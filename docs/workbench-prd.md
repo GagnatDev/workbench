@@ -61,14 +61,50 @@ Anyone doing **process-based creative or physical work** — ceramicists, textil
 
 ## 6. Domain model
 
-Four core entities, as the user envisions the workflow:
+The model is built from a small set of entities. The key insight: **journal, moodboard, checklist, and materials are all the same shape — a named container of small records** — so they unify into one **Section** concept rather than four bespoke types.
 
-- **Idea** — captured fast, lands in the **Inbox**. Can be promoted to *initiate* a Project. Ideas can also be captured *inside* a project. (Text and/or photo, optional link.)
-- **Project** — the workspace for committed work. Has a **status** drawn from a customizable stage list, flexible structured **details** (materials, dimensions, temperatures — varies by craft), a **to-do checklist**, a **moodboard**, and a stream of journal entries.
-- **Journal entry / Event** — a timestamped record of what actually happened within a project (e.g. "May 12 — threw 3 cups, walls too thick").
-- **Moodboard item** — an image or link collected as inspiration within a project.
+**Entities**
 
-**Cross-cutting:** **Tags** (free-form labels) and **Collections** (group projects by domain, e.g. ceramics vs. app ideas) apply across entities. Photos are first-class attachments on ideas, journal entries, and moodboard items.
+- **User** — the app's **own identity record**. Has its own `id uuid` (the value used as `user_id` on every other row) and stores the homectl-auth `sub` in an `auth_sub` column, plus cached `email` / `display_name` / `app_role`. Workbench owns its users rather than depending on the auth provider's identifier everywhere; a User row is **provisioned the first time an invited person authenticates** (see §8). This means the auth service can be swapped or re-keyed without rewriting `user_id` across the data.
+- **Collection** — groups Projects by domain (ceramics, textiles, app ideas). A Project belongs to zero or one Collection.
+- **Idea** — the **universal capture primitive**: a fast, low-friction capture (text and/or photo, optional link). An Idea is either **global** (no `project_id` → the user-level **Inbox**) or **project-scoped** (`project_id` set → that project's **Inbox**). You never choose a type at capture time. An Idea is later *processed*: a global Idea is **promoted to a Project**; a project Idea is **filed into a Section** (becoming a journal entry, task, pin, or material) or kept as a loose project note. Ideas keep a distinct lifecycle (captured → kept/archived → promoted/filed) and intentionally live *outside* the Section/Item world.
+- **Project** — the workspace for committed work. Has a title, description, a **status** drawn from a customizable per-project stage list, and a flexible **`details`** JSONB blob for one-off structured specs (target dimensions, intended form, expected shrinkage). A Project holds many **Sections** and may belong to a Collection.
+- **Section** — a named container inside a Project, discriminated by **`kind`**: `journal`, `moodboard`, `checklist`, `materials` (extensible). A Project can have **multiple named Sections of any kind** (e.g. two journals "Variant A" / "Variant B", several moodboards). The Section's `kind` determines how its Items are rendered and validated.
+- **Item** — the atomic record living inside a Section. Shared columns (title/body, ordering rank, tags, timestamps) plus a **`payload`** JSONB carrying kind-specific fields:
+  - in a `journal` → a timestamped **entry** (`entry_at`, body)
+  - in a `checklist` → a **task** (`done`)
+  - in a `moodboard` → a **pin** (`image` or `link` subtype: `storage_key` / `url`, caption)
+  - in a `materials` → a **material** (`quantity`, notes)
+- **Attachment** — a photo, with a **polymorphic owner** (an Idea or an Item). Stored in object storage; referenced by `storage_key`.
+
+**Shape**
+
+```
+Collection
+  └─ Project ── details (JSONB: one-off specs)
+       └─ Section (kind: journal | moodboard | checklist | materials; named; 0..N of each)
+            └─ Item (shared fields + kind-specific payload)
+                 └─ Attachment (photo)
+
+Idea (capture primitive — lives in the global Inbox OR a project-scoped Inbox)
+  ├─ global         ──promote (reparent)──▶ new Project (idea moves into its Inbox)
+  ├─ project-scoped ──file──▶ Section Item (entry | task | pin | material)
+  └─ Attachment (photo)
+```
+
+**Cross-cutting**
+- **Tags** — free-form labels on Ideas, Projects, and Items.
+- **Ordering** — Sections within a Project and Items within a Section are explicitly ordered. Because the app is offline-first with last-write-wins sync, ordering uses **fractional/lexicographic ranks** (insert-between without renumbering) so concurrent offline reorders don't collide or trigger renumber storms.
+
+**Design rationale & guardrails**
+- Every content row carries `user_id` → `users.id` (the app's own identity), **not** the auth `sub`. The `sub` lives once, on the `users` row. `users` itself is **server-side identity** and is *not* a synced content table — the client fetches its own profile via `/api/me`.
+- Unifying into Sections + Items collapses the **synced content** tables to six (`collection`, `project`, `section`, `item`, `idea`, `attachment`), which the local-first LWW sync engine strongly favors over a dozen bespoke tables.
+- The cost of this generality is that **per-`kind` integrity is enforced in application code, not the database**. Each kind has a **Zod schema** validating its Item `payload` on write (a discriminated union keyed on `section.kind` / item subtype), keeping the `payload` from degenerating into an unvalidated junk drawer.
+- Adding a new Section `kind` is free at the schema level but still requires its own UI rendering, capture affordance, and validation — schema generality is **not** feature-completeness.
+
+**Capture & promotion flows (resolved)**
+- **In-project capture** — a jot made *inside* a Project creates a **project-scoped Idea** (`project_id` set) in that project's Inbox. It is triaged later: **filed** into a Section (journal entry / task / pin / material) or kept as a loose project note. Capture stays type-free; structure is added on triage.
+- **Promotion** — promoting a global Idea **creates a new Project and reparents the Idea into that project's Inbox** (carrying its text and attachments), where it is then expanded or filed. Promotion is simply "create Project + set the Idea's `project_id`," reusing the same processing model rather than a bespoke conversion.
 
 ---
 
@@ -76,22 +112,23 @@ Four core entities, as the user envisions the workflow:
 
 **Capture & Inbox**
 - One-tap new-idea capture (text + photo) from anywhere; saved immediately, no required fields.
-- All loose ideas collect in an **Inbox**.
-- Inbox review: edit, tag, delete, archive, or **promote to a Project**.
+- Ideas collect in an **Inbox** — the global Inbox (captured outside any project) or a **per-project Inbox** (captured inside a project).
+- Process the global Inbox: edit, tag, delete, archive, or **promote an idea to a new Project** (reparents it into that project's Inbox).
+- Process a project Inbox: **file an idea into a Section** (journal entry / task / pin / material) or keep it as a project note.
 
 **Projects**
 - Create/edit/delete projects with title and description.
 - **Customizable status pipeline** per project, seeded from a template; user can rename/reorder stages.
-- **Flexible structured details** (key/value) for craft-specific data.
-- **To-do checklist** per project.
+- **Flexible details** (key/value JSONB) for one-off structured specs (dimensions, intended form, shrinkage).
+- Add, name, reorder, and delete **Sections** (kinds: `journal`, `moodboard`, `checklist`, `materials`), with **multiple of any kind** per project.
 - Assign a project to a **Collection**.
 
-**Process journal**
-- Add timestamped journal entries (text + photo) to a project.
-- View a chronological project timeline.
-
-**Moodboard**
-- Attach images and links to a project's moodboard (no automatic preview in V1).
+**Sections & Items**
+- **Journal** — add timestamped entries (text + photo); view a chronological timeline; multiple journals per project (e.g. per variant).
+- **Checklist** — add tasks with a done state; reorder.
+- **Moodboard** — pin images and links (no automatic preview in V1).
+- **Materials** — list materials with quantity, notes, and an optional photo.
+- Items are reorderable within a Section; Sections are reorderable within a Project.
 
 **Organisation**
 - Tag ideas and projects; group projects into collections; mark favourites; basic filtering.
@@ -101,7 +138,7 @@ Four core entities, as the user envisions the workflow:
 - Sync (LWW) on reconnect. Installable PWA with a sync-status indicator.
 
 **Accounts**
-- Login via `homectl-auth`; users are provisioned by invite. Each user sees only their own data.
+- Login via `homectl-auth`; access is granted by invite. On a person's first authenticated request, Workbench **provisions a local `users` row** (mapping the verified `auth_sub` to its own `user.id`). Each user sees only their own data, scoped by that `user.id`.
 
 ---
 
@@ -109,7 +146,8 @@ Four core entities, as the user envisions the workflow:
 
 - **Single deployable** at `workbench.homectl.no`: a pnpm monorepo built into one Docker image. An **Express 5** server serves the built **React + Vite** PWA as static files *and* hosts the API and the auth callback on the same origin.
 - **Local-first:** the client uses **Dexie/IndexedDB** as the offline source of truth. A **last-write-wins sync engine** (`pull`/`push` with soft-delete tombstones) reconciles with the backend.
-- **Backend:** Express 5 + **Kysely** (typed SQL) + **node-pg-migrate** (plain-SQL migrations run at boot). Data in the managed **Postgres** database `workbench`, every row scoped to the authenticated user. Flexible fields stored as **JSONB**.
+- **Backend:** Express 5 + **Kysely** (typed SQL) + **node-pg-migrate** (plain-SQL migrations run at boot). Data in the managed **Postgres** database `workbench`, every content row scoped by `user_id` (→ `users.id`). Flexible fields stored as **JSONB**.
+- **Identity:** the app keeps its own **`users`** table; a `resolveUser` step after auth maps the verified JWT `sub` to a local `user.id` (creating the row just-in-time on first login), so Workbench owns its identity and isn't coupled to the auth provider's key beyond the initial mapping.
 - **Photos:** stored in **S3-compatible object storage** (bucket `homectl-workbench`) via **presigned PUT/GET** URLs; captured offline as local blobs, uploaded on sync.
 - **Auth:** `@gagnatdev/homectl-auth-client` against `auth.homectl.no` (OAuth2 code flow + RS256 JWT bearer). The app is registered in `homectl-auth`'s `apps.json` with roles `member`/`admin`.
 - **Deploy:** GitHub Actions (CI → build & push image to `rg.fr-par.scw.cloud/homectl/workbench` → `kubectl apply`), mirroring the `unforked` app. NGINX ingress + cert-manager TLS.
