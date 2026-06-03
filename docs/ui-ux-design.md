@@ -1,6 +1,6 @@
 # Workbench — UI/UX Design (V1)
 
-> **Status:** Draft · **Date:** 2026-06-03 · **Author:** Ann-Katrin Gagnat
+> **Status:** Approved — ready for implementation · **Date:** 2026-06-03 · **Author:** Ann-Katrin Gagnat
 > Companion to [`workbench-prd.md`](./workbench-prd.md) and [`domain-model.md`](./domain-model.md). This document is the canonical reference for screens, navigation, and user flows. It records the decisions from a UI/UX design session; rationale is given per decision.
 
 Mobile-first throughout — the phone in the workshop is the primary device. Mockups below are phone-width; desktop adaptation is a single breakpoint (see [§10](#10-desktop-layout)).

@@ -1,6 +1,7 @@
 # Workbench — Domain Model
 
-> Companion to [`workbench-prd.md`](./workbench-prd.md) §6. This document describes the entities, relationships, and core flows of the Workbench domain using diagrams. It is the canonical reference for the data model.
+> **Status:** Approved — ready for implementation · **Date:** 2026-06-03 · **Author:** Ann-Katrin Gagnat
+> Companion to [`workbench-prd.md`](./workbench-prd.md) §6, [`ui-ux-design.md`](./ui-ux-design.md) (how these entities are presented), and [`visual-identity.md`](./visual-identity.md). This document describes the entities, relationships, and core flows of the Workbench domain using diagrams. It is the canonical reference for the data model.
 
 ## Core idea
 
@@ -58,6 +59,7 @@ erDiagram
         string      status "current stage"
         jsonb       stages "ordered, customizable stage list"
         jsonb       details "one-off specs: dimensions, form, shrinkage"
+        bool        favourite "pins to top of Projects list"
         string      rank "order within collection"
         timestamptz created_at
         timestamptz updated_at
@@ -204,20 +206,21 @@ stateDiagram-v2
     Kept --> Promoted
     Kept --> Filed : file into Section
     Promoted --> Filed : file into Section
-    Promoted --> Note : keep as project note
+    Promoted --> Kept : keep as project note
     Filed --> [*]
     Archived --> [*]
-    Note --> [*]
 ```
 
 - **Promoted** ideas become project-scoped (gain a `project_id`) and then behave like any project Idea.
 - **Filing** an Idea creates the corresponding Section Item (carrying its content + attachments) and marks the Idea `filed`.
+- **"Keep as note"** (in a project Inbox) is just `state = kept` on a project-scoped Idea — a loose project note. It surfaces in that project Inbox's **Kept** segment ([`ui-ux-design.md`](./ui-ux-design.md) §4), exactly mirroring the global Inbox's New/Kept split. There is no separate `note` state — `kept` covers both global and project-scoped retained ideas.
 
 ---
 
 ## Cross-cutting concerns
 
-- **Tags** — free-form labels stored as a JSONB array on Ideas, Projects, and Items.
-- **Ordering** — Projects within a Collection, Sections within a Project, and Items within a Section each carry a `rank`. Ranks are **fractional / lexicographic** (insert-between without renumbering) so concurrent offline reorders under LWW sync don't collide.
+- **Tags** — free-form labels stored as a JSONB array on Ideas, Projects, and Items. Entered as autocomplete chips; filtering is local per list ([`ui-ux-design.md`](./ui-ux-design.md) §9.2). No global cross-entity tag browser in V1.
+- **Favourites** — `project.favourite` pins a project to the top of the Projects list ([`ui-ux-design.md`](./ui-ux-design.md) §5). V1 favourites apply to Projects only.
+- **Ordering** — Projects within a Collection, Sections within a Project, and Items within a Section each carry a `rank`. Ranks are **fractional / lexicographic** (insert-between without renumbering) so concurrent offline reorders under LWW sync don't collide. The reorder gesture (long-press drag) is specified in [`ui-ux-design.md`](./ui-ux-design.md) §8.
 - **Sync** — six **content** tables sync (`collection`, `project`, `section`, `item`, `idea`, `attachment`), each pulled/pushed by `updated_at` with tombstones; the uniform shape keeps the local-first sync engine simple. The `users` table is server-side identity and does **not** sync (the current user comes from `/api/me`).
 - **Per-kind integrity** — enforced in application code (Zod), not the database, since `section`/`item` are generic tables.

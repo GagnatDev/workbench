@@ -1,9 +1,10 @@
 # Workbench — Product Requirements Document (V1)
 
-> **Status:** Draft · **Date:** 2026-06-01 · **Author:** Ann-Katrin Gagnat
+> **Status:** Approved — ready for implementation · **Date:** 2026-06-01 · **Approved:** 2026-06-03 · **Author:** Ann-Katrin Gagnat
 > **Supersedes/extends:** [`personal-creative-workbench.md`](./personal-creative-workbench.md) (original brainstorm)
+> **Companion docs:** [`domain-model.md`](./domain-model.md) (entities & flows · §6) · [`ui-ux-design.md`](./ui-ux-design.md) (screens & navigation) · [`visual-identity.md`](./visual-identity.md) (palette & type)
 
-This PRD captures the decisions made in a design session that turned the original brainstorm into a buildable V1. It records *what* we're building and *why*; the *how* (step-by-step build sequence) lives in the implementation plan.
+This PRD captures the decisions made in a design session that turned the original brainstorm into a buildable V1. It records *what* we're building and *why*; the *how* (step-by-step build sequence) lives in the implementation plan. The detailed domain model, UI/UX, and visual identity each have their own companion document (linked above).
 
 ---
 
@@ -54,7 +55,7 @@ Anyone doing **process-based creative or physical work** — ceramicists, textil
 | 3 | **Local-first with simple sync** | Workshop use demands offline writing. Single-writer-per-account means **last-write-wins (LWW)** is sufficient; no CRDTs/OT needed. |
 | 4 | **PWA from day one** | Installable, offline-capable, camera access, one codebase across devices. |
 | 5 | **Configurable stages, not hardcoded ceramics** | Users span multiple crafts. Stages are per-project, seeded from templates (Ceramics / Textiles / Generic / App-dev). Structured detail is flexible, not schema-bound. |
-| 6 | **Four distinct entity types** | Ideas, Projects, Journal entries, and Moodboard items are conceptually separate (see §6). |
+| 6 | **One container shape, not bespoke types** | Journal, moodboard, checklist, and materials are the same shape — *a named container of small records* — so they unify into one **Section** + **Item** model discriminated by `kind` (see §6). Ideas stay a separate capture primitive with their own lifecycle. |
 | 7 | **Fits existing infrastructure** | Deploys to the `homectl` k8s cluster, reuses managed Postgres and S3-compatible object storage, follows the `unforked` app's conventions. |
 
 ---
@@ -68,13 +69,13 @@ The model is built from a small set of entities. The key insight: **journal, moo
 - **User** — the app's **own identity record**. Has its own `id uuid` (the value used as `user_id` on every other row) and stores the homectl-auth `sub` in an `auth_sub` column, plus cached `email` / `display_name` / `app_role`. Workbench owns its users rather than depending on the auth provider's identifier everywhere; a User row is **provisioned the first time an invited person authenticates** (see §8). This means the auth service can be swapped or re-keyed without rewriting `user_id` across the data.
 - **Collection** — groups Projects by domain (ceramics, textiles, app ideas). A Project belongs to zero or one Collection.
 - **Idea** — the **universal capture primitive**: a fast, low-friction capture (text and/or photo, optional link). An Idea is either **global** (no `project_id` → the user-level **Inbox**) or **project-scoped** (`project_id` set → that project's **Inbox**). You never choose a type at capture time. An Idea is later *processed*: a global Idea is **promoted to a Project**; a project Idea is **filed into a Section** (becoming a journal entry, task, pin, or material) or kept as a loose project note. Ideas keep a distinct lifecycle (captured → kept/archived → promoted/filed) and intentionally live *outside* the Section/Item world.
-- **Project** — the workspace for committed work. Has a title, description, a **status** drawn from a customizable per-project stage list, and a flexible **`details`** JSONB blob for one-off structured specs (target dimensions, intended form, expected shrinkage). A Project holds many **Sections** and may belong to a Collection.
+- **Project** — the workspace for committed work. Has a title, description, a **status** drawn from a customizable per-project stage list, a flexible **`details`** JSONB blob for one-off structured specs (target dimensions, intended form, expected shrinkage), and a **`favourite`** flag (favourites pin to the top of the Projects list). A Project holds many **Sections** and may belong to a Collection.
 - **Section** — a named container inside a Project, discriminated by **`kind`**: `journal`, `moodboard`, `checklist`, `materials` (extensible). A Project can have **multiple named Sections of any kind** (e.g. two journals "Variant A" / "Variant B", several moodboards). The Section's `kind` determines how its Items are rendered and validated.
 - **Item** — the atomic record living inside a Section. Shared columns (title/body, ordering rank, tags, timestamps) plus a **`payload`** JSONB carrying kind-specific fields:
   - in a `journal` → a timestamped **entry** (`entry_at`, body)
   - in a `checklist` → a **task** (`done`)
   - in a `moodboard` → a **pin** (`image` or `link` subtype: `storage_key` / `url`, caption)
-  - in a `materials` → a **material** (`quantity`, notes)
+  - in a `materials` → a **material** (`quantity`, `unit`; notes in `body`)
 - **Attachment** — a photo, with a **polymorphic owner** (an Idea or an Item). Stored in object storage; referenced by `storage_key`.
 
 **Shape**

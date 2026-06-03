@@ -1,6 +1,6 @@
 # Workbench — Visual Identity
 
-> **Status:** Draft · **Date:** 2026-06-03 · **Author:** Ann-Katrin Gagnat
+> **Status:** Approved — ready for implementation · **Date:** 2026-06-03 · **Author:** Ann-Katrin Gagnat
 > Companion to [`workbench-prd.md`](./workbench-prd.md) and [`ui-ux-design.md`](./ui-ux-design.md). This document defines the look and feel: palette, typography, and surface treatment. The UI/UX doc defines *what* is on screen; this one defines *how it looks*.
 
 ## Direction: functional minimalism, raw elements
@@ -41,12 +41,12 @@ Editorial headers over a utilitarian body — the craft-magazine pairing.
 
 | Role | Face | Notes |
 |------|------|-------|
-| **Headers** | Classic understated serif — **Fraunces** (variable, self-hostable) or Playfair Display | Project titles, screen titles, section names. Brings slow, deliberate craftsmanship to the things you've named. |
+| **Headers** | Editorial high-contrast serif — **Playfair Display** (self-hostable) | Project titles, screen titles, section names. Its thick/thin stroke contrast brings the craft-magazine elegance to the things you've named. Used **sparingly and only at title sizes** (see rule below) so it reads editorial, not formal. |
 | **Body** | Clean geometric sans — **Inter** (self-hostable) with `Helvetica Neue`/system-ui fallback | Everything else. High contrast, generous spacing — a recipe or stitch count must be readable from across the workbench. |
 | **Data** | Inter with tabular numerals (`font-variant-numeric: tabular-nums`) | Details key–value block, quantities, temperatures, dates. |
 
 - Body text minimum **16px**, line-height ≥ 1.5; metadata no smaller than 13px.
-- Serif is reserved for *titles only* — never for body or UI labels, or the magazine feel tips into costume.
+- Serif is reserved for *titles only* — never for body or UI labels. With a high-contrast face like Playfair this is doubly important: at small sizes the thin strokes thin out and the magazine feel tips into costume.
 - Fonts are **self-hosted and precached by the PWA service worker** — typography cannot depend on connectivity (offline is the normal case, not the exception).
 
 ---
@@ -77,7 +77,10 @@ How the identity lands on the key screens from [`ui-ux-design.md`](./ui-ux-desig
 
 ---
 
+## App icon
+
+**Decision:** the real install mark is **designed before Phase 1** (not placeholdered), so it ships once. Direction: a single simple glyph — a vessel silhouette or ⌂-like workbench form — in Charcoal on Oatmeal, no wordmark. Provide the full PWA icon set (maskable + any-purpose, 192/512px) and a matching `theme_color`/`background_color` (Oatmeal) for the manifest.
+
 ## Open questions
 
 - **Dark mode** — deferred from V1. The matte Oatmeal palette has no obvious dark inversion; if evening-studio use demands it, design a true companion palette (warm dark clay tones) rather than auto-inverting.
-- **App icon / PWA install icon** — needs a mark. Direction: a single simple glyph (vessel silhouette or ⌂-like workbench form) in Charcoal on Oatmeal, no wordmark.
