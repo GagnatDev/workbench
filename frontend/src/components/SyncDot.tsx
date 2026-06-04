@@ -13,26 +13,27 @@ const STYLES: Record<SyncDotState, { className: string; label: string }> = {
   error: { className: 'bg-brick', label: 'Sync error' },
 }
 
-function describe(state: SyncDotState, pending: number): string {
+function describe(state: SyncDotState, pending: number, photos: number): string {
   const base = STYLES[state].label
-  if (pending > 0 && state !== 'syncing') {
-    const noun = pending === 1 ? 'change' : 'changes'
-    return state === 'offline'
-      ? `Offline — ${pending} ${noun} pending`
-      : `${base} — ${pending} ${noun} pending`
-  }
-  return base
+  const parts: string[] = []
+  if (pending > 0) parts.push(`${pending} ${pending === 1 ? 'change' : 'changes'}`)
+  if (photos > 0) parts.push(`${photos} ${photos === 1 ? 'photo' : 'photos'} queued`)
+  if (parts.length === 0 || state === 'syncing') return base
+  const prefix = state === 'offline' ? 'Offline' : base
+  return `${prefix} — ${parts.join(' · ')}`
 }
 
 export function SyncDot({
   state = 'synced',
   pending = 0,
+  photos = 0,
 }: {
   state?: SyncDotState
   pending?: number
+  photos?: number
 }) {
   const { className } = STYLES[state]
-  const label = describe(state, pending)
+  const label = describe(state, pending, photos)
   return (
     <span
       role="status"

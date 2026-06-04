@@ -8,9 +8,9 @@ See [`docs/`](./docs) for the PRD, domain model, UI/UX, and visual identity.
 
 ## Status
 
-**Phase 2 — local-first foundation.** The walking skeleton (Phase 1) now has a
-working last-write-wins sync engine on top of it. Features (capture, projects,
-sections) layer on these rails next (see the implementation plan).
+**Phase 3 — capture & inbox.** Quick-capture, the global Inbox with triage, and
+the photo-upload pipeline now run on the Phase 2 local-first rails. Projects,
+sections, and the journal layer on next (see the implementation plan).
 
 What works today:
 
@@ -27,6 +27,21 @@ What works today:
   client mirrors every table in **Dexie/IndexedDB** (source of truth offline)
   and syncs push-then-pull on focus/reconnect/after each edit; the header sync
   dot reflects live status.
+- **Quick capture & global Inbox.** ➕ opens a keyboard-up bottom sheet
+  (dismiss-saves, empty discarded) backed by **one reusable composer**
+  (consistency rule §11.1). The Inbox has New/Kept segments (New badge counts
+  only new) + archived behind the overflow; cards swipe right to archive, left to
+  promote, tap for the detail sheet (edit, tag-autocomplete, keep, archive,
+  delete). **Promote** spins up a Project from a stage template (Ceramics /
+  Textiles / Generic / App-dev, last-used remembered), reparents the idea, and
+  navigates into it.
+- **Photos via presigned S3.** Capture attaches a photo as a local blob; on
+  sync the engine presigns a PUT (`POST /api/uploads/presign`), uploads the
+  blob **browser→S3 directly**, then marks the attachment uploaded.
+  `GET /api/files/:id` redirects to a short-lived, ownership-checked presigned
+  GET. Uploads are resilient — a failed/unconfigured upload never blocks data
+  sync; the photo stays queued (shown in the sync dot) and retries. Scaleway
+  Object Storage in prod, MinIO locally.
 - Frontend: React + Vite + PWA (installable, offline app shell, self-hosted
   fonts). Navigation skeleton (Inbox · ➕ · Projects), sign-in screen, sync dot,
   empty states — per `docs/ui-ux-design.md` and `docs/visual-identity.md`.
@@ -37,7 +52,7 @@ Prereqs: Node 24, pnpm 10, Docker.
 
 ```bash
 cp .env.example .env                 # required — the backend loads it in dev
-docker compose up -d postgres        # local Postgres (and `minio` for Phase 3+)
+docker compose up -d postgres minio minio-init   # Postgres + S3 (MinIO + bucket)
 pnpm install
 pnpm dev                             # frontend :3000 (proxy → :8080), backend :8080
 ```
@@ -49,6 +64,10 @@ backend exits with a Zod error for the missing `DATABASE_URL`.
 Open http://localhost:3000. With `AUTH_MODE=dev` / `VITE_DISABLE_AUTH=true`
 (the defaults) there's no login step — every request resolves to a fixed local
 user, and a `users` row is provisioned on the first `/api/me` call.
+
+To exercise photo capture locally, uncomment the `S3_*` block in `.env` (it's
+pre-filled to match the docker-compose MinIO). Without it, capture still works —
+photos just stay queued (the sync dot shows the count) instead of uploading.
 
 Run the whole stack as the production image does:
 

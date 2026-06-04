@@ -11,6 +11,8 @@ export interface SyncState {
   status: SyncStatus
   /** Rows with local edits not yet pushed. */
   pending: number
+  /** Photo blobs captured locally but not yet uploaded to object storage. */
+  photosQueued: number
   lastSyncedAt: string | null
 }
 
@@ -18,6 +20,17 @@ type Listener = (state: SyncState) => void
 
 function isOffline(): boolean {
   return typeof navigator !== 'undefined' && navigator.onLine === false
+}
+
+/**
+ * A `fetch` that never got a response — server down, connection refused, DNS,
+ * CORS — rejects with a TypeError ("Failed to fetch"). That's offline-like, not a
+ * real error: the app stays usable and should sync once the server is back.
+ * Distinct from an HTTP error response (a thrown `Error` with a status), which is
+ * a genuine failure worth the red dot.
+ */
+function isNetworkError(err: unknown): boolean {
+  return err instanceof TypeError
 }
 
 async function authedJson(path: string, init?: RequestInit): Promise<unknown> {
@@ -37,6 +50,12 @@ async function countPending(): Promise<number> {
   return total
 }
 
+/** Attachments with a local blob still waiting to be uploaded to object storage. */
+async function countPhotosQueued(): Promise<number> {
+  const atts = await db.attachments.toArray()
+  return atts.filter((a) => !a.deleted && !a.uploaded).length
+}
+
 /**
  * The last-write-wins sync engine — the client half of the Phase 2 foundation.
  *
@@ -51,11 +70,19 @@ async function countPending(): Promise<number> {
  * a no-op when offline. Subscribers (the sync dot) see status transitions.
  */
 class SyncEngine {
-  private state: SyncState = { status: 'synced', pending: 0, lastSyncedAt: null }
+  private state: SyncState = {
+    status: 'synced',
+    pending: 0,
+    photosQueued: 0,
+    lastSyncedAt: null,
+  }
   private readonly listeners = new Set<Listener>()
   private running = false
   private queued = false
   private timer: ReturnType<typeof setTimeout> | undefined
+  // Set when the server reports object storage isn't configured (503), so we stop
+  // re-attempting presign every run. Reset on reconnect in case config changed.
+  private uploadsDisabled = false
 
   getState(): SyncState {
     return this.state
@@ -92,7 +119,11 @@ class SyncEngine {
 
   async syncNow(): Promise<void> {
     if (isOffline()) {
-      this.setState({ status: 'offline', pending: await countPending() })
+      this.setState({
+        status: 'offline',
+        pending: await countPending(),
+        photosQueued: await countPhotosQueued(),
+      })
       return
     }
     if (this.running) {
@@ -102,18 +133,28 @@ class SyncEngine {
     this.running = true
     this.setState({ status: 'syncing' })
     try {
+      // 1. upload pending photos, 2. push dirty rows, 3. pull since cursor.
+      // Photo upload is resilient (per-attachment): a failed or unconfigured
+      // upload never blocks data sync — the photo stays queued and retries.
+      await this.uploadPending()
       await this.push()
       await this.pull()
       this.setState({
         status: 'synced',
         pending: await countPending(),
+        photosQueued: await countPhotosQueued(),
         lastSyncedAt: new Date().toISOString(),
       })
     } catch (err) {
-      console.error('[sync] run failed', err)
+      // Server unreachable (a TypeError from fetch) is offline-like — stay calm
+      // (grey dot), no console noise. Reserve 'error' (red) + a logged error for
+      // an actual server/HTTP failure.
+      const offlineLike = isOffline() || isNetworkError(err)
+      if (!offlineLike) console.error('[sync] run failed', err)
       this.setState({
-        status: isOffline() ? 'offline' : 'error',
+        status: offlineLike ? 'offline' : 'error',
         pending: await countPending(),
+        photosQueued: await countPhotosQueued(),
       })
     } finally {
       this.running = false
@@ -121,6 +162,64 @@ class SyncEngine {
         this.queued = false
         void this.syncNow()
       }
+    }
+  }
+
+  /**
+   * Upload every captured-but-unsynced photo blob to object storage via a
+   * presigned PUT, then mark its attachment `uploaded` with the server's
+   * `storage_key` (a dirty edit the following push carries). The blob is kept
+   * locally so the workshop phone keeps rendering it offline.
+   *
+   * Failure handling, by kind:
+   *  - **server unreachable** (TypeError) — rethrow; syncNow marks us offline and
+   *    the whole run (photos + data) retries later.
+   *  - **storage not configured** (503) — expected when running without S3 (local
+   *    dev, or before Phase 0 provisioning). Stop trying for the session and log
+   *    once; photos stay queued and the sync dot shows the count. Reset on
+   *    reconnect in case configuration changed.
+   *  - **one bad photo** (other non-2xx) — skip just that photo; data still syncs.
+   */
+  private async uploadPending(): Promise<void> {
+    if (this.uploadsDisabled) return
+    const atts = await db.attachments.toArray()
+    const pending = atts.filter((a) => !a.deleted && !a.uploaded)
+
+    for (const att of pending) {
+      const blobRow = await db.blobs.get(att.id)
+      if (!blobRow?.blob) continue // nothing local to upload
+      const contentType = att.content_type ?? blobRow.blob.type ?? 'application/octet-stream'
+
+      // A fetch TypeError here propagates (network down → offline).
+      const presign = await authClient.authedFetch(`${API_BASE}/api/uploads/presign`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ attachmentId: att.id, contentType }),
+      })
+      if (presign.status === 503) {
+        this.uploadsDisabled = true
+        console.info('[sync] object storage not configured — photos stay queued')
+        return
+      }
+      if (!presign.ok) {
+        console.warn(`[sync] presign failed for ${att.id}: ${presign.status}`)
+        continue // skip this photo; don't block the rest or the data sync
+      }
+      const { url, storageKey } = (await presign.json()) as { url: string; storageKey: string }
+
+      // Direct browser→S3 PUT — the presigned URL carries its own auth, so this
+      // is a plain fetch (no app bearer, and it never transits our backend).
+      const put = await fetch(url, {
+        method: 'PUT',
+        body: blobRow.blob,
+        headers: { 'Content-Type': contentType },
+      })
+      if (!put.ok) {
+        console.warn(`[sync] upload failed for ${att.id}: ${put.status}`)
+        continue
+      }
+
+      await writeLocal('attachments', { ...att, storage_key: storageKey, uploaded: true })
     }
   }
 
@@ -189,14 +288,19 @@ class SyncEngine {
 
   /** Wire up automatic syncing (focus / reconnect) and kick off the first run. */
   start(): () => void {
-    const onOnline = (): void => void this.syncNow()
+    const onOnline = (): void => {
+      this.uploadsDisabled = false // retry uploads — config may have changed
+      void this.syncNow()
+    }
     const onFocus = (): void => void this.syncNow()
     const onOffline = (): void => this.setState({ status: 'offline' })
     window.addEventListener('online', onOnline)
     window.addEventListener('offline', onOffline)
     window.addEventListener('focus', onFocus)
 
-    void countPending().then((pending) => this.setState({ pending }))
+    void Promise.all([countPending(), countPhotosQueued()]).then(([pending, photosQueued]) =>
+      this.setState({ pending, photosQueued }),
+    )
     void this.syncNow()
 
     return () => {

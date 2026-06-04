@@ -11,6 +11,7 @@ import { resolveUser } from "./middleware/resolveUser.js";
 import { healthRouter } from "./routes/health.js";
 import { meRoutes } from "./routes/me.js";
 import { syncRoutes } from "./routes/sync.js";
+import { uploadRoutes } from "./routes/uploads.js";
 
 export interface AppDeps {
   db: Db;
@@ -59,6 +60,7 @@ export function buildApp(deps: AppDeps): Express {
   api.use(resolveUser(db));
   api.use(meRoutes());
   api.use(syncRoutes(db));
+  api.use(uploadRoutes(db));
   app.use("/api", api);
 
   // Serve the built SPA (single-container topology). express.static handles real

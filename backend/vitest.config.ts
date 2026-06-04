@@ -17,6 +17,14 @@ export default defineConfig({
     env: {
       DATABASE_URL: "postgresql://test:test@127.0.0.1:5432/test",
       AUTH_MODE: "dev",
+      // Fake-but-valid S3 config so the uploads routes are exercisable. The
+      // presigner signs locally (no network), so these never touch a real bucket.
+      S3_ENDPOINT: "http://localhost:9000",
+      S3_REGION: "fr-par",
+      S3_BUCKET: "homectl-workbench",
+      S3_ACCESS_KEY_ID: "test",
+      S3_SECRET_ACCESS_KEY: "test",
+      S3_FORCE_PATH_STYLE: "true",
     },
     coverage: {
       provider: "v8",
