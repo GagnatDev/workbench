@@ -1,9 +1,8 @@
 import { db } from './db'
+import { createProject } from './projects'
 import { deleteLocal, writeLocal } from './sync'
 import type { Idea } from './types'
 import { isDraftEmpty, type ComposerDraft } from '@/components/Composer'
-import { rankBefore } from '@/lib/rank'
-import { seedDetails, templateById } from '@/lib/templates'
 
 /**
  * Idea lifecycle operations, all built on the Phase 2 local-first primitives
@@ -67,42 +66,18 @@ export async function deleteIdea(id: string): Promise<void> {
 
 /**
  * Promote a global idea into a new project (ui-ux-design.md §3.3, domain model
- * "promote"): create the Project from the chosen stage template, then reparent
- * the idea into the project's inbox and mark it `promoted`. Returns the new
- * project id so the caller can navigate into it. Done in one local transaction
- * so the two writes can't half-apply offline.
+ * "promote"): create the Project from the chosen stage template (shared with
+ * direct creation, see `createProject`), then reparent the idea into the
+ * project's inbox and mark it `promoted`. Returns the new project id so the
+ * caller can navigate into it.
  */
 export async function promoteIdea(
   idea: Idea,
   title: string,
   templateId: string,
 ): Promise<string> {
-  const template = templateById(templateId)
-  const projectId = crypto.randomUUID()
-
-  // Place the new project at the top of the list (favourites pin above it later).
-  const projects = await db.projects.toArray()
-  const minRank = projects
-    .filter((p) => !p.deleted)
-    .map((p) => p.rank)
-    .sort()[0]
-
-  await writeLocal('projects', {
-    id: projectId,
-    title: title.trim() || 'Untitled project',
-    description: null,
-    collection_id: null,
-    status: template.stages[0] ?? null,
-    stages: template.stages,
-    details: seedDetails(template),
-    favourite: false,
-    rank: rankBefore(minRank ?? null),
-  })
-
+  const projectId = await createProject(title, templateId)
   await writeLocal('ideas', { ...idea, project_id: projectId, state: 'promoted' })
-
-  // Remember the template so the next promote/new-project defaults to it (§3.3).
-  await db._meta.put({ key: 'lastTemplate', value: templateId })
   return projectId
 }
 

@@ -1,60 +1,130 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
+import { Plus } from 'lucide-react'
+import { AttachmentThumb } from '@/components/AttachmentThumb'
 import { EmptyState } from '@/components/EmptyState'
-import { db } from '@/db/db'
-import type { Project } from '@/db/types'
-
-/** Favourites pinned on top, then rank order (ui-ux-design.md §5). */
-function projectOrder(a: Project, b: Project): number {
-  if (a.favourite !== b.favourite) return a.favourite ? -1 : 1
-  return a.rank.localeCompare(b.rank)
-}
+import { NewProjectSheet } from '@/components/NewProjectSheet'
+import { allCollections } from '@/db/collections'
+import { loadProjectCards } from '@/db/projects'
+import { timeAgo } from '@/lib/time'
 
 /**
- * Projects tab. Phase 3 lands a minimal real list so a promoted idea has a
- * visible home; the full §5 treatment (collection filter chips, latest-photo
- * thumbnails, time-since-last-entry, favourite toggles, the header ➕) arrives in
- * Phase 4.
+ * Projects tab (ui-ux-design.md §5): a flat card list with a horizontally
+ * scrollable collection-filter chip row ("All" + each collection), favourites
+ * pinned on top. Each card shows the latest-photo thumbnail, a serif title, the
+ * status badge, and time-since-last-activity (surfacing neglected work). The
+ * header ➕ creates a project via the same mini-sheet as promotion (§3.3).
+ * (Tags / the ⛭ tag filter arrive with project tagging in Phase 6.)
  */
 export function Projects() {
-  const projects =
-    useLiveQuery(async () => {
-      const all = await db.projects.toArray()
-      return all.filter((p) => !p.deleted).sort(projectOrder)
-    }, []) ?? []
+  const [filter, setFilter] = useState<string | 'all'>('all')
+  const [creating, setCreating] = useState(false)
+
+  const cards = useLiveQuery(() => loadProjectCards(), []) ?? []
+  const collections = useLiveQuery(() => allCollections(), []) ?? []
+
+  const shown =
+    filter === 'all' ? cards : cards.filter((c) => c.project.collection_id === filter)
 
   return (
     <section>
-      <h2 className="mb-6 font-serif text-2xl text-charcoal">Projects</h2>
-      {projects.length === 0 ? (
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="font-serif text-2xl text-charcoal">Projects</h2>
+        <button
+          type="button"
+          aria-label="New project"
+          onClick={() => setCreating(true)}
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-terracotta text-oatmeal active:scale-95"
+        >
+          <Plus size={20} />
+        </button>
+      </div>
+
+      {collections.length > 0 && (
+        <div className="-mx-4 mb-5 flex gap-2 overflow-x-auto px-4 pb-1">
+          <FilterChip label="All" active={filter === 'all'} onClick={() => setFilter('all')} />
+          {collections.map((c) => (
+            <FilterChip
+              key={c.id}
+              label={c.name}
+              active={filter === c.id}
+              onClick={() => setFilter(c.id)}
+            />
+          ))}
+        </div>
+      )}
+
+      {cards.length === 0 ? (
         <EmptyState
           title="No projects yet."
           hint="Ideas become projects — capture one first, then promote it."
         />
+      ) : shown.length === 0 ? (
+        <EmptyState title="Nothing in this collection yet." />
       ) : (
         <ul className="flex flex-col gap-2">
-          {projects.map((p) => (
-            <li key={p.id}>
+          {shown.map(({ project, photoAttachmentId, photoUploaded, lastActivity }) => (
+            <li key={project.id}>
               <Link
-                to={`/projects/${p.id}`}
-                className="flex items-center justify-between rounded-card bg-stoneware p-3"
+                to={`/projects/${project.id}`}
+                className="flex items-stretch gap-3 overflow-hidden rounded-card bg-stoneware"
               >
-                <span className="min-w-0 flex-1">
+                {photoAttachmentId ? (
+                  <AttachmentThumb
+                    attachmentId={photoAttachmentId}
+                    uploaded={photoUploaded}
+                    className="h-20 w-20 flex-shrink-0 object-cover"
+                    alt=""
+                  />
+                ) : (
+                  <span className="h-20 w-20 flex-shrink-0 bg-oatmeal" aria-hidden />
+                )}
+                <span className="flex min-w-0 flex-1 flex-col justify-center py-2 pr-3">
                   <span className="block truncate font-serif text-lg text-charcoal">
-                    {p.favourite && <span className="text-flax">★ </span>}
-                    {p.title}
+                    {project.favourite && <span className="text-flax">★ </span>}
+                    {project.title}
+                  </span>
+                  <span className="mt-1 flex items-center gap-2 text-xs text-charcoal-muted">
+                    {project.status && (
+                      <span className="rounded-full bg-oatmeal px-2 py-0.5 text-charcoal">
+                        {project.status}
+                      </span>
+                    )}
+                    <span className="tabular">{timeAgo(lastActivity)}</span>
                   </span>
                 </span>
-                {p.status && (
-                  <span className="ml-3 flex-shrink-0 rounded-full bg-oatmeal px-2.5 py-1 text-xs text-charcoal">
-                    {p.status}
-                  </span>
-                )}
               </Link>
             </li>
           ))}
         </ul>
       )}
+
+      {creating && <NewProjectSheet onClose={() => setCreating(false)} />}
     </section>
+  )
+}
+
+function FilterChip({
+  label,
+  active,
+  onClick,
+}: {
+  label: string
+  active: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={
+        active
+          ? 'flex-shrink-0 rounded-full bg-terracotta px-3 py-1 text-sm text-oatmeal'
+          : 'flex-shrink-0 rounded-full bg-stoneware px-3 py-1 text-sm text-charcoal'
+      }
+    >
+      {label}
+    </button>
   )
 }

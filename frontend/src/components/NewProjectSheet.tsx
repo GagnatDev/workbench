@@ -4,30 +4,21 @@ import { ArrowRight } from 'lucide-react'
 import { BottomSheet } from './BottomSheet'
 import { TemplatePicker } from './TemplatePicker'
 import { db } from '@/db/db'
-import { promoteIdea } from '@/db/ideas'
-import type { Idea } from '@/db/types'
+import { createProject } from '@/db/projects'
 import { DEFAULT_TEMPLATE_ID } from '@/lib/templates'
 
-/** First non-empty line of the idea, the natural project title (ui-ux-design.md §3.3). */
-function firstLine(idea: Idea): string {
-  const line = idea.content.split('\n').find((l) => l.trim())?.trim() ?? ''
-  return line.slice(0, 80)
-}
-
 /**
- * Promote mini-sheet (ui-ux-design.md §3.3): title prefilled from the idea's first
- * line (editable) + a stage-template picker defaulting to the last-used template.
- * Confirm creates the Project, reparents the idea into its inbox, and navigates
- * into the new project. Fast enough to keep the swipe's momentum, but never makes
- * an untitled project or one with the wrong stages.
+ * New-project sheet — the Projects-tab ➕ (ui-ux-design.md §5) creates a project
+ * directly via the **same mini-sheet as promotion** (§3.3): a title field and a
+ * stage-template picker defaulting to the last-used template, nothing more. On
+ * confirm it creates the project and navigates into it.
  */
-export function PromoteSheet({ idea, onClose }: { idea: Idea; onClose: () => void }) {
+export function NewProjectSheet({ onClose }: { onClose: () => void }) {
   const navigate = useNavigate()
-  const [title, setTitle] = useState(() => firstLine(idea))
+  const [title, setTitle] = useState('')
   const [templateId, setTemplateId] = useState(DEFAULT_TEMPLATE_ID)
   const [creating, setCreating] = useState(false)
 
-  // Default to the last template the user picked (§3.3).
   useEffect(() => {
     void db._meta.get('lastTemplate').then((row) => {
       if (row?.value) setTemplateId(row.value)
@@ -37,17 +28,18 @@ export function PromoteSheet({ idea, onClose }: { idea: Idea; onClose: () => voi
   const create = async () => {
     if (creating) return
     setCreating(true)
-    const projectId = await promoteIdea(idea, title, templateId)
+    const projectId = await createProject(title, templateId)
     onClose()
     navigate(`/projects/${projectId}`)
   }
 
   return (
-    <BottomSheet onClose={onClose} labelledBy="promote-title">
-      <h2 id="promote-title" className="mb-3 font-serif text-lg text-charcoal">
-        Promote to project
+    <BottomSheet onClose={onClose} labelledBy="new-project-title">
+      <h2 id="new-project-title" className="mb-3 font-serif text-lg text-charcoal">
+        New project
       </h2>
       <input
+        autoFocus
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder="Project title"

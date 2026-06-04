@@ -8,9 +8,11 @@ See [`docs/`](./docs) for the PRD, domain model, UI/UX, and visual identity.
 
 ## Status
 
-**Phase 3 — capture & inbox.** Quick-capture, the global Inbox with triage, and
-the photo-upload pipeline now run on the Phase 2 local-first rails. Projects,
-sections, and the journal layer on next (see the implementation plan).
+**Phase 4 — projects.** Project CRUD, a customizable per-project stage pipeline,
+the flexible `details` block, collections, and favourites — the Projects tab and
+project overview now stand on the Phase 2/3 local-first rails. Sections (journal,
+moodboard, checklist, materials) and the project inbox layer on next (see the
+implementation plan).
 
 What works today:
 
@@ -42,6 +44,14 @@ What works today:
   GET. Uploads are resilient — a failed/unconfigured upload never blocks data
   sync; the photo stays queued (shown in the sync dot) and retries. Scaleway
   Object Storage in prod, MinIO locally.
+- **Projects.** The Projects tab is a flat card list (latest-photo thumbnail,
+  status badge, time-since-last-activity) with a collection-filter chip row and
+  favourites pinned on top; the header ➕ creates a project via the same mini-sheet
+  as promote. The project overview carries a tap-to-jump **status sheet** with an
+  inline stage editor (rename/reorder/add/delete, current status reconciled), the
+  free-text two-column **details** block whose template-seeded keys vanish until
+  filled, collection assignment (create-on-the-spot), the favourite star, and
+  edit/delete. Project + collection writes ride the same six-table LWW sync.
 - Frontend: React + Vite + PWA (installable, offline app shell, self-hosted
   fonts). Navigation skeleton (Inbox · ➕ · Projects), sign-in screen, sync dot,
   empty states — per `docs/ui-ux-design.md` and `docs/visual-identity.md`.
