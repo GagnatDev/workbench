@@ -1,0 +1,39 @@
+/* Self-hosted variable fonts (precached by the service worker — typography must
+   not depend on connectivity). Playfair Display for titles, Inter for body. */
+@import '@fontsource-variable/playfair-display';
+@import '@fontsource-variable/inter';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-oatmeal text-charcoal font-sans antialiased;
+    /* Body min 16px, generous line-height (visual-identity.md typography). */
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  /* Serif is reserved for titles only. */
+  h1,
+  h2,
+  h3 {
+    @apply font-serif;
+  }
+
+  /* Tabular numerals for data (measurements, quantities, dates). */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}

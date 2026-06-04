@@ -1,0 +1,16 @@
+# Git
+.git/
+
+# Node (workspaces)
+node_modules/
+**/node_modules/
+frontend/dist/
+backend/dist/
+backend/coverage/
+
+# Docs (not needed in the image)
+docs/
+
+# Env and logs
+*.log
+.env*

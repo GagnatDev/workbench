@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Backend tests spin up Postgres via Testcontainers (Docker is available on
+      # ubuntu-latest). AUTH_MODE=dev so no auth service is needed.
+      - name: Backend tests
+        run: pnpm --filter @workbench/backend run test
+
+      - name: Frontend unit tests and build
+        run: |
+          pnpm --filter @workbench/frontend run test:unit
+          pnpm --filter @workbench/frontend run build
+
+      - name: Backend build
+        run: pnpm --filter @workbench/backend run build

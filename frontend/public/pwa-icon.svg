@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Workbench">
+  <rect width="512" height="512" fill="#F4F1EA"/>
+  <!-- A thrown vessel silhouette in Charcoal — the maker's mark, no wordmark
+       (docs/visual-identity.md, App icon). Centred in the maskable safe zone. -->
+  <path fill="#5C5A56" d="
+    M220 142
+    L292 142
+    Q300 142 300 150
+    L300 176
+    Q300 202 318 217
+    Q372 260 372 324
+    Q372 410 256 410
+    Q140 410 140 324
+    Q140 260 194 217
+    Q212 202 212 176
+    L212 150
+    Q212 142 220 142 Z"/>
+</svg>
