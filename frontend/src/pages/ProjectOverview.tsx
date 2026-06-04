@@ -1,15 +1,31 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ChevronDown, ChevronLeft, FolderInput, MoreHorizontal, Star, Trash2 } from 'lucide-react'
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  FolderInput,
+  Inbox as InboxIcon,
+  MoreHorizontal,
+  Plus,
+  Star,
+  Trash2,
+} from 'lucide-react'
+import { AddSectionSheet } from '@/components/AddSectionSheet'
+import { BottomSheet } from '@/components/BottomSheet'
 import { CollectionPicker } from '@/components/CollectionPicker'
 import { DetailsBlock } from '@/components/DetailsBlock'
 import { EditProjectSheet } from '@/components/EditProjectSheet'
+import { ReorderableList } from '@/components/ReorderableList'
+import { SectionPreviewCard } from '@/components/SectionPreviewCard'
 import { StatusSheet } from '@/components/StatusSheet'
 import { db } from '@/db/db'
 import { deleteProject, toggleFavourite } from '@/db/projects'
+import { deleteSection, renameSection, sectionsOfProject, setSectionRank } from '@/db/sections'
+import type { Section } from '@/db/types'
 
-type Sheet = 'status' | 'collection' | 'edit' | null
+type Sheet = 'status' | 'collection' | 'edit' | 'addSection' | null
 
 /**
  * Project overview (ui-ux-design.md §6.1): the header (title, status chip,
@@ -26,8 +42,17 @@ export function ProjectOverview() {
     () => (project?.collection_id ? db.collections.get(project.collection_id) : undefined),
     [project?.collection_id],
   )
+  const sections = useLiveQuery(() => (id ? sectionsOfProject(id) : []), [id]) ?? []
+  // Untriaged ideas sitting in this project's inbox (drives the §6.1 banner).
+  const inboxCount =
+    useLiveQuery(async () => {
+      if (!id) return 0
+      const ideas = await db.ideas.where('project_id').equals(id).toArray()
+      return ideas.filter((i) => !i.deleted && i.state === 'captured').length
+    }, [id]) ?? 0
 
   const [sheet, setSheet] = useState<Sheet>(null)
+  const [manageSection, setManageSection] = useState<Section | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
@@ -135,20 +160,102 @@ export function ProjectOverview() {
         {collection ? collection.name : 'Add to collection'}
       </button>
 
+      {inboxCount > 0 && (
+        <Link
+          to={`/projects/${project.id}/inbox`}
+          className="mt-4 flex items-center gap-2 rounded-card bg-flax/20 px-3 py-2.5 text-sm text-charcoal"
+        >
+          <InboxIcon size={16} className="text-charcoal-muted" />
+          <span className="flex-1">
+            {inboxCount} {inboxCount === 1 ? 'idea' : 'ideas'} to file
+          </span>
+          <ChevronRight size={16} className="text-charcoal-muted" />
+        </Link>
+      )}
+
       <div className="mt-6">
         <DetailsBlock project={project} />
       </div>
 
-      <p className="mt-10 border-t border-divider pt-6 text-sm text-charcoal-muted">
-        Sections (journal, moodboard, checklist, materials) and the project inbox
-        arrive in the next phase.
-      </p>
+      <div className="mt-8">
+        {sections.length === 0 ? (
+          <p className="text-sm text-charcoal-muted">Add a journal to start logging.</p>
+        ) : (
+          <ReorderableList
+            items={sections}
+            onReorder={(section, rank) => void setSectionRank(section, rank)}
+            className="flex flex-col gap-2"
+            rowClassName="list-none"
+            renderItem={(section) => (
+              <SectionPreviewCard
+                section={section}
+                projectId={project.id}
+                onManage={() => setManageSection(section)}
+              />
+            )}
+          />
+        )}
+        <button
+          type="button"
+          onClick={() => setSheet('addSection')}
+          className="mt-3 inline-flex items-center gap-1.5 text-sm text-terracotta hover:text-charcoal"
+        >
+          <Plus size={16} /> Add section
+        </button>
+      </div>
 
       {sheet === 'status' && <StatusSheet project={project} onClose={() => setSheet(null)} />}
       {sheet === 'collection' && (
         <CollectionPicker project={project} onClose={() => setSheet(null)} />
       )}
       {sheet === 'edit' && <EditProjectSheet project={project} onClose={() => setSheet(null)} />}
+      {sheet === 'addSection' && (
+        <AddSectionSheet projectId={project.id} onClose={() => setSheet(null)} />
+      )}
+      {manageSection && (
+        <SectionManageSheet section={manageSection} onClose={() => setManageSection(null)} />
+      )}
     </section>
+  )
+}
+
+/** Rename or delete a section (the §6.1 overview management, behind the ⋯). */
+function SectionManageSheet({ section, onClose }: { section: Section; onClose: () => void }) {
+  const [name, setName] = useState(section.name)
+  const [confirm, setConfirm] = useState(false)
+
+  const save = () => {
+    if (name.trim() && name.trim() !== section.name) void renameSection(section, name)
+  }
+
+  return (
+    <BottomSheet
+      onClose={() => {
+        save()
+        onClose()
+      }}
+      labelledBy="section-manage"
+    >
+      <h2 id="section-manage" className="mb-3 font-serif text-lg text-charcoal">
+        Section
+      </h2>
+      <input
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        className="w-full rounded-lg bg-oatmeal p-3 text-charcoal focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+      />
+      <button
+        type="button"
+        onClick={() => {
+          if (confirm) {
+            void deleteSection(section.id)
+            onClose()
+          } else setConfirm(true)
+        }}
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-brick"
+      >
+        <Trash2 size={16} /> {confirm ? 'Tap again to confirm' : 'Delete section'}
+      </button>
+    </BottomSheet>
   )
 }

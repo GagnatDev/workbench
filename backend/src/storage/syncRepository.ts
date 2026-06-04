@@ -103,8 +103,9 @@ function serializeRow(row: Record<string, unknown>): SyncRow {
  *
  * The single-timestamp LWW model accepts that two near-simultaneous edits on
  * skewed clocks resolve by wall-clock order (rare for a personal, few-device
- * app — see the plan's sync design). Deep per-`kind` payload validation is
- * deferred to Phase 5; here rows pass through structurally.
+ * app — see the plan's sync design). Per-`kind` payload integrity is enforced in
+ * the local-first client on write (domain model); here rows pass through
+ * structurally and `payload` is stored as opaque jsonb.
  */
 export class SyncRepository {
   constructor(private readonly db: Db) {}

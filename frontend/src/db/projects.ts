@@ -1,7 +1,8 @@
 import { db } from './db'
+import { deleteSection } from './sections'
 import { deleteLocal, writeLocal } from './sync'
 import type { Attachment, Project } from './types'
-import { rankBefore } from '@/lib/rank'
+import { compareRank, rankBefore } from '@/lib/rank'
 import { seedDetails, templateById } from '@/lib/templates'
 
 /**
@@ -92,11 +93,16 @@ export async function setProjectCollection(
 }
 
 /**
- * Soft-delete a project and cascade to its project-scoped ideas (and their
- * attachments) so nothing is left orphaned in a project Inbox that no longer has
- * a home. Sections/Items get the same treatment once they exist (Phase 5).
+ * Soft-delete a project and cascade to everything under it: its sections (each in
+ * turn cascading to its items and their attachments) and its project-scoped ideas
+ * (and their attachments), so nothing is left orphaned once the project is gone.
  */
 export async function deleteProject(id: string): Promise<void> {
+  const sections = await db.sections.where('project_id').equals(id).toArray()
+  for (const section of sections) {
+    if (!section.deleted) await deleteSection(section.id)
+  }
+
   const ideas = await db.ideas.where('project_id').equals(id).toArray()
   for (const idea of ideas) {
     if (idea.deleted) continue
@@ -112,7 +118,7 @@ export async function deleteProject(id: string): Promise<void> {
 /** Favourites pinned on top, then rank order (ui-ux-design.md §5). */
 export function projectOrder(a: Project, b: Project): number {
   if (a.favourite !== b.favourite) return a.favourite ? -1 : 1
-  return a.rank.localeCompare(b.rank)
+  return compareRank(a.rank, b.rank)
 }
 
 /**

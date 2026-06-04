@@ -1,7 +1,7 @@
 import { db } from './db'
 import { deleteLocal, writeLocal } from './sync'
 import type { Collection } from './types'
-import { rankAfter } from '@/lib/rank'
+import { compareRank, rankAfter } from '@/lib/rank'
 
 /**
  * Collections group projects by domain (ceramics, textiles, app ideas). They are
@@ -45,5 +45,5 @@ export async function deleteCollection(id: string): Promise<void> {
 /** All non-deleted collections in rank order, for filter chips and the picker. */
 export async function allCollections(): Promise<Collection[]> {
   const all = await db.collections.toArray()
-  return all.filter((c) => !c.deleted).sort((a, b) => a.rank.localeCompare(b.rank))
+  return all.filter((c) => !c.deleted).sort((a, b) => compareRank(a.rank, b.rank))
 }

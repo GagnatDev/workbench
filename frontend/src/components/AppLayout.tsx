@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useMatch } from 'react-router-dom'
 import { FolderOpen, Inbox, Plus, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { syncEngine } from '@/db/sync'
@@ -27,6 +27,10 @@ function navItemClass({ isActive }: { isActive: boolean }): string {
 export function AppLayout() {
   const [capturing, setCapturing] = useState(false)
   const sync = useSyncState()
+  // Capture is context-aware: anywhere under a project, the default destination is
+  // that project's inbox; elsewhere it's the global inbox (ui-ux-design.md §2).
+  const projectMatch = useMatch({ path: '/projects/:id', end: false })
+  const currentProjectId = projectMatch?.params.id ?? null
 
   // The authed shell is the right place to start the engine: it mounts only once
   // the user is authenticated (so authedFetch has a token) and stays mounted for
@@ -91,7 +95,9 @@ export function AppLayout() {
         </NavLink>
       </nav>
 
-      {capturing && <CaptureSheet onClose={() => setCapturing(false)} />}
+      {capturing && (
+        <CaptureSheet defaultProjectId={currentProjectId} onClose={() => setCapturing(false)} />
+      )}
     </div>
   )
 }

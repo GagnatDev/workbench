@@ -48,6 +48,18 @@ export function rankBetween(before: string | null, after: string | null): string
   }
 }
 
+/**
+ * Order two ranks. Ranks must compare by **codepoint** (the digit alphabet runs
+ * digits → uppercase → lowercase in ascending ASCII), so a plain `<`/`>` is
+ * correct and `String.localeCompare` is **not** — locale collation reorders case
+ * (e.g. it can place `'k'` before `'V'`), which scrambles a list once ranks cross
+ * the upper/lower boundary (as `rankAfter` does when appending). Always sort ranks
+ * through this comparator.
+ */
+export function compareRank(a: string, b: string): number {
+  return a < b ? -1 : a > b ? 1 : 0
+}
+
 /** Append a new rank after the current maximum (e.g. adding at the end of a list). */
 export function rankAfter(maxRank: string | null): string {
   return rankBetween(maxRank, null);

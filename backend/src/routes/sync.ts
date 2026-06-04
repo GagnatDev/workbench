@@ -11,8 +11,9 @@ import {
 import { logger } from "../logger.js";
 
 // Envelope validation only — the id/updated_at contract every row must satisfy.
-// Table-specific (per-`kind`) payload validation is deferred to Phase 5; unknown
-// fields pass through untouched.
+// Per-`kind` payload integrity is enforced in app code on write (the local-first
+// client's Zod schemas, frontend/src/db/payload.ts), per the domain model; the
+// server is a generic sync store and passes unknown fields through untouched.
 const rowSchema = z
   .object({
     id: z.string().uuid(),
