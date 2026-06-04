@@ -8,9 +8,9 @@ See [`docs/`](./docs) for the PRD, domain model, UI/UX, and visual identity.
 
 ## Status
 
-**Phase 1 — walking skeleton.** The full pipeline is wired end-to-end (auth →
-DB → API → installable offline PWA shell) with near-empty features. Subsequent
-phases layer features on these rails (see the implementation plan).
+**Phase 2 — local-first foundation.** The walking skeleton (Phase 1) now has a
+working last-write-wins sync engine on top of it. Features (capture, projects,
+sections) layer on these rails next (see the implementation plan).
 
 What works today:
 
@@ -19,6 +19,14 @@ What works today:
   app-owned `users` identity table, with **just-in-time provisioning** mapping
   the auth `sub` → app `user.id`. `GET /api/me` returns the resolved app user.
 - Auth seam with two providers (see **Auth** below).
+- **Local-first sync (LWW).** Six syncable content tables (collections,
+  projects, sections, items, ideas, attachments) sharing one envelope
+  (`id`/`user_id`/`updated_at`/`deleted`). `GET /api/sync/pull` +
+  `POST /api/sync/push`, scoped to the token's user; the server forces `user_id`
+  and stamps `updated_at` so the pull cursor lives in one clock domain. The
+  client mirrors every table in **Dexie/IndexedDB** (source of truth offline)
+  and syncs push-then-pull on focus/reconnect/after each edit; the header sync
+  dot reflects live status.
 - Frontend: React + Vite + PWA (installable, offline app shell, self-hosted
   fonts). Navigation skeleton (Inbox · ➕ · Projects), sign-in screen, sync dot,
   empty states — per `docs/ui-ux-design.md` and `docs/visual-identity.md`.

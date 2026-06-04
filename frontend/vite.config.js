@@ -6,6 +6,10 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 var apiProxyTarget = (_a = process.env.VITE_API_PROXY) !== null && _a !== void 0 ? _a : 'http://localhost:8080';
 export default defineConfig({
+    // The whole stack shares one .env at the monorepo root (the backend loads it
+    // too). Without this, Vite would only read frontend/.env and miss
+    // VITE_DISABLE_AUTH, silently re-enabling the auth redirect in local dev.
+    envDir: path.resolve(__dirname, '..'),
     plugins: [
         react(),
         VitePWA({

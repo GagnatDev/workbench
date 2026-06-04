@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { FolderOpen, Inbox, Plus, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { syncEngine } from '@/db/sync'
+import { useSyncState } from '@/db/useSyncState'
 import { SyncDot } from './SyncDot'
 import { CaptureSheet } from './CaptureSheet'
 
@@ -24,6 +26,12 @@ function navItemClass({ isActive }: { isActive: boolean }): string {
  */
 export function AppLayout() {
   const [capturing, setCapturing] = useState(false)
+  const sync = useSyncState()
+
+  // The authed shell is the right place to start the engine: it mounts only once
+  // the user is authenticated (so authedFetch has a token) and stays mounted for
+  // the session. start() kicks off the first sync and wires focus/reconnect.
+  useEffect(() => syncEngine.start(), [])
 
   const captureButton = (
     <button
@@ -54,7 +62,7 @@ export function AppLayout() {
         <header className="flex items-center justify-between border-b border-divider px-4 py-3">
           <h1 className="font-serif text-xl text-charcoal">Workbench</h1>
           <div className="flex items-center gap-4">
-            <SyncDot state="synced" />
+            <SyncDot state={sync.status} pending={sync.pending} />
             <NavLink
               to="/settings"
               aria-label="Settings and profile"
