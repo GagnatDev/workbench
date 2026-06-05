@@ -21,7 +21,7 @@ export async function startServer(connectionString?: string): Promise<StartedSer
   const db = createDb(pool);
   const authProvider = await createAuthProvider();
 
-  const app = buildApp({ db, authProvider });
+  const app = buildApp({ db, authProvider, webRoot: env.WEB_ROOT });
 
   const server = await new Promise<Server>((resolve) => {
     const s = app.listen(env.PORT, () => {

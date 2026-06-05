@@ -33,6 +33,11 @@ const EnvSchema = z
     S3_SECRET_ACCESS_KEY: z.string().optional(),
     S3_FORCE_PATH_STYLE: boolFlag,
 
+    // Directory of the built SPA to serve (single-container topology). Unset in
+    // local dev/tests (the SPA is served by Vite); set by the e2e harness to
+    // frontend/dist and by the Docker image to its bundled web root.
+    WEB_ROOT: z.string().optional(),
+
     LOG_LEVEL: z.string().optional(),
   })
   .transform((env) => ({

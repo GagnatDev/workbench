@@ -39,3 +39,96 @@ jobs:
 
       - name: Backend build
         run: pnpm --filter @workbench/backend run build
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency:
+      group: e2e-${{ github.ref }}
+      cancel-in-progress: true
+    env:
+      CI: "true"
+      # The harness detects DATABASE_URL + S3_ENDPOINT and uses these GitHub
+      # service containers instead of starting its own (Testcontainers locally).
+      DATABASE_URL: postgresql://workbench:workbench@localhost:5432/workbench
+      S3_ENDPOINT: http://localhost:9000
+      S3_REGION: us-east-1
+      S3_BUCKET: homectl-workbench
+      S3_ACCESS_KEY_ID: workbench
+      S3_SECRET_ACCESS_KEY: workbench-dev-secret
+      S3_FORCE_PATH_STYLE: "true"
+      AUTH_MODE: dev
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: workbench
+          POSTGRES_PASSWORD: workbench
+          POSTGRES_DB: workbench
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U workbench -d workbench"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+      minio:
+        # bitnami/minio auto-starts the server (the stock minio/minio image needs a
+        # `command:`, which service containers can't set). The harness waits for the
+        # endpoint and creates the bucket itself (ensureBucket), so no health-cmd is
+        # needed here — avoiding a dependency on `mc` being present in the image.
+        image: bitnami/minio:latest
+        env:
+          MINIO_ROOT_USER: workbench
+          MINIO_ROOT_PASSWORD: workbench-dev-secret
+        ports:
+          - 9000:9000
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache Playwright browsers
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: pw-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install Playwright browsers
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: pnpm --filter @workbench/e2e exec playwright install --with-deps chromium
+
+      - name: Install Playwright OS deps (cache hit)
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: pnpm --filter @workbench/e2e exec playwright install-deps chromium
+
+      - name: Run e2e tests
+        run: pnpm --filter @workbench/e2e run test:e2e
+
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: e2e/playwright-report/
+          retention-days: 14
+
+      - name: Upload traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: e2e/test-results/
+          retention-days: 7

@@ -1,6 +1,7 @@
 packages:
   - frontend
   - backend
+  - e2e
 
 onlyBuiltDependencies:
   - sharp
