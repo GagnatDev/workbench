@@ -9,6 +9,7 @@ import { EmptyState } from '../EmptyState'
 import { TagInput } from '../TagInput'
 import { useSectionItems } from '@/db/useSectionItems'
 import { allItemTags, createItem, deleteItem, setItemPayload, updateItem } from '@/db/items'
+import { matchesTags } from '@/lib/tags'
 import type { EntryPayload } from '@/db/payload'
 import type { Item, Section } from '@/db/types'
 
@@ -52,7 +53,13 @@ function dayLabel(iso: string): string {
  * the newest entries, so it never hides behind the bottom nav and stays one tap
  * from where attention already is.
  */
-export function JournalSection({ section }: { section: Section }) {
+export function JournalSection({
+  section,
+  tagFilter = [],
+}: {
+  section: Section
+  tagFilter?: string[]
+}) {
   const data = useSectionItems(section.id)
   const [draft, setDraft] = useState<ComposerDraft>(emptyDraft)
   const [entryAt, setEntryAt] = useState<string | null>(null) // null = now
@@ -61,7 +68,7 @@ export function JournalSection({ section }: { section: Section }) {
   const [viewer, setViewer] = useState<string[] | null>(null)
 
   const items = (data?.items ?? [])
-    .slice()
+    .filter((i) => matchesTags(i.tags, tagFilter))
     .sort((a, b) => entryAtOf(b).localeCompare(entryAtOf(a)))
 
   const submit = async () => {

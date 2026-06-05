@@ -1,12 +1,15 @@
 import { useRef, useState } from 'react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { Camera, Plus, Trash2, X } from 'lucide-react'
 import { BottomSheet } from '../BottomSheet'
 import { EmptyState } from '../EmptyState'
 import { ReorderableList } from '../ReorderableList'
 import { AttachmentThumb } from '../AttachmentThumb'
+import { TagInput } from '../TagInput'
 import { useSectionItems } from '@/db/useSectionItems'
 import {
   addItemPhoto,
+  allItemTags,
   createItem,
   deleteItem,
   removeAttachment,
@@ -14,6 +17,7 @@ import {
   setItemRank,
   updateItem,
 } from '@/db/items'
+import { matchesTags } from '@/lib/tags'
 import type { MaterialPayload } from '@/db/payload'
 import type { Attachment, Item, Section } from '@/db/types'
 
@@ -23,9 +27,15 @@ import type { Attachment, Item, Section } from '@/db/types'
  * adds a name (the composer grammar); quantity, unit, notes, and a photo are
  * filled in behind a row tap. Long-press drag reorders (§8).
  */
-export function MaterialsSection({ section }: { section: Section }) {
+export function MaterialsSection({
+  section,
+  tagFilter = [],
+}: {
+  section: Section
+  tagFilter?: string[]
+}) {
   const data = useSectionItems(section.id)
-  const items = data?.items ?? []
+  const items = (data?.items ?? []).filter((i) => matchesTags(i.tags, tagFilter))
   const [name, setName] = useState('')
   const [editing, setEditing] = useState<Item | null>(null)
 
@@ -137,10 +147,12 @@ function MaterialEditSheet({
   const [quantity, setQuantity] = useState(payload.quantity ?? '')
   const [unit, setUnit] = useState(payload.unit ?? '')
   const [body, setBody] = useState(item.body ?? '')
+  const [tags, setTags] = useState<string[]>(item.tags ?? [])
+  const suggestions = useLiveQuery(() => allItemTags(), []) ?? []
   const fileInput = useRef<HTMLInputElement>(null)
 
   const save = async () => {
-    await updateItem(item, { title: title.trim() || null, body: body.trim() || null })
+    await updateItem(item, { title: title.trim() || null, body: body.trim() || null, tags })
     await setItemPayload(item, 'materials', { quantity: quantity.trim(), unit: unit.trim() })
   }
 
@@ -185,6 +197,10 @@ function MaterialEditSheet({
         placeholder="Notes"
         className={`mt-2 w-full resize-none ${field}`}
       />
+
+      <div className="mt-3">
+        <TagInput tags={tags} onChange={setTags} suggestions={suggestions} />
+      </div>
 
       <div className="mt-3">
         {photo ? (

@@ -68,6 +68,44 @@ describe("sync round-trip", () => {
   });
 });
 
+/**
+ * A minimal valid `projects` row. The upsert sets every data column explicitly
+ * (DB defaults don't apply), so the NOT NULL columns — title, stages, details,
+ * favourite, rank — must all be present.
+ */
+function project(overrides: Record<string, unknown> = {}) {
+  return {
+    id: randomUUID(),
+    title: "Raku test",
+    stages: [],
+    details: {},
+    favourite: false,
+    rank: "a0",
+    updated_at: new Date().toISOString(),
+    ...overrides,
+  };
+}
+
+describe("project tags (Phase 6)", () => {
+  it("round-trips the tags jsonb array", async () => {
+    const row = project({ tags: ["raku", "blue"] });
+    const pushed = await push(app, { projects: [row] });
+    expect(pushed.status).toBe(200);
+    expect(pushed.body.applied.projects[0].tags).toEqual(["raku", "blue"]);
+
+    const pulled = await pull(app);
+    expect(pulled.body.changes.projects[0].tags).toEqual(["raku", "blue"]);
+  });
+
+  it("defaults to an empty array when the client omits tags", async () => {
+    await push(app, { projects: [project()] });
+    const pulled = await pull(app);
+    // A row pushed without `tags` stores SQL JSON null, surfaced as null/[] —
+    // never undefined, so the client's `?? []` always has something to read.
+    expect(pulled.body.changes.projects[0].tags ?? []).toEqual([]);
+  });
+});
+
 describe("last-write-wins", () => {
   it("rejects a write older than the stored row, accepts a newer one", async () => {
     const id = randomUUID();

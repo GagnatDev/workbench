@@ -39,6 +39,7 @@ export async function createProject(title: string, templateId: string): Promise<
     stages: template.stages,
     details: seedDetails(template),
     favourite: false,
+    tags: [],
     rank: rankBefore(minRank ?? null),
   })
 
@@ -47,10 +48,10 @@ export async function createProject(title: string, templateId: string): Promise<
   return projectId
 }
 
-/** Patch a project's editable fields (title/description) from the edit sheet. */
+/** Patch a project's editable fields (title/description/tags) from the edit sheet. */
 export async function updateProject(
   project: Project,
-  patch: Partial<Pick<Project, 'title' | 'description'>>,
+  patch: Partial<Pick<Project, 'title' | 'description' | 'tags'>>,
 ): Promise<void> {
   await writeLocal('projects', { ...project, ...patch })
 }
@@ -113,6 +114,17 @@ export async function deleteProject(id: string): Promise<void> {
     await deleteLocal('ideas', idea.id)
   }
   await deleteLocal('projects', id)
+}
+
+/** Distinct tags across the user's projects, for the edit-sheet tag autocomplete. */
+export async function allProjectTags(): Promise<string[]> {
+  const projects = await db.projects.toArray()
+  const set = new Set<string>()
+  for (const project of projects) {
+    if (project.deleted) continue
+    for (const tag of project.tags ?? []) set.add(tag)
+  }
+  return [...set].sort()
 }
 
 /** Favourites pinned on top, then rank order (ui-ux-design.md §5). */

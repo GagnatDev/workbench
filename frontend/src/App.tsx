@@ -22,6 +22,7 @@ export default function App() {
       >
         <Route index element={<Navigate to="/inbox" replace />} />
         <Route path="/inbox" element={<Inbox />} />
+        <Route path="/inbox/archived" element={<Inbox archived />} />
         <Route path="/projects" element={<Projects />} />
         <Route path="/projects/:id" element={<ProjectOverview />} />
         <Route path="/projects/:id/inbox" element={<ProjectInbox />} />

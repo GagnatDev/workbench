@@ -12,6 +12,7 @@ import { healthRouter } from "./routes/health.js";
 import { meRoutes } from "./routes/me.js";
 import { syncRoutes } from "./routes/sync.js";
 import { uploadRoutes } from "./routes/uploads.js";
+import { inviteRoutes } from "./routes/invites.js";
 
 export interface AppDeps {
   db: Db;
@@ -61,6 +62,7 @@ export function buildApp(deps: AppDeps): Express {
   api.use(meRoutes());
   api.use(syncRoutes(db));
   api.use(uploadRoutes(db));
+  api.use(inviteRoutes());
   app.use("/api", api);
 
   // Serve the built SPA (single-container topology). express.static handles real

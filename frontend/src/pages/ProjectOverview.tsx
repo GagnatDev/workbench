@@ -160,6 +160,19 @@ export function ProjectOverview() {
         {collection ? collection.name : 'Add to collection'}
       </button>
 
+      {project.tags && project.tags.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {project.tags.map((tag) => (
+            <span
+              key={tag}
+              className="rounded-full bg-oatmeal px-2.5 py-1 text-sm text-charcoal"
+            >
+              #{tag}
+            </span>
+          ))}
+        </div>
+      )}
+
       {inboxCount > 0 && (
         <Link
           to={`/projects/${project.id}/inbox`}

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ChevronLeft } from 'lucide-react'
@@ -6,6 +7,9 @@ import { JournalSection } from '@/components/sections/JournalSection'
 import { MoodboardSection } from '@/components/sections/MoodboardSection'
 import { ChecklistSection } from '@/components/sections/ChecklistSection'
 import { MaterialsSection } from '@/components/sections/MaterialsSection'
+import { TagFilterBar } from '@/components/TagFilterBar'
+import { itemsOfSection } from '@/db/items'
+import { collectTags } from '@/lib/tags'
 
 /**
  * Section screen (ui-ux-design.md §7, screen inventory #13–16): full-screen, with
@@ -17,6 +21,9 @@ export function Section() {
   const { id, sid } = useParams<{ id: string; sid: string }>()
   const section = useLiveQuery(() => (sid ? db.sections.get(sid) : undefined), [sid])
   const project = useLiveQuery(() => (id ? db.projects.get(id) : undefined), [id])
+  const allTags =
+    useLiveQuery(async () => (sid ? collectTags(await itemsOfSection(sid)) : []), [sid]) ?? []
+  const [tagFilter, setTagFilter] = useState<string[]>([])
 
   if (section === undefined || project === undefined) {
     return <p className="text-charcoal-muted">Loading…</p>
@@ -48,10 +55,12 @@ export function Section() {
         )}
       </div>
 
-      {section.kind === 'journal' && <JournalSection section={section} />}
-      {section.kind === 'moodboard' && <MoodboardSection section={section} />}
-      {section.kind === 'checklist' && <ChecklistSection section={section} />}
-      {section.kind === 'materials' && <MaterialsSection section={section} />}
+      <TagFilterBar allTags={allTags} active={tagFilter} onChange={setTagFilter} />
+
+      {section.kind === 'journal' && <JournalSection section={section} tagFilter={tagFilter} />}
+      {section.kind === 'moodboard' && <MoodboardSection section={section} tagFilter={tagFilter} />}
+      {section.kind === 'checklist' && <ChecklistSection section={section} tagFilter={tagFilter} />}
+      {section.kind === 'materials' && <MaterialsSection section={section} tagFilter={tagFilter} />}
     </section>
   )
 }

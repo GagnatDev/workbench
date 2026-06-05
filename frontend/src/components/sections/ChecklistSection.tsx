@@ -1,10 +1,13 @@
 import { useState } from 'react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { Check, Plus, Trash2 } from 'lucide-react'
 import { BottomSheet } from '../BottomSheet'
 import { EmptyState } from '../EmptyState'
 import { ReorderableList } from '../ReorderableList'
+import { TagInput } from '../TagInput'
 import { useSectionItems } from '@/db/useSectionItems'
-import { createItem, deleteItem, setItemRank, toggleTask, updateItem } from '@/db/items'
+import { allItemTags, createItem, deleteItem, setItemRank, toggleTask, updateItem } from '@/db/items'
+import { matchesTags } from '@/lib/tags'
 import type { TaskPayload } from '@/db/payload'
 import type { Item, Section } from '@/db/types'
 
@@ -14,9 +17,15 @@ import type { Item, Section } from '@/db/types'
  * composer grammar (type → Enter saves). Done items stay in place, struck through
  * — order is user-controlled (long-press drag, §8), not auto-sinking.
  */
-export function ChecklistSection({ section }: { section: Section }) {
+export function ChecklistSection({
+  section,
+  tagFilter = [],
+}: {
+  section: Section
+  tagFilter?: string[]
+}) {
   const data = useSectionItems(section.id)
-  const items = data?.items ?? []
+  const items = (data?.items ?? []).filter((i) => matchesTags(i.tags, tagFilter))
   const [text, setText] = useState('')
   const [editing, setEditing] = useState<Item | null>(null)
 
@@ -96,12 +105,18 @@ export function ChecklistSection({ section }: { section: Section }) {
   )
 }
 
-/** Rename or delete a task (the slower actions behind a row tap). */
+/** Rename, tag, or delete a task (the slower actions behind a row tap). */
 function TaskEditSheet({ item, onClose }: { item: Item; onClose: () => void }) {
   const [title, setTitle] = useState(item.title ?? '')
+  const [tags, setTags] = useState<string[]>(item.tags ?? [])
+  const suggestions = useLiveQuery(() => allItemTags(), []) ?? []
 
   const save = () => {
-    if (title.trim() !== (item.title ?? '')) void updateItem(item, { title: title.trim() || null })
+    const titleChanged = title.trim() !== (item.title ?? '')
+    const tagsChanged = JSON.stringify(tags) !== JSON.stringify(item.tags ?? [])
+    if (titleChanged || tagsChanged) {
+      void updateItem(item, { title: title.trim() || null, tags })
+    }
   }
 
   return (
@@ -121,6 +136,9 @@ function TaskEditSheet({ item, onClose }: { item: Item; onClose: () => void }) {
         onChange={(e) => setTitle(e.target.value)}
         className="w-full resize-none rounded-lg bg-oatmeal p-3 text-charcoal focus:outline-none focus:ring-2 focus:ring-terracotta/40"
       />
+      <div className="mt-3">
+        <TagInput tags={tags} onChange={setTags} suggestions={suggestions} />
+      </div>
       <button
         type="button"
         onClick={() => {

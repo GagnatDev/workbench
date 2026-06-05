@@ -40,9 +40,10 @@ const SYNC_TABLES = {
       "stages",
       "details",
       "favourite",
+      "tags",
       "rank",
     ],
-    json: new Set(["stages", "details"]),
+    json: new Set(["stages", "details", "tags"]),
   },
   sections: {
     columns: ["project_id", "kind", "name", "rank"],

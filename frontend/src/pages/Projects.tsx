@@ -5,8 +5,10 @@ import { Plus } from 'lucide-react'
 import { AttachmentThumb } from '@/components/AttachmentThumb'
 import { EmptyState } from '@/components/EmptyState'
 import { NewProjectSheet } from '@/components/NewProjectSheet'
+import { TagFilterBar } from '@/components/TagFilterBar'
 import { allCollections } from '@/db/collections'
 import { loadProjectCards } from '@/db/projects'
+import { collectTags, matchesTags } from '@/lib/tags'
 import { timeAgo } from '@/lib/time'
 
 /**
@@ -14,18 +16,21 @@ import { timeAgo } from '@/lib/time'
  * scrollable collection-filter chip row ("All" + each collection), favourites
  * pinned on top. Each card shows the latest-photo thumbnail, a serif title, the
  * status badge, and time-since-last-activity (surfacing neglected work). The
- * header ➕ creates a project via the same mini-sheet as promotion (§3.3).
- * (Tags / the ⛭ tag filter arrive with project tagging in Phase 6.)
+ * header ➕ creates a project via the same mini-sheet as promotion (§3.3). A tag
+ * filter (§9.2) narrows the list further, AND-combined with the collection chip.
  */
 export function Projects() {
   const [filter, setFilter] = useState<string | 'all'>('all')
+  const [tagFilter, setTagFilter] = useState<string[]>([])
   const [creating, setCreating] = useState(false)
 
   const cards = useLiveQuery(() => loadProjectCards(), []) ?? []
   const collections = useLiveQuery(() => allCollections(), []) ?? []
 
-  const shown =
-    filter === 'all' ? cards : cards.filter((c) => c.project.collection_id === filter)
+  const allTags = collectTags(cards.map((c) => c.project))
+  const shown = cards
+    .filter((c) => filter === 'all' || c.project.collection_id === filter)
+    .filter((c) => matchesTags(c.project.tags, tagFilter))
 
   return (
     <section>
@@ -55,13 +60,15 @@ export function Projects() {
         </div>
       )}
 
+      <TagFilterBar allTags={allTags} active={tagFilter} onChange={setTagFilter} />
+
       {cards.length === 0 ? (
         <EmptyState
           title="No projects yet."
           hint="Ideas become projects — capture one first, then promote it."
         />
       ) : shown.length === 0 ? (
-        <EmptyState title="Nothing in this collection yet." />
+        <EmptyState title="Nothing matches this filter." />
       ) : (
         <ul className="flex flex-col gap-2">
           {shown.map(({ project, photoAttachmentId, photoUploaded, lastActivity }) => (

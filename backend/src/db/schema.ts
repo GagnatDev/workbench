@@ -52,6 +52,8 @@ export interface ProjectsTable extends SyncColumns {
   /** Free-form one-off specs (dimensions, firing temp…). */
   details: ColumnType<Record<string, unknown>, string, string>;
   favourite: ColumnType<boolean, boolean | undefined, boolean>;
+  /** Tags for local per-list filtering (Phase 6), like ideas/items. */
+  tags: ColumnType<string[], string, string>;
   rank: string;
 }
 

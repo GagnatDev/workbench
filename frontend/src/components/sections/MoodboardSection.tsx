@@ -5,6 +5,7 @@ import { AttachmentThumb } from '../AttachmentThumb'
 import { PhotoViewer } from '../PhotoViewer'
 import { useSectionItems } from '@/db/useSectionItems'
 import { createItem, deleteItem } from '@/db/items'
+import { matchesTags } from '@/lib/tags'
 import type { PinPayload } from '@/db/payload'
 import type { Section } from '@/db/types'
 
@@ -23,9 +24,15 @@ function domainOf(url: string): string {
  * (domain + caption) — honest about V1's lack of scraped previews. Tap an image →
  * full-screen viewer; tap a link → open it. The ➕ tile adds a photo or a URL.
  */
-export function MoodboardSection({ section }: { section: Section }) {
+export function MoodboardSection({
+  section,
+  tagFilter = [],
+}: {
+  section: Section
+  tagFilter?: string[]
+}) {
   const data = useSectionItems(section.id)
-  const items = data?.items ?? []
+  const items = (data?.items ?? []).filter((i) => matchesTags(i.tags, tagFilter))
   const [adding, setAdding] = useState(false)
   const [viewer, setViewer] = useState<{ ids: string[]; start: number } | null>(null)
 

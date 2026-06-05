@@ -32,6 +32,7 @@ export interface Project extends SyncEnvelope {
   stages: unknown[]
   details: Record<string, unknown>
   favourite: boolean
+  tags: string[]
   rank: string
 }
 
