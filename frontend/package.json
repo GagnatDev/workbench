@@ -10,6 +10,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
+    "test": "vitest run",
     "test:unit": "vitest run",
     "generate-pwa-assets": "pwa-assets-generator --preset minimal public/pwa-icon.svg"
   },
