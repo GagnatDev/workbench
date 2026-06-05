@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Archive, FolderPlus, Link as LinkIcon } from 'lucide-react'
 import { db } from '@/db/db'
@@ -35,6 +36,7 @@ export function IdeaCard({
   onArchive: () => void
   onPromote: () => void
 }) {
+  const { t } = useTranslation()
   const photo = useLiveQuery(
     async () => {
       const atts = await db.attachments.where('owner_id').equals(idea.id).toArray()
@@ -68,10 +70,10 @@ export function IdeaCard({
       {/* Action underlays revealed by the swipe. */}
       <div className="absolute inset-0 flex items-center justify-between px-4 text-oatmeal">
         <span className={`flex items-center gap-1 ${dx > 0 ? 'opacity-100' : 'opacity-0'}`}>
-          <Archive size={18} /> Archive
+          <Archive size={18} /> {t('idea.archive')}
         </span>
         <span className={`flex items-center gap-1 ${dx < 0 ? 'opacity-100' : 'opacity-0'}`}>
-          Promote <FolderPlus size={18} />
+          {t('idea.promote_short')} <FolderPlus size={18} />
         </span>
       </div>
       <div
@@ -101,7 +103,7 @@ export function IdeaCard({
         )}
         <span className="min-w-0 flex-1">
           <span className="line-clamp-2 block break-words text-charcoal">
-            {idea.content || (idea.link ? domainOf(idea.link) : 'Photo')}
+            {idea.content || (idea.link ? domainOf(idea.link) : t('common.photo'))}
           </span>
           <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-charcoal-muted">
             <span>{timeAgo(idea.created_at)}</span>

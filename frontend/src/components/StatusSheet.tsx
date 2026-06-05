@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ArrowDown, ArrowUp, Check, Pencil, Plus, X } from 'lucide-react'
 import { BottomSheet } from './BottomSheet'
 import { setProjectStages, setProjectStatus } from '@/db/projects'
@@ -12,6 +13,7 @@ import type { Project } from '@/db/types'
  * status if its stage was renamed or removed (see `setProjectStages`).
  */
 export function StatusSheet({ project, onClose }: { project: Project; onClose: () => void }) {
+  const { t } = useTranslation()
   const [editing, setEditing] = useState(false)
   const stages = project.stages.map(String)
 
@@ -27,7 +29,7 @@ export function StatusSheet({ project, onClose }: { project: Project; onClose: (
   return (
     <BottomSheet onClose={onClose} labelledBy="status-title">
       <h2 id="status-title" className="mb-3 font-serif text-lg text-charcoal">
-        Set status
+        {t('status.title')}
       </h2>
       <ul className="flex flex-col">
         {stages.map((stage) => {
@@ -53,7 +55,7 @@ export function StatusSheet({ project, onClose }: { project: Project; onClose: (
         onClick={() => setEditing(true)}
         className="mt-3 inline-flex items-center gap-1.5 border-t border-divider pt-3 text-sm text-charcoal-muted hover:text-charcoal"
       >
-        <Pencil size={15} /> Edit stages…
+        <Pencil size={15} /> {t('status.edit_stages_link')}
       </button>
     </BottomSheet>
   )
@@ -69,6 +71,7 @@ function StageEditor({
   initial: string[]
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   const [stages, setStages] = useState<string[]>(initial)
 
   const rename = (i: number, value: string) =>
@@ -94,7 +97,7 @@ function StageEditor({
   return (
     <BottomSheet onClose={onClose} labelledBy="stage-editor-title">
       <h2 id="stage-editor-title" className="mb-3 font-serif text-lg text-charcoal">
-        Edit stages
+        {t('status.edit_stages_title')}
       </h2>
       <ul className="flex flex-col gap-2">
         {stages.map((stage, i) => (
@@ -102,12 +105,12 @@ function StageEditor({
             <input
               value={stage}
               onChange={(e) => rename(i, e.target.value)}
-              placeholder="Stage name"
+              placeholder={t('status.stage_placeholder')}
               className="min-w-0 flex-1 rounded-lg bg-oatmeal p-2 text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-terracotta/40"
             />
             <button
               type="button"
-              aria-label="Move up"
+              aria-label={t('status.move_up')}
               disabled={i === 0}
               onClick={() => move(i, -1)}
               className="p-1 text-charcoal-muted hover:text-charcoal disabled:opacity-30"
@@ -116,7 +119,7 @@ function StageEditor({
             </button>
             <button
               type="button"
-              aria-label="Move down"
+              aria-label={t('status.move_down')}
               disabled={i === stages.length - 1}
               onClick={() => move(i, 1)}
               className="p-1 text-charcoal-muted hover:text-charcoal disabled:opacity-30"
@@ -125,7 +128,7 @@ function StageEditor({
             </button>
             <button
               type="button"
-              aria-label={`Delete ${stage || 'stage'}`}
+              aria-label={t('status.delete_stage', { stage: stage || t('status.stage_fallback') })}
               onClick={() => remove(i)}
               className="p-1 text-charcoal-muted hover:text-brick"
             >
@@ -139,14 +142,14 @@ function StageEditor({
         onClick={add}
         className="mt-3 inline-flex items-center gap-1.5 text-sm text-charcoal-muted hover:text-charcoal"
       >
-        <Plus size={15} /> Add stage
+        <Plus size={15} /> {t('status.add_stage')}
       </button>
       <button
         type="button"
         onClick={save}
         className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-terracotta py-3 text-oatmeal"
       >
-        Save stages
+        {t('status.save_stages')}
       </button>
     </BottomSheet>
   )

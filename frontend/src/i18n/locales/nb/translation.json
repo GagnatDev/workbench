@@ -1,0 +1,278 @@
+{
+  "app": {
+    "title": "Arbeidsbenk"
+  },
+  "common": {
+    "loading": "Laster…",
+    "more": "Mer",
+    "create": "Opprett",
+    "delete": "Slett",
+    "back": "Tilbake",
+    "close": "Lukk",
+    "untitled": "Uten tittel",
+    "photo": "Foto",
+    "remove_photo": "Fjern foto",
+    "confirm_again": "Trykk igjen for å bekrefte",
+    "project_fallback": "Prosjekt"
+  },
+  "nav": {
+    "inbox": "Innboks",
+    "projects": "Prosjekter",
+    "capture_aria": "Fang en idé",
+    "settings_aria": "Innstillinger og profil"
+  },
+  "sync": {
+    "aria": "Synkroniseringsstatus",
+    "up_to_date": "Alt er oppdatert.",
+    "action": "Synkroniser nå",
+    "pending_one": "{{count}} endring",
+    "pending_other": "{{count}} endringer",
+    "queued": "{{count}} i kø",
+    "status": {
+      "synced": "Synkronisert",
+      "syncing": "Synkroniserer…",
+      "offline": "Frakoblet",
+      "error": "Synkroniseringsfeil"
+    }
+  },
+  "inbox": {
+    "segment": {
+      "new": "Nye",
+      "kept": "Beholdt"
+    },
+    "archived": "Arkivert",
+    "view_archived": "Vis arkiverte",
+    "empty": {
+      "archived": "Ingen arkiverte idéer.",
+      "new": "Trykk ➕ for å fange din første idé.",
+      "kept_title": "Ingenting beholdt ennå.",
+      "kept_hint": "Idéer du beholder havner her — kan fortsatt forfremmes senere."
+    }
+  },
+  "projects": {
+    "title": "Prosjekter",
+    "new_aria": "Nytt prosjekt",
+    "all": "Alle",
+    "empty": {
+      "title": "Ingen prosjekter ennå.",
+      "hint": "Idéer blir prosjekter — fang en først, så forfremmer du den.",
+      "no_match": "Ingenting passer dette filteret."
+    }
+  },
+  "project": {
+    "not_found": "Fant ikke prosjektet.",
+    "favourite": "Favoritt",
+    "unfavourite": "Fjern favoritt",
+    "edit": "Rediger prosjekt",
+    "delete": "Slett prosjekt",
+    "no_status": "Ingen status",
+    "title_placeholder": "Prosjekttittel",
+    "description_placeholder": "Beskrivelse (valgfritt)",
+    "add_to_collection": "Legg til i samling",
+    "inbox_count_one": "{{count}} idé å sortere",
+    "inbox_count_other": "{{count}} idéer å sortere",
+    "add_journal_hint": "Legg til en journal for å begynne å logge.",
+    "add_section": "Legg til seksjon"
+  },
+  "section_manage": {
+    "title": "Seksjon",
+    "delete": "Slett seksjon"
+  },
+  "project_inbox": {
+    "back_to_inbox": "Tilbake til innboks",
+    "empty": {
+      "new": "Ingenting å sortere.",
+      "new_hint": "Fang noe inne i et prosjekt, så havner det her for sortering.",
+      "kept": "Ingen beholdte notater."
+    }
+  },
+  "section": {
+    "not_found": "Fant ikke seksjonen.",
+    "back_to_project": "Tilbake til prosjekt"
+  },
+  "idea": {
+    "detail_title": "Idédetalj",
+    "placeholder": "Idé…",
+    "link_placeholder": "Lenke (valgfritt)",
+    "promote": "Forfrem til prosjekt",
+    "promote_short": "Forfrem",
+    "move_to_new": "Flytt til Nye",
+    "keep": "Behold",
+    "archive": "Arkivér"
+  },
+  "capture": {
+    "placeholder": "Skriv en idé…",
+    "save_hint": "Sveip ned eller trykk utenfor for å lagre",
+    "inbox": "Innboks",
+    "inbox_global": "Innboks (global)"
+  },
+  "file_as": {
+    "header": "Sortér som",
+    "which": "Hvilken {{kind}}?",
+    "keep_as_note": "Behold som notat",
+    "target": {
+      "journal": "Innførsel",
+      "checklist": "Oppgave",
+      "moodboard": "Pin",
+      "materials": "Materiale"
+    }
+  },
+  "new_project": {
+    "title": "Nytt prosjekt",
+    "template": "Mal"
+  },
+  "promote": {
+    "title": "Forfrem til prosjekt"
+  },
+  "add_section": {
+    "create": "Opprett seksjon"
+  },
+  "status": {
+    "title": "Sett status",
+    "edit_stages_link": "Rediger faser…",
+    "edit_stages_title": "Rediger faser",
+    "stage_placeholder": "Fasenavn",
+    "stage_fallback": "fase",
+    "add_stage": "Legg til fase",
+    "save_stages": "Lagre faser",
+    "move_up": "Flytt opp",
+    "move_down": "Flytt ned",
+    "delete_stage": "Slett {{stage}}"
+  },
+  "details": {
+    "title": "Detaljer",
+    "empty": "Ingen detaljer ennå.",
+    "edit_aria": "Rediger detaljer",
+    "done_aria": "Ferdig med å redigere detaljer",
+    "label_placeholder": "Etikett",
+    "value_placeholder": "Verdi",
+    "add": "Legg til detalj",
+    "remove_aria": "Fjern detalj"
+  },
+  "journal": {
+    "composer_placeholder": "Legg til en innførsel…",
+    "backdate_aria": "Tilbakedater innførsel",
+    "add_aria": "Legg til innførsel",
+    "edit_title": "Rediger innførsel",
+    "date": "Dato",
+    "delete": "Slett innførsel",
+    "empty": {
+      "title": "Ingen innførsler ennå.",
+      "hint": "Logg hva du gjorde — én linje holder."
+    }
+  },
+  "checklist": {
+    "placeholder": "Legg til en oppgave…",
+    "add_aria": "Legg til oppgave",
+    "mark_done": "Merk som fullført",
+    "mark_not_done": "Merk som ikke fullført",
+    "untitled": "Oppgave uten tittel",
+    "edit_title": "Rediger oppgave",
+    "delete": "Slett oppgave",
+    "empty": {
+      "title": "Ingen oppgaver ennå.",
+      "hint": "Legg til det første du skal gjøre nedenfor."
+    }
+  },
+  "materials": {
+    "placeholder": "Legg til et materiale…",
+    "add_aria": "Legg til materiale",
+    "edit_title": "Materiale",
+    "name_placeholder": "Navn",
+    "quantity_placeholder": "Mengde",
+    "unit_placeholder": "Enhet",
+    "notes_placeholder": "Notater",
+    "add_photo": "Legg til foto",
+    "delete": "Slett materiale",
+    "empty": {
+      "title": "Ingen materialer ennå.",
+      "hint": "List opp hva dette prosjektet trenger."
+    }
+  },
+  "moodboard": {
+    "empty": "Samle referanser — bilder og lenker som setter stemningen.",
+    "add_pin_aria": "Legg til pin",
+    "delete_pin_aria": "Slett pin",
+    "pin_fallback": "Pin",
+    "pins_count_one": "{{count}} lenkepin",
+    "pins_count_other": "{{count}} lenkepins",
+    "add_title": "Legg til i moodboard",
+    "or_link": "eller en lenke",
+    "url_placeholder": "https://…",
+    "caption_placeholder": "Bildetekst (valgfritt)",
+    "add_link": "Legg til lenke"
+  },
+  "composer": {
+    "link": "Lenke",
+    "attached_alt": "Vedlagt",
+    "url_placeholder": "https://…"
+  },
+  "collection": {
+    "title": "Samling",
+    "none": "Ingen",
+    "new_placeholder": "Ny samling…",
+    "create_aria": "Opprett samling"
+  },
+  "tags": {
+    "add_placeholder": "Legg til tagger…",
+    "remove_aria": "Fjern {{tag}}",
+    "filter_aria": "Filtrer etter tagg"
+  },
+  "photo_viewer": {
+    "dialog_aria": "Fotovisning",
+    "previous": "Forrige",
+    "next": "Neste"
+  },
+  "attachment": {
+    "not_uploaded_aria": "Ikke lastet opp ennå",
+    "queued_title": "I kø for opplasting"
+  },
+  "section_card": {
+    "manage_aria": "Administrer seksjon",
+    "empty": "Tom — trykk for å legge til."
+  },
+  "settings": {
+    "title": "Innstillinger",
+    "signed_in_as": "Logget inn som",
+    "unknown": "Ukjent",
+    "role": "Rolle: {{role}}",
+    "dev_mode": "Utviklermodus — autentisering forbigått",
+    "sign_out": "Logg ut",
+    "invite": {
+      "title": "Inviter en venn",
+      "subtitle": "Workbench er kun for inviterte. Send en venn en invitasjon for å bli med.",
+      "email_placeholder": "venn@eksempel.no",
+      "send": "Inviter",
+      "sending": "Sender…",
+      "error": "Kunne ikke sende invitasjonen.",
+      "sent": "Invitasjon sendt.",
+      "created": "Invitasjon opprettet — del denne lenken:"
+    },
+    "language": {
+      "title": "Språk",
+      "nb": "Norsk",
+      "en": "English"
+    }
+  },
+  "login": {
+    "sign_in": "Logg inn med homectl",
+    "invite_only": "Kun for inviterte · spør Ann"
+  },
+  "time": {
+    "just_now": "akkurat nå",
+    "min": "{{n}}m",
+    "hour": "{{n}}t",
+    "day": "{{n}}d",
+    "week": "{{n}}u",
+    "month": "{{n}}mnd",
+    "year": "{{n}}å",
+    "today": "I dag",
+    "yesterday": "I går"
+  },
+  "section_kind": {
+    "journal": "Journal",
+    "moodboard": "Moodboard",
+    "checklist": "Sjekkliste",
+    "materials": "Materialer"
+  }
+}

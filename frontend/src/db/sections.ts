@@ -2,6 +2,7 @@ import { db } from './db'
 import { deleteLocal, writeLocal } from './sync'
 import type { Section } from './types'
 import type { SectionKind } from './payload'
+import i18n from '@/i18n'
 import { compareRank, rankAfter } from '@/lib/rank'
 
 /**
@@ -12,17 +13,21 @@ import { compareRank, rankAfter } from '@/lib/rank'
  * server-side section logic.
  */
 
-/** The four kinds, with the labels the add-section / file-as sheets show. */
-export const SECTION_KINDS: { kind: SectionKind; label: string }[] = [
-  { kind: 'journal', label: 'Journal' },
-  { kind: 'moodboard', label: 'Moodboard' },
-  { kind: 'checklist', label: 'Checklist' },
-  { kind: 'materials', label: 'Materials' },
+/** The four kinds, in display order (labels are resolved via i18n `section_kind.*`). */
+export const SECTION_KINDS: { kind: SectionKind }[] = [
+  { kind: 'journal' },
+  { kind: 'moodboard' },
+  { kind: 'checklist' },
+  { kind: 'materials' },
 ]
 
-/** A sensible default name when the user adds a section without typing one. */
+/**
+ * A sensible default name when the user adds a section without typing one —
+ * localized to the active language (the name is stored as project data, so it
+ * starts in whatever language was active at creation).
+ */
 export function defaultSectionName(kind: SectionKind): string {
-  return SECTION_KINDS.find((k) => k.kind === kind)?.label ?? 'Section'
+  return i18n.t(`section_kind.${kind}`)
 }
 
 /** All live sections of a project, in rank order (overview cards, pickers). */

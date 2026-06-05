@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
@@ -35,6 +36,7 @@ type Sheet = 'status' | 'collection' | 'edit' | 'addSection' | null
  * banner land in Phase 5 (Sections & Items).
  */
 export function ProjectOverview() {
+  const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const project = useLiveQuery(() => (id ? db.projects.get(id) : undefined), [id])
@@ -57,14 +59,14 @@ export function ProjectOverview() {
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   if (project === undefined) {
-    return <p className="text-charcoal-muted">Loading…</p>
+    return <p className="text-charcoal-muted">{t('common.loading')}</p>
   }
   if (!project || project.deleted) {
     return (
       <div>
-        <p className="text-charcoal">Project not found.</p>
+        <p className="text-charcoal">{t('project.not_found')}</p>
         <Link to="/projects" className="mt-2 inline-block text-terracotta">
-          Back to projects
+          {t('nav.projects')}
         </Link>
       </div>
     )
@@ -82,12 +84,12 @@ export function ProjectOverview() {
           to="/projects"
           className="inline-flex items-center gap-1 text-sm text-charcoal-muted hover:text-charcoal"
         >
-          <ChevronLeft size={16} /> Projects
+          <ChevronLeft size={16} /> {t('nav.projects')}
         </Link>
         <div className="flex items-center gap-1">
           <button
             type="button"
-            aria-label={project.favourite ? 'Unfavourite' : 'Favourite'}
+            aria-label={project.favourite ? t('project.unfavourite') : t('project.favourite')}
             aria-pressed={project.favourite}
             onClick={() => void toggleFavourite(project)}
             className={project.favourite ? 'p-1.5 text-flax' : 'p-1.5 text-charcoal-muted hover:text-charcoal'}
@@ -97,7 +99,7 @@ export function ProjectOverview() {
           <div className="relative">
             <button
               type="button"
-              aria-label="More"
+              aria-label={t('common.more')}
               onClick={() => {
                 setMenuOpen((v) => !v)
                 setConfirmDelete(false)
@@ -116,7 +118,7 @@ export function ProjectOverview() {
                   }}
                   className="block w-full px-4 py-2 text-left text-sm text-charcoal hover:bg-oatmeal"
                 >
-                  Edit project
+                  {t('project.edit')}
                 </button>
                 <button
                   type="button"
@@ -127,7 +129,7 @@ export function ProjectOverview() {
                   className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-brick hover:bg-oatmeal"
                 >
                   <Trash2 size={15} />
-                  {confirmDelete ? 'Tap again to confirm' : 'Delete project'}
+                  {confirmDelete ? t('common.confirm_again') : t('project.delete')}
                 </button>
               </div>
             )}
@@ -142,7 +144,7 @@ export function ProjectOverview() {
           onClick={() => setSheet('status')}
           className="flex flex-shrink-0 items-center gap-1 rounded-full bg-stoneware px-3 py-1 text-sm text-charcoal"
         >
-          {project.status ?? 'No status'}
+          {project.status ?? t('project.no_status')}
           <ChevronDown size={15} className="text-charcoal-muted" />
         </button>
       </div>
@@ -157,7 +159,7 @@ export function ProjectOverview() {
         className="mt-3 inline-flex items-center gap-1.5 text-sm text-charcoal-muted hover:text-charcoal"
       >
         <FolderInput size={15} />
-        {collection ? collection.name : 'Add to collection'}
+        {collection ? collection.name : t('project.add_to_collection')}
       </button>
 
       {project.tags && project.tags.length > 0 && (
@@ -179,9 +181,7 @@ export function ProjectOverview() {
           className="mt-4 flex items-center gap-2 rounded-card bg-flax/20 px-3 py-2.5 text-sm text-charcoal"
         >
           <InboxIcon size={16} className="text-charcoal-muted" />
-          <span className="flex-1">
-            {inboxCount} {inboxCount === 1 ? 'idea' : 'ideas'} to file
-          </span>
+          <span className="flex-1">{t('project.inbox_count', { count: inboxCount })}</span>
           <ChevronRight size={16} className="text-charcoal-muted" />
         </Link>
       )}
@@ -192,7 +192,7 @@ export function ProjectOverview() {
 
       <div className="mt-8">
         {sections.length === 0 ? (
-          <p className="text-sm text-charcoal-muted">Add a journal to start logging.</p>
+          <p className="text-sm text-charcoal-muted">{t('project.add_journal_hint')}</p>
         ) : (
           <ReorderableList
             items={sections}
@@ -213,7 +213,7 @@ export function ProjectOverview() {
           onClick={() => setSheet('addSection')}
           className="mt-3 inline-flex items-center gap-1.5 text-sm text-terracotta hover:text-charcoal"
         >
-          <Plus size={16} /> Add section
+          <Plus size={16} /> {t('project.add_section')}
         </button>
       </div>
 
@@ -234,6 +234,7 @@ export function ProjectOverview() {
 
 /** Rename or delete a section (the §6.1 overview management, behind the ⋯). */
 function SectionManageSheet({ section, onClose }: { section: Section; onClose: () => void }) {
+  const { t } = useTranslation()
   const [name, setName] = useState(section.name)
   const [confirm, setConfirm] = useState(false)
 
@@ -250,7 +251,7 @@ function SectionManageSheet({ section, onClose }: { section: Section; onClose: (
       labelledBy="section-manage"
     >
       <h2 id="section-manage" className="mb-3 font-serif text-lg text-charcoal">
-        Section
+        {t('section_manage.title')}
       </h2>
       <input
         value={name}
@@ -267,7 +268,7 @@ function SectionManageSheet({ section, onClose }: { section: Section; onClose: (
         }}
         className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-brick"
       >
-        <Trash2 size={16} /> {confirm ? 'Tap again to confirm' : 'Delete section'}
+        <Trash2 size={16} /> {confirm ? t('common.confirm_again') : t('section_manage.delete')}
       </button>
     </BottomSheet>
   )

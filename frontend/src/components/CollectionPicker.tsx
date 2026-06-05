@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Check, Plus } from 'lucide-react'
 import { BottomSheet } from './BottomSheet'
@@ -13,6 +14,7 @@ import type { Project } from '@/db/types'
  * the first one needn't be made elsewhere.
  */
 export function CollectionPicker({ project, onClose }: { project: Project; onClose: () => void }) {
+  const { t } = useTranslation()
   const collections = useLiveQuery(() => allCollections(), []) ?? []
   const [newName, setNewName] = useState('')
 
@@ -31,7 +33,7 @@ export function CollectionPicker({ project, onClose }: { project: Project; onClo
   return (
     <BottomSheet onClose={onClose} labelledBy="collection-title">
       <h2 id="collection-title" className="mb-3 font-serif text-lg text-charcoal">
-        Collection
+        {t('collection.title')}
       </h2>
       <ul className="flex flex-col">
         <li>
@@ -40,7 +42,7 @@ export function CollectionPicker({ project, onClose }: { project: Project; onClo
             onClick={() => assign(null)}
             className="flex w-full items-center justify-between rounded-lg px-2 py-2.5 text-left hover:bg-oatmeal"
           >
-            <span className="text-charcoal-muted">None</span>
+            <span className="text-charcoal-muted">{t('collection.none')}</span>
             {project.collection_id == null && <Check size={18} className="text-flax" />}
           </button>
         </li>
@@ -68,12 +70,12 @@ export function CollectionPicker({ project, onClose }: { project: Project; onClo
               void createAndAssign()
             }
           }}
-          placeholder="New collection…"
+          placeholder={t('collection.new_placeholder')}
           className="min-w-0 flex-1 rounded-lg bg-oatmeal p-2 text-sm text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-terracotta/40"
         />
         <button
           type="button"
-          aria-label="Create collection"
+          aria-label={t('collection.create_aria')}
           onClick={() => void createAndAssign()}
           disabled={!newName.trim()}
           className="flex-shrink-0 rounded-lg bg-terracotta p-2 text-oatmeal disabled:opacity-40"

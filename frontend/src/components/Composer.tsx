@@ -1,4 +1,5 @@
 import { useRef, useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Camera, Link as LinkIcon, X } from 'lucide-react'
 
 /**
@@ -37,7 +38,7 @@ export function isDraftEmpty(d: ComposerDraft): boolean {
 export function Composer({
   draft,
   onChange,
-  placeholder = 'Type an idea…',
+  placeholder,
   autoFocus = false,
   allowPhoto = true,
   allowLink = true,
@@ -55,6 +56,7 @@ export function Composer({
   /** Optional control rendered on the affordance row (e.g. a backdate button). */
   trailing?: ReactNode
 }) {
+  const { t } = useTranslation()
   const fileInput = useRef<HTMLInputElement>(null)
   const [showLink, setShowLink] = useState(draft.link.length > 0)
 
@@ -91,7 +93,7 @@ export function Composer({
             onSubmit()
           }
         }}
-        placeholder={placeholder}
+        placeholder={placeholder ?? t('capture.placeholder')}
         className="w-full resize-none rounded-lg bg-oatmeal p-3 text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-terracotta/40"
       />
 
@@ -99,12 +101,12 @@ export function Composer({
         <div className="relative mt-2 inline-block">
           <img
             src={draft.photo.url}
-            alt="Attached"
+            alt={t('composer.attached_alt')}
             className="max-h-40 rounded-lg object-cover"
           />
           <button
             type="button"
-            aria-label="Remove photo"
+            aria-label={t('common.remove_photo')}
             onClick={removePhoto}
             className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-charcoal text-oatmeal"
           >
@@ -119,7 +121,7 @@ export function Composer({
           inputMode="url"
           value={draft.link}
           onChange={(e) => onChange({ ...draft, link: e.target.value })}
-          placeholder="https://…"
+          placeholder={t('composer.url_placeholder')}
           className="mt-2 w-full rounded-lg bg-oatmeal p-2 text-sm text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-terracotta/40"
         />
       )}
@@ -131,7 +133,7 @@ export function Composer({
             onClick={() => fileInput.current?.click()}
             className="inline-flex items-center gap-1 text-sm hover:text-charcoal"
           >
-            <Camera size={18} /> Photo
+            <Camera size={18} /> {t('common.photo')}
           </button>
         )}
         {allowLink && (
@@ -143,7 +145,7 @@ export function Composer({
               showLink ? 'text-terracotta' : ''
             }`}
           >
-            <LinkIcon size={18} /> Link
+            <LinkIcon size={18} /> {t('composer.link')}
           </button>
         )}
         <span className="flex-1" />

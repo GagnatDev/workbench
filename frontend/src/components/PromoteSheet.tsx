@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import { BottomSheet } from './BottomSheet'
@@ -22,6 +23,7 @@ function firstLine(idea: Idea): string {
  * an untitled project or one with the wrong stages.
  */
 export function PromoteSheet({ idea, onClose }: { idea: Idea; onClose: () => void }) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [title, setTitle] = useState(() => firstLine(idea))
   const [templateId, setTemplateId] = useState(DEFAULT_TEMPLATE_ID)
@@ -45,17 +47,17 @@ export function PromoteSheet({ idea, onClose }: { idea: Idea; onClose: () => voi
   return (
     <BottomSheet onClose={onClose} labelledBy="promote-title">
       <h2 id="promote-title" className="mb-3 font-serif text-lg text-charcoal">
-        Promote to project
+        {t('promote.title')}
       </h2>
       <input
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        placeholder="Project title"
+        placeholder={t('project.title_placeholder')}
         className="w-full rounded-lg bg-oatmeal p-3 text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-terracotta/40"
       />
 
       <div className="mt-4">
-        <span className="text-sm text-charcoal-muted">Template</span>
+        <span className="text-sm text-charcoal-muted">{t('new_project.template')}</span>
         <div className="mt-2">
           <TemplatePicker value={templateId} onChange={setTemplateId} />
         </div>
@@ -67,7 +69,7 @@ export function PromoteSheet({ idea, onClose }: { idea: Idea; onClose: () => voi
         disabled={creating}
         className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-terracotta py-3 text-oatmeal disabled:opacity-60"
       >
-        Create <ArrowRight size={18} />
+        {t('common.create')} <ArrowRight size={18} />
       </button>
     </BottomSheet>
   )

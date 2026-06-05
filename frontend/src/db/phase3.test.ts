@@ -15,6 +15,7 @@ const { db } = await import('./db')
 const { syncEngine, writeLocal } = await import('./sync')
 const { captureIdea, promoteIdea } = await import('./ideas')
 const { SYNC_TABLES } = await import('./types')
+const i18n = (await import('@/i18n')).default
 
 type Row = Record<string, unknown> & { id: string; updated_at: string }
 let server: Record<string, Row[]>
@@ -25,6 +26,9 @@ function resp(body: unknown): Response {
 }
 
 beforeEach(async () => {
+  // Template seeds are localized (Norwegian-first); pin English so the
+  // promote-into-project assertions below stay deterministic.
+  await i18n.changeLanguage('en')
   server = {}
   putUrls = []
   authedFetch.mockReset()

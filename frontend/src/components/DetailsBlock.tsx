@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Check, Pencil, Plus, X } from 'lucide-react'
 import { setProjectDetails } from '@/db/projects'
 import type { Project } from '@/db/types'
@@ -16,6 +17,7 @@ interface Row {
  * blank** — gentle structure, not a form-builder. Data uses tabular numerals.
  */
 export function DetailsBlock({ project }: { project: Project }) {
+  const { t } = useTranslation()
   const [editing, setEditing] = useState(false)
   const entries = Object.entries(project.details ?? {}).map(([key, value]) => ({
     key,
@@ -36,10 +38,10 @@ export function DetailsBlock({ project }: { project: Project }) {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h3 className="font-serif text-base text-charcoal">Details</h3>
+        <h3 className="font-serif text-base text-charcoal">{t('details.title')}</h3>
         <button
           type="button"
-          aria-label="Edit details"
+          aria-label={t('details.edit_aria')}
           onClick={() => setEditing(true)}
           className="text-charcoal-muted hover:text-charcoal"
         >
@@ -56,7 +58,7 @@ export function DetailsBlock({ project }: { project: Project }) {
           ))}
         </dl>
       ) : (
-        <p className="mt-2 text-sm text-charcoal-muted">No details yet.</p>
+        <p className="mt-2 text-sm text-charcoal-muted">{t('details.empty')}</p>
       )}
     </div>
   )
@@ -72,6 +74,7 @@ function DetailsEditor({
   initial: Row[]
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   // Always offer at least one empty row to type into.
   const [rows, setRows] = useState<Row[]>(initial.length ? initial : [{ key: '', value: '' }])
 
@@ -96,10 +99,10 @@ function DetailsEditor({
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h3 className="font-serif text-base text-charcoal">Details</h3>
+        <h3 className="font-serif text-base text-charcoal">{t('details.title')}</h3>
         <button
           type="button"
-          aria-label="Done editing details"
+          aria-label={t('details.done_aria')}
           onClick={save}
           className="text-terracotta hover:text-charcoal"
         >
@@ -112,18 +115,18 @@ function DetailsEditor({
             <input
               value={row.key}
               onChange={(e) => patch(i, 'key', e.target.value)}
-              placeholder="Label"
+              placeholder={t('details.label_placeholder')}
               className="min-w-0 flex-1 rounded-lg bg-oatmeal p-2 text-sm text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-terracotta/40"
             />
             <input
               value={row.value}
               onChange={(e) => patch(i, 'value', e.target.value)}
-              placeholder="Value"
+              placeholder={t('details.value_placeholder')}
               className="tabular min-w-0 flex-1 rounded-lg bg-oatmeal p-2 text-sm text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-terracotta/40"
             />
             <button
               type="button"
-              aria-label="Remove detail"
+              aria-label={t('details.remove_aria')}
               onClick={() => remove(i)}
               className="p-1 text-charcoal-muted hover:text-brick"
             >
@@ -137,7 +140,7 @@ function DetailsEditor({
         onClick={add}
         className="mt-3 inline-flex items-center gap-1.5 text-sm text-charcoal-muted hover:text-charcoal"
       >
-        <Plus size={15} /> Add detail
+        <Plus size={15} /> {t('details.add')}
       </button>
     </div>
   )

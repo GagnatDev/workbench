@@ -1,4 +1,5 @@
-import { STAGE_TEMPLATES } from '@/lib/templates'
+import { useTranslation } from 'react-i18next'
+import { localizedTemplates } from '@/lib/templates'
 
 /**
  * The shared stage-template chip row used by the promote mini-sheet (§3.3) and
@@ -12,9 +13,11 @@ export function TemplatePicker({
   value: string
   onChange: (id: string) => void
 }) {
+  // Subscribe to language changes so the labels re-resolve on switch.
+  useTranslation()
   return (
     <div className="flex flex-wrap gap-2">
-      {STAGE_TEMPLATES.map((t) => (
+      {localizedTemplates().map((t) => (
         <button
           key={t.id}
           type="button"

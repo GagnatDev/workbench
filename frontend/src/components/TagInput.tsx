@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'
 
 /**
@@ -16,6 +17,7 @@ export function TagInput({
   onChange: (tags: string[]) => void
   suggestions?: string[]
 }) {
+  const { t } = useTranslation()
   const [input, setInput] = useState('')
 
   const add = (raw: string) => {
@@ -41,7 +43,7 @@ export function TagInput({
             className="inline-flex items-center gap-1 rounded-full bg-oatmeal px-2.5 py-1 text-sm text-charcoal"
           >
             #{tag}
-            <button type="button" aria-label={`Remove ${tag}`} onClick={() => remove(tag)}>
+            <button type="button" aria-label={t('tags.remove_aria', { tag })} onClick={() => remove(tag)}>
               <X size={13} />
             </button>
           </span>
@@ -57,7 +59,7 @@ export function TagInput({
               remove(tags[tags.length - 1]!)
             }
           }}
-          placeholder={tags.length ? '' : 'Add tags…'}
+          placeholder={tags.length ? '' : t('tags.add_placeholder')}
           className="min-w-[6rem] flex-1 bg-transparent py-1 text-sm text-charcoal placeholder:text-charcoal-muted focus:outline-none"
         />
       </div>

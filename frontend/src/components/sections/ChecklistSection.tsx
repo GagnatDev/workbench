@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Check, Plus, Trash2 } from 'lucide-react'
 import { BottomSheet } from '../BottomSheet'
@@ -24,6 +25,7 @@ export function ChecklistSection({
   section: Section
   tagFilter?: string[]
 }) {
+  const { t } = useTranslation()
   const data = useSectionItems(section.id)
   const items = (data?.items ?? []).filter((i) => matchesTags(i.tags, tagFilter))
   const [text, setText] = useState('')
@@ -39,7 +41,7 @@ export function ChecklistSection({
   return (
     <div>
       {items.length === 0 ? (
-        <EmptyState title="No tasks yet." hint="Add the first thing to do below." />
+        <EmptyState title={t('checklist.empty.title')} hint={t('checklist.empty.hint')} />
       ) : (
         <ReorderableList
           items={items}
@@ -52,7 +54,7 @@ export function ChecklistSection({
               <div className="flex items-center gap-3 border-b border-divider py-2.5">
                 <button
                   type="button"
-                  aria-label={done ? 'Mark not done' : 'Mark done'}
+                  aria-label={done ? t('checklist.mark_not_done') : t('checklist.mark_done')}
                   aria-pressed={done}
                   onClick={() => void toggleTask(item)}
                   className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border ${
@@ -68,7 +70,7 @@ export function ChecklistSection({
                     done ? 'text-charcoal-muted line-through' : 'text-charcoal'
                   }`}
                 >
-                  {item.title || 'Untitled task'}
+                  {item.title || t('checklist.untitled')}
                 </button>
               </div>
             )
@@ -86,12 +88,12 @@ export function ChecklistSection({
               void add()
             }
           }}
-          placeholder="Add a task…"
+          placeholder={t('checklist.placeholder')}
           className="min-w-0 flex-1 rounded-lg bg-oatmeal p-3 text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-terracotta/40"
         />
         <button
           type="button"
-          aria-label="Add task"
+          aria-label={t('checklist.add_aria')}
           onClick={() => void add()}
           disabled={!text.trim()}
           className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-terracotta text-oatmeal disabled:opacity-40"
@@ -107,6 +109,7 @@ export function ChecklistSection({
 
 /** Rename, tag, or delete a task (the slower actions behind a row tap). */
 function TaskEditSheet({ item, onClose }: { item: Item; onClose: () => void }) {
+  const { t } = useTranslation()
   const [title, setTitle] = useState(item.title ?? '')
   const [tags, setTags] = useState<string[]>(item.tags ?? [])
   const suggestions = useLiveQuery(() => allItemTags(), []) ?? []
@@ -128,7 +131,7 @@ function TaskEditSheet({ item, onClose }: { item: Item; onClose: () => void }) {
       labelledBy="task-edit"
     >
       <h2 id="task-edit" className="sr-only">
-        Edit task
+        {t('checklist.edit_title')}
       </h2>
       <textarea
         rows={2}
@@ -147,7 +150,7 @@ function TaskEditSheet({ item, onClose }: { item: Item; onClose: () => void }) {
         }}
         className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-brick"
       >
-        <Trash2 size={16} /> Delete task
+        <Trash2 size={16} /> {t('checklist.delete')}
       </button>
     </BottomSheet>
   )

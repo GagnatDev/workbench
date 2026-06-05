@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 /**
  * The shared sheet container. On phones it's a bottom sheet (slides up, grabber,
@@ -16,6 +17,7 @@ export function BottomSheet({
   children: ReactNode
   labelledBy?: string
 }) {
+  const { t } = useTranslation()
   const dragStart = useRef<number | null>(null)
   const [dragY, setDragY] = useState(0)
 
@@ -50,7 +52,7 @@ export function BottomSheet({
     >
       <button
         type="button"
-        aria-label="Dismiss"
+        aria-label={t('common.close')}
         onClick={onClose}
         className="absolute inset-0 bg-charcoal/30"
       />

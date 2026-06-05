@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ChevronLeft } from 'lucide-react'
@@ -18,6 +19,7 @@ import { collectTags } from '@/lib/tags'
  * name · project title) and dispatches the body to the renderer for its `kind`.
  */
 export function Section() {
+  const { t } = useTranslation()
   const { id, sid } = useParams<{ id: string; sid: string }>()
   const section = useLiveQuery(() => (sid ? db.sections.get(sid) : undefined), [sid])
   const project = useLiveQuery(() => (id ? db.projects.get(id) : undefined), [id])
@@ -26,14 +28,14 @@ export function Section() {
   const [tagFilter, setTagFilter] = useState<string[]>([])
 
   if (section === undefined || project === undefined) {
-    return <p className="text-charcoal-muted">Loading…</p>
+    return <p className="text-charcoal-muted">{t('common.loading')}</p>
   }
   if (!section || section.deleted) {
     return (
       <div>
-        <p className="text-charcoal">Section not found.</p>
+        <p className="text-charcoal">{t('section.not_found')}</p>
         <Link to={`/projects/${id}`} className="mt-2 inline-block text-terracotta">
-          Back to project
+          {t('section.back_to_project')}
         </Link>
       </div>
     )
@@ -44,7 +46,7 @@ export function Section() {
       <div className="mb-5 flex items-baseline gap-2">
         <Link
           to={`/projects/${id}`}
-          aria-label="Back to project"
+          aria-label={t('section.back_to_project')}
           className="text-charcoal-muted hover:text-charcoal"
         >
           <ChevronLeft size={20} />

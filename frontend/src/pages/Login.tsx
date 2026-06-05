@@ -1,4 +1,5 @@
 import { Navigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/auth/AuthContext'
 
 /**
@@ -6,6 +7,7 @@ import { useAuth } from '@/auth/AuthContext'
  * homectl OAuth flow. No onboarding wizard, no demo data.
  */
 export function Login() {
+  const { t } = useTranslation()
   const { status, login } = useAuth()
 
   if (status === 'authenticated') return <Navigate to="/inbox" replace />
@@ -21,9 +23,9 @@ export function Login() {
         onClick={login}
         className="rounded-lg bg-terracotta px-6 py-3 text-oatmeal shadow-sm transition-transform active:scale-95"
       >
-        Sign in with homectl
+        {t('login.sign_in')}
       </button>
-      <p className="text-sm text-charcoal-muted">Invite-only · ask Ann</p>
+      <p className="text-sm text-charcoal-muted">{t('login.invite_only')}</p>
     </div>
   )
 }

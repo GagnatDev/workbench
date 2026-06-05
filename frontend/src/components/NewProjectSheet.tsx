@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import { BottomSheet } from './BottomSheet'
@@ -14,6 +15,7 @@ import { DEFAULT_TEMPLATE_ID } from '@/lib/templates'
  * confirm it creates the project and navigates into it.
  */
 export function NewProjectSheet({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [title, setTitle] = useState('')
   const [templateId, setTemplateId] = useState(DEFAULT_TEMPLATE_ID)
@@ -36,18 +38,18 @@ export function NewProjectSheet({ onClose }: { onClose: () => void }) {
   return (
     <BottomSheet onClose={onClose} labelledBy="new-project-title">
       <h2 id="new-project-title" className="mb-3 font-serif text-lg text-charcoal">
-        New project
+        {t('new_project.title')}
       </h2>
       <input
         autoFocus
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        placeholder="Project title"
+        placeholder={t('project.title_placeholder')}
         className="w-full rounded-lg bg-oatmeal p-3 text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-terracotta/40"
       />
 
       <div className="mt-4">
-        <span className="text-sm text-charcoal-muted">Template</span>
+        <span className="text-sm text-charcoal-muted">{t('new_project.template')}</span>
         <div className="mt-2">
           <TemplatePicker value={templateId} onChange={setTemplateId} />
         </div>
@@ -59,7 +61,7 @@ export function NewProjectSheet({ onClose }: { onClose: () => void }) {
         disabled={creating}
         className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-terracotta py-3 text-oatmeal disabled:opacity-60"
       >
-        Create <ArrowRight size={18} />
+        {t('common.create')} <ArrowRight size={18} />
       </button>
     </BottomSheet>
   )

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { SlidersHorizontal, X } from 'lucide-react'
 
 /**
@@ -20,6 +21,7 @@ export function TagFilterBar({
   active: string[]
   onChange: (tags: string[]) => void
 }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
 
   if (allTags.length === 0) return null
@@ -32,7 +34,7 @@ export function TagFilterBar({
       <div className="flex items-center gap-2">
         <button
           type="button"
-          aria-label="Filter by tag"
+          aria-label={t('tags.filter_aria')}
           aria-pressed={open || active.length > 0}
           onClick={() => setOpen((v) => !v)}
           className={

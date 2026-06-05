@@ -19,7 +19,7 @@ export default defineConfig({
             manifest: {
                 name: 'Workbench',
                 short_name: 'Workbench',
-                description: 'A personal creative workbench for makers — capture ideas, run projects, journal the process.',
+                description: 'En personlig kreativ arbeidsbenk for skapere — fang idéer, driv prosjekter, loggfør prosessen.',
                 // Oatmeal — the matte base tone (docs/visual-identity.md).
                 theme_color: '#F4F1EA',
                 background_color: '#F4F1EA',
@@ -27,7 +27,7 @@ export default defineConfig({
                 scope: '/',
                 start_url: '/',
                 orientation: 'portrait-primary',
-                lang: 'en',
+                lang: 'nb',
                 icons: [
                     { src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },
                     { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },

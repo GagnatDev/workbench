@@ -24,8 +24,12 @@ const { createCollection, renameCollection, deleteCollection, allCollections } =
 )
 const { captureIdea, promoteIdea } = await import('./ideas')
 const { SYNC_TABLES } = await import('./types')
+const i18n = (await import('@/i18n')).default
 
 beforeEach(async () => {
+  // Template seeds are localized (Norwegian-first); pin English so these
+  // template-content assertions are deterministic regardless of saved locale.
+  await i18n.changeLanguage('en')
   vi.spyOn(syncEngine, 'schedule').mockImplementation(() => {})
   await Promise.all(SYNC_TABLES.map((t) => db.table(t).clear()))
   await db.blobs.clear()

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Clock, Send, Trash2 } from 'lucide-react'
+import i18n, { activeLocale } from '@/i18n'
 import { BottomSheet } from '../BottomSheet'
 import { Composer, emptyDraft, isDraftEmpty, type ComposerDraft } from '../Composer'
 import { AttachmentThumb } from '../AttachmentThumb'
@@ -34,13 +36,13 @@ function dayLabel(iso: string): string {
   const now = new Date()
   const startOf = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime()
   const days = Math.round((startOf(now) - startOf(d)) / 86_400_000)
-  if (days === 0) return 'Today'
-  if (days === 1) return 'Yesterday'
+  if (days === 0) return i18n.t('time.today')
+  if (days === 1) return i18n.t('time.yesterday')
   const opts: Intl.DateTimeFormatOptions =
     d.getFullYear() === now.getFullYear()
       ? { month: 'long', day: 'numeric' }
       : { month: 'long', day: 'numeric', year: 'numeric' }
-  return d.toLocaleDateString(undefined, opts)
+  return d.toLocaleDateString(activeLocale(), opts)
 }
 
 /**
@@ -60,6 +62,7 @@ export function JournalSection({
   section: Section
   tagFilter?: string[]
 }) {
+  const { t } = useTranslation()
   const data = useSectionItems(section.id)
   const [draft, setDraft] = useState<ComposerDraft>(emptyDraft)
   const [entryAt, setEntryAt] = useState<string | null>(null) // null = now
@@ -95,13 +98,13 @@ export function JournalSection({
           draft={draft}
           onChange={setDraft}
           allowLink={false}
-          placeholder="Add an entry…"
+          placeholder={t('journal.composer_placeholder')}
           onSubmit={() => void submit()}
           trailing={
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                aria-label="Backdate entry"
+                aria-label={t('journal.backdate_aria')}
                 aria-pressed={showBackdate}
                 onClick={() => setShowBackdate((v) => !v)}
                 className={`inline-flex items-center gap-1 text-sm hover:text-charcoal ${
@@ -112,7 +115,7 @@ export function JournalSection({
               </button>
               <button
                 type="button"
-                aria-label="Add entry"
+                aria-label={t('journal.add_aria')}
                 onClick={() => void submit()}
                 disabled={isDraftEmpty(draft)}
                 className="flex h-9 w-9 items-center justify-center rounded-full bg-terracotta text-oatmeal disabled:opacity-40"
@@ -133,7 +136,7 @@ export function JournalSection({
       </div>
 
       {items.length === 0 ? (
-        <EmptyState title="No entries yet." hint="Log what you did — a line is enough." />
+        <EmptyState title={t('journal.empty.title')} hint={t('journal.empty.hint')} />
       ) : (
         <div className="flex flex-col gap-4">
           {items.map((item) => {
@@ -204,6 +207,7 @@ function setViewerAt(
 
 /** Edit an entry: text, backdate, delete (the slower actions behind a tap). */
 function JournalEntrySheet({ item, onClose }: { item: Item; onClose: () => void }) {
+  const { t } = useTranslation()
   const [body, setBody] = useState(item.body ?? '')
   const [at, setAt] = useState(entryAtOf(item))
   const [tags, setTags] = useState<string[]>(item.tags ?? [])
@@ -231,7 +235,7 @@ function JournalEntrySheet({ item, onClose }: { item: Item; onClose: () => void 
       labelledBy="entry-edit"
     >
       <h2 id="entry-edit" className="sr-only">
-        Edit entry
+        {t('journal.edit_title')}
       </h2>
       <textarea
         rows={4}
@@ -240,7 +244,7 @@ function JournalEntrySheet({ item, onClose }: { item: Item; onClose: () => void 
         className="w-full resize-none rounded-lg bg-oatmeal p-3 text-charcoal focus:outline-none focus:ring-2 focus:ring-terracotta/40"
       />
       <label className="mt-3 block text-sm text-charcoal-muted">
-        Date
+        {t('journal.date')}
         <input
           type="datetime-local"
           value={toLocalInput(at)}
@@ -259,7 +263,7 @@ function JournalEntrySheet({ item, onClose }: { item: Item; onClose: () => void 
         }}
         className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-brick"
       >
-        <Trash2 size={16} /> Delete entry
+        <Trash2 size={16} /> {t('journal.delete')}
       </button>
     </BottomSheet>
   )

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ChevronLeft, MoreHorizontal } from 'lucide-react'
@@ -27,6 +28,7 @@ function newestFirst(a: Idea, b: Idea): number {
  * has a home), so there's no swipe-promote; this is a calm, tap-to-file list.
  */
 export function ProjectInbox() {
+  const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const project = useLiveQuery(() => (id ? db.projects.get(id) : undefined), [id])
   const [segment, setSegment] = useState<Segment>('new')
@@ -54,30 +56,30 @@ export function ProjectInbox() {
         to={`/projects/${id}`}
         className="mb-3 inline-flex items-center gap-1 text-sm text-charcoal-muted hover:text-charcoal"
       >
-        <ChevronLeft size={16} /> {project?.title ?? 'Project'}
+        <ChevronLeft size={16} /> {project?.title ?? t('common.project_fallback')}
       </Link>
 
       <div className="mb-6 flex items-center justify-between border-b border-divider">
         <div className="flex gap-6 text-sm">
           <button type="button" onClick={() => setSegment('new')} className={tabClass(segment === 'new')}>
-            New
+            {t('inbox.segment.new')}
             {newCount > 0 && (
               <span className="rounded-full bg-flax px-1.5 text-xs text-charcoal">{newCount}</span>
             )}
           </button>
           <button type="button" onClick={() => setSegment('kept')} className={tabClass(segment === 'kept')}>
-            Kept
+            {t('inbox.segment.kept')}
           </button>
           {segment === 'archived' && (
             <span className="border-b-2 border-terracotta pb-2 font-medium text-charcoal">
-              Archived
+              {t('inbox.archived')}
             </span>
           )}
         </div>
         <div className="relative">
           <button
             type="button"
-            aria-label="More"
+            aria-label={t('common.more')}
             onClick={() => setOverflowOpen((v) => !v)}
             className="pb-2 text-charcoal-muted hover:text-charcoal"
           >
@@ -93,7 +95,7 @@ export function ProjectInbox() {
                 }}
                 className="block w-full px-4 py-2 text-left text-sm text-charcoal hover:bg-oatmeal"
               >
-                {segment === 'archived' ? 'Back to inbox' : 'View archived'}
+                {segment === 'archived' ? t('project_inbox.back_to_inbox') : t('inbox.view_archived')}
               </button>
             </div>
           )}
@@ -104,16 +106,12 @@ export function ProjectInbox() {
         <EmptyState
           title={
             segment === 'new'
-              ? 'Nothing to file.'
+              ? t('project_inbox.empty.new')
               : segment === 'kept'
-                ? 'No kept notes.'
-                : 'No archived ideas.'
+                ? t('project_inbox.empty.kept')
+                : t('inbox.empty.archived')
           }
-          hint={
-            segment === 'new'
-              ? 'Capture inside a project and it lands here to file.'
-              : undefined
-          }
+          hint={segment === 'new' ? t('project_inbox.empty.new_hint') : undefined}
         />
       ) : (
         <ul className="flex flex-col gap-2">
@@ -131,6 +129,7 @@ export function ProjectInbox() {
 }
 
 function InboxCard({ idea, onTap }: { idea: Idea; onTap: () => void }) {
+  const { t } = useTranslation()
   const photo = useLiveQuery(async () => {
     const atts = await db.attachments.where('owner_id').equals(idea.id).toArray()
     return atts.find((a) => !a.deleted && a.owner_type === 'idea')
@@ -152,7 +151,7 @@ function InboxCard({ idea, onTap }: { idea: Idea; onTap: () => void }) {
       )}
       <span className="min-w-0 flex-1">
         <span className="line-clamp-2 block break-words text-charcoal">
-          {idea.content || (idea.link ?? 'Photo')}
+          {idea.content || (idea.link ?? t('common.photo'))}
         </span>
         <span className="mt-1 block text-xs text-charcoal-muted">{timeAgo(idea.created_at)}</span>
       </span>

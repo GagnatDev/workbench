@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { BookOpen, Check, Image, ListChecks, MoreHorizontal, Package } from 'lucide-react'
 import { AttachmentThumb } from './AttachmentThumb'
+import { activeLocale } from '@/i18n'
 import { useSectionItems } from '@/db/useSectionItems'
 import type { EntryPayload, PinPayload, SectionKind, TaskPayload } from '@/db/payload'
 import type { Section } from '@/db/types'
@@ -13,7 +15,7 @@ const KIND_ICON: Record<SectionKind, typeof BookOpen> = {
 }
 
 function shortDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+  return new Date(iso).toLocaleDateString(activeLocale(), { month: 'short', day: 'numeric' })
 }
 
 /**
@@ -32,6 +34,7 @@ export function SectionPreviewCard({
   projectId: string
   onManage: () => void
 }) {
+  const { t } = useTranslation()
   const data = useSectionItems(section.id)
   const items = data?.items ?? []
   const Icon = KIND_ICON[section.kind]
@@ -55,7 +58,7 @@ export function SectionPreviewCard({
         {summary && <span className="tabular text-sm text-charcoal-muted">{summary}</span>}
         <button
           type="button"
-          aria-label="Manage section"
+          aria-label={t('section_card.manage_aria')}
           onClick={onManage}
           className="-mr-1 p-1 text-charcoal-muted hover:text-charcoal"
         >
@@ -70,9 +73,10 @@ export function SectionPreviewCard({
 }
 
 function Preview({ section, data }: { section: Section; data: ReturnType<typeof useSectionItems> }) {
+  const { t: tr } = useTranslation()
   const items = data?.items ?? []
   if (items.length === 0) {
-    return <p className="text-sm text-charcoal-muted">Empty — tap to add.</p>
+    return <p className="text-sm text-charcoal-muted">{tr('section_card.empty')}</p>
   }
 
   if (section.kind === 'journal') {
@@ -111,7 +115,7 @@ function Preview({ section, data }: { section: Section; data: ReturnType<typeof 
               <span className="flex h-3.5 w-3.5 flex-shrink-0 items-center justify-center rounded-sm border border-charcoal-muted">
                 {done && <Check size={10} />}
               </span>
-              <span className="truncate">{t.title || 'Untitled'}</span>
+              <span className="truncate">{t.title || tr('common.untitled')}</span>
             </li>
           )
         })}
@@ -128,7 +132,11 @@ function Preview({ section, data }: { section: Section; data: ReturnType<typeof 
       if (thumbs.length === 3) break
     }
     if (thumbs.length === 0) {
-      return <p className="text-sm text-charcoal-muted">{items.length} link pins</p>
+      return (
+        <p className="text-sm text-charcoal-muted">
+          {tr('moodboard.pins_count', { count: items.length })}
+        </p>
+      )
     }
     return (
       <div className="flex gap-1.5">
@@ -149,7 +157,7 @@ function Preview({ section, data }: { section: Section; data: ReturnType<typeof 
     <ul className="flex flex-col gap-1 text-sm text-charcoal-muted">
       {items.slice(0, 3).map((m) => (
         <li key={m.id} className="truncate">
-          {m.title || 'Untitled'}
+          {m.title || tr('common.untitled')}
         </li>
       ))}
     </ul>

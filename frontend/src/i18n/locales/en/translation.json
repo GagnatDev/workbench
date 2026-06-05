@@ -1,0 +1,278 @@
+{
+  "app": {
+    "title": "Workbench"
+  },
+  "common": {
+    "loading": "Loading…",
+    "more": "More",
+    "create": "Create",
+    "delete": "Delete",
+    "back": "Back",
+    "close": "Close",
+    "untitled": "Untitled",
+    "photo": "Photo",
+    "remove_photo": "Remove photo",
+    "confirm_again": "Tap again to confirm",
+    "project_fallback": "Project"
+  },
+  "nav": {
+    "inbox": "Inbox",
+    "projects": "Projects",
+    "capture_aria": "Capture an idea",
+    "settings_aria": "Settings and profile"
+  },
+  "sync": {
+    "aria": "Sync status",
+    "up_to_date": "Everything is up to date.",
+    "action": "Sync now",
+    "pending_one": "{{count}} change",
+    "pending_other": "{{count}} changes",
+    "queued": "{{count}} queued",
+    "status": {
+      "synced": "Synced",
+      "syncing": "Syncing…",
+      "offline": "Offline",
+      "error": "Sync error"
+    }
+  },
+  "inbox": {
+    "segment": {
+      "new": "New",
+      "kept": "Kept"
+    },
+    "archived": "Archived",
+    "view_archived": "View archived",
+    "empty": {
+      "archived": "No archived ideas.",
+      "new": "Tap ➕ to capture your first idea.",
+      "kept_title": "Nothing kept yet.",
+      "kept_hint": "Ideas you keep land here — still promotable later."
+    }
+  },
+  "projects": {
+    "title": "Projects",
+    "new_aria": "New project",
+    "all": "All",
+    "empty": {
+      "title": "No projects yet.",
+      "hint": "Ideas become projects — capture one first, then promote it.",
+      "no_match": "Nothing matches this filter."
+    }
+  },
+  "project": {
+    "not_found": "Project not found.",
+    "favourite": "Favourite",
+    "unfavourite": "Unfavourite",
+    "edit": "Edit project",
+    "delete": "Delete project",
+    "no_status": "No status",
+    "title_placeholder": "Project title",
+    "description_placeholder": "Description (optional)",
+    "add_to_collection": "Add to collection",
+    "inbox_count_one": "{{count}} idea to file",
+    "inbox_count_other": "{{count}} ideas to file",
+    "add_journal_hint": "Add a journal to start logging.",
+    "add_section": "Add section"
+  },
+  "section_manage": {
+    "title": "Section",
+    "delete": "Delete section"
+  },
+  "project_inbox": {
+    "back_to_inbox": "Back to inbox",
+    "empty": {
+      "new": "Nothing to file.",
+      "new_hint": "Capture inside a project and it lands here to file.",
+      "kept": "No kept notes."
+    }
+  },
+  "section": {
+    "not_found": "Section not found.",
+    "back_to_project": "Back to project"
+  },
+  "idea": {
+    "detail_title": "Idea detail",
+    "placeholder": "Idea…",
+    "link_placeholder": "Link (optional)",
+    "promote": "Promote to project",
+    "promote_short": "Promote",
+    "move_to_new": "Move to New",
+    "keep": "Keep",
+    "archive": "Archive"
+  },
+  "capture": {
+    "placeholder": "Type an idea…",
+    "save_hint": "Swipe down or tap away to save",
+    "inbox": "Inbox",
+    "inbox_global": "Inbox (global)"
+  },
+  "file_as": {
+    "header": "File as",
+    "which": "Which {{kind}}?",
+    "keep_as_note": "Keep as note",
+    "target": {
+      "journal": "Entry",
+      "checklist": "Task",
+      "moodboard": "Pin",
+      "materials": "Material"
+    }
+  },
+  "new_project": {
+    "title": "New project",
+    "template": "Template"
+  },
+  "promote": {
+    "title": "Promote to project"
+  },
+  "add_section": {
+    "create": "Create section"
+  },
+  "status": {
+    "title": "Set status",
+    "edit_stages_link": "Edit stages…",
+    "edit_stages_title": "Edit stages",
+    "stage_placeholder": "Stage name",
+    "stage_fallback": "stage",
+    "add_stage": "Add stage",
+    "save_stages": "Save stages",
+    "move_up": "Move up",
+    "move_down": "Move down",
+    "delete_stage": "Delete {{stage}}"
+  },
+  "details": {
+    "title": "Details",
+    "empty": "No details yet.",
+    "edit_aria": "Edit details",
+    "done_aria": "Done editing details",
+    "label_placeholder": "Label",
+    "value_placeholder": "Value",
+    "add": "Add detail",
+    "remove_aria": "Remove detail"
+  },
+  "journal": {
+    "composer_placeholder": "Add an entry…",
+    "backdate_aria": "Backdate entry",
+    "add_aria": "Add entry",
+    "edit_title": "Edit entry",
+    "date": "Date",
+    "delete": "Delete entry",
+    "empty": {
+      "title": "No entries yet.",
+      "hint": "Log what you did — a line is enough."
+    }
+  },
+  "checklist": {
+    "placeholder": "Add a task…",
+    "add_aria": "Add task",
+    "mark_done": "Mark done",
+    "mark_not_done": "Mark not done",
+    "untitled": "Untitled task",
+    "edit_title": "Edit task",
+    "delete": "Delete task",
+    "empty": {
+      "title": "No tasks yet.",
+      "hint": "Add the first thing to do below."
+    }
+  },
+  "materials": {
+    "placeholder": "Add a material…",
+    "add_aria": "Add material",
+    "edit_title": "Material",
+    "name_placeholder": "Name",
+    "quantity_placeholder": "Quantity",
+    "unit_placeholder": "Unit",
+    "notes_placeholder": "Notes",
+    "add_photo": "Add photo",
+    "delete": "Delete material",
+    "empty": {
+      "title": "No materials yet.",
+      "hint": "List what this project needs."
+    }
+  },
+  "moodboard": {
+    "empty": "Collect references — photos and links that set the mood.",
+    "add_pin_aria": "Add pin",
+    "delete_pin_aria": "Delete pin",
+    "pin_fallback": "Pin",
+    "pins_count_one": "{{count}} link pin",
+    "pins_count_other": "{{count}} link pins",
+    "add_title": "Add to moodboard",
+    "or_link": "or a link",
+    "url_placeholder": "https://…",
+    "caption_placeholder": "Caption (optional)",
+    "add_link": "Add link"
+  },
+  "composer": {
+    "link": "Link",
+    "attached_alt": "Attached",
+    "url_placeholder": "https://…"
+  },
+  "collection": {
+    "title": "Collection",
+    "none": "None",
+    "new_placeholder": "New collection…",
+    "create_aria": "Create collection"
+  },
+  "tags": {
+    "add_placeholder": "Add tags…",
+    "remove_aria": "Remove {{tag}}",
+    "filter_aria": "Filter by tag"
+  },
+  "photo_viewer": {
+    "dialog_aria": "Photo viewer",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "attachment": {
+    "not_uploaded_aria": "Not yet uploaded",
+    "queued_title": "Queued for upload"
+  },
+  "section_card": {
+    "manage_aria": "Manage section",
+    "empty": "Empty — tap to add."
+  },
+  "settings": {
+    "title": "Settings",
+    "signed_in_as": "Signed in as",
+    "unknown": "Unknown",
+    "role": "Role: {{role}}",
+    "dev_mode": "Dev mode — auth bypassed",
+    "sign_out": "Sign out",
+    "invite": {
+      "title": "Invite a friend",
+      "subtitle": "Workbench is invite-only. Send a friend an invite to join.",
+      "email_placeholder": "friend@example.com",
+      "send": "Invite",
+      "sending": "Sending…",
+      "error": "Could not send the invite.",
+      "sent": "Invite sent.",
+      "created": "Invite created — share this link:"
+    },
+    "language": {
+      "title": "Language",
+      "nb": "Norsk",
+      "en": "English"
+    }
+  },
+  "login": {
+    "sign_in": "Sign in with homectl",
+    "invite_only": "Invite-only · ask Ann"
+  },
+  "time": {
+    "just_now": "just now",
+    "min": "{{n}}m",
+    "hour": "{{n}}h",
+    "day": "{{n}}d",
+    "week": "{{n}}w",
+    "month": "{{n}}mo",
+    "year": "{{n}}y",
+    "today": "Today",
+    "yesterday": "Yesterday"
+  },
+  "section_kind": {
+    "journal": "Journal",
+    "moodboard": "Moodboard",
+    "checklist": "Checklist",
+    "materials": "Materials"
+  }
+}

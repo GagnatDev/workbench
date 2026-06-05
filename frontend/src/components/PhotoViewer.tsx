@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { AttachmentThumb } from './AttachmentThumb'
 
@@ -17,6 +18,7 @@ export function PhotoViewer({
   startIndex?: number
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   const [index, setIndex] = useState(startIndex)
   const count = attachmentIds.length
   const clamp = (i: number) => (i + count) % count
@@ -40,11 +42,11 @@ export function PhotoViewer({
       className="fixed inset-0 z-[60] flex items-center justify-center bg-charcoal/90"
       role="dialog"
       aria-modal="true"
-      aria-label="Photo viewer"
+      aria-label={t('photo_viewer.dialog_aria')}
     >
       <button
         type="button"
-        aria-label="Close"
+        aria-label={t('common.close')}
         onClick={onClose}
         className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-charcoal/60 text-oatmeal"
       >
@@ -55,7 +57,7 @@ export function PhotoViewer({
         <>
           <button
             type="button"
-            aria-label="Previous"
+            aria-label={t('photo_viewer.previous')}
             onClick={() => setIndex((i) => clamp(i - 1))}
             className="absolute left-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-charcoal/60 text-oatmeal"
           >
@@ -63,7 +65,7 @@ export function PhotoViewer({
           </button>
           <button
             type="button"
-            aria-label="Next"
+            aria-label={t('photo_viewer.next')}
             onClick={() => setIndex((i) => clamp(i + 1))}
             className="absolute right-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-charcoal/60 text-oatmeal"
           >
@@ -76,7 +78,7 @@ export function PhotoViewer({
         key={id}
         attachmentId={id}
         className="max-h-[90vh] max-w-[92vw] object-contain"
-        alt="Photo"
+        alt={t('common.photo')}
       />
     </div>
   )

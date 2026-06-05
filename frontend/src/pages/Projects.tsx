@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Plus } from 'lucide-react'
@@ -20,6 +21,7 @@ import { timeAgo } from '@/lib/time'
  * filter (§9.2) narrows the list further, AND-combined with the collection chip.
  */
 export function Projects() {
+  const { t } = useTranslation()
   const [filter, setFilter] = useState<string | 'all'>('all')
   const [tagFilter, setTagFilter] = useState<string[]>([])
   const [creating, setCreating] = useState(false)
@@ -35,10 +37,10 @@ export function Projects() {
   return (
     <section>
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="font-serif text-2xl text-charcoal">Projects</h2>
+        <h2 className="font-serif text-2xl text-charcoal">{t('projects.title')}</h2>
         <button
           type="button"
-          aria-label="New project"
+          aria-label={t('projects.new_aria')}
           onClick={() => setCreating(true)}
           className="flex h-9 w-9 items-center justify-center rounded-full bg-terracotta text-oatmeal active:scale-95"
         >
@@ -48,7 +50,7 @@ export function Projects() {
 
       {collections.length > 0 && (
         <div className="-mx-4 mb-5 flex gap-2 overflow-x-auto px-4 pb-1">
-          <FilterChip label="All" active={filter === 'all'} onClick={() => setFilter('all')} />
+          <FilterChip label={t('projects.all')} active={filter === 'all'} onClick={() => setFilter('all')} />
           {collections.map((c) => (
             <FilterChip
               key={c.id}
@@ -64,11 +66,11 @@ export function Projects() {
 
       {cards.length === 0 ? (
         <EmptyState
-          title="No projects yet."
-          hint="Ideas become projects — capture one first, then promote it."
+          title={t('projects.empty.title')}
+          hint={t('projects.empty.hint')}
         />
       ) : shown.length === 0 ? (
-        <EmptyState title="Nothing matches this filter." />
+        <EmptyState title={t('projects.empty.no_match')} />
       ) : (
         <ul className="flex flex-col gap-2">
           {shown.map(({ project, photoAttachmentId, photoUploaded, lastActivity }) => (

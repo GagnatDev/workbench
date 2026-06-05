@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ChevronLeft, MoreHorizontal } from 'lucide-react'
@@ -26,6 +27,7 @@ function newestFirst(a: Idea, b: Idea): number {
  * `archived` renders that read-only view (reached from the overflow menu).
  */
 export function Inbox({ archived = false }: { archived?: boolean }) {
+  const { t } = useTranslation()
   const [segment, setSegment] = useState<Segment>('new')
   const [overflowOpen, setOverflowOpen] = useState(false)
   const [tagFilter, setTagFilter] = useState<string[]>([])
@@ -53,7 +55,7 @@ export function Inbox({ archived = false }: { archived?: boolean }) {
             to="/inbox"
             className="flex items-center gap-1 pb-2 text-sm font-medium text-charcoal"
           >
-            <ChevronLeft size={18} /> Archived
+            <ChevronLeft size={18} /> {t('inbox.archived')}
           </Link>
         ) : (
           <div className="flex gap-6 text-sm">
@@ -66,7 +68,7 @@ export function Inbox({ archived = false }: { archived?: boolean }) {
                   : 'flex items-center gap-1.5 pb-2 text-charcoal-muted'
               }
             >
-              New
+              {t('inbox.segment.new')}
               {newCount > 0 && (
                 <span className="rounded-full bg-flax px-1.5 text-xs text-charcoal">
                   {newCount}
@@ -82,7 +84,7 @@ export function Inbox({ archived = false }: { archived?: boolean }) {
                   : 'pb-2 text-charcoal-muted'
               }
             >
-              Kept
+              {t('inbox.segment.kept')}
             </button>
           </div>
         )}
@@ -91,7 +93,7 @@ export function Inbox({ archived = false }: { archived?: boolean }) {
           <div className="relative">
             <button
               type="button"
-              aria-label="More"
+              aria-label={t('common.more')}
               onClick={() => setOverflowOpen((v) => !v)}
               className="pb-2 text-charcoal-muted hover:text-charcoal"
             >
@@ -104,7 +106,7 @@ export function Inbox({ archived = false }: { archived?: boolean }) {
                   onClick={() => setOverflowOpen(false)}
                   className="block w-full px-4 py-2 text-left text-sm text-charcoal hover:bg-oatmeal"
                 >
-                  View archived
+                  {t('inbox.view_archived')}
                 </Link>
               </div>
             )}
@@ -118,15 +120,13 @@ export function Inbox({ archived = false }: { archived?: boolean }) {
         <EmptyState
           title={
             archived
-              ? 'No archived ideas.'
+              ? t('inbox.empty.archived')
               : segment === 'new'
-                ? 'Tap ➕ to capture your first idea.'
-                : 'Nothing kept yet.'
+                ? t('inbox.empty.new')
+                : t('inbox.empty.kept_title')
           }
           hint={
-            archived || segment === 'new'
-              ? undefined
-              : 'Ideas you keep land here — still promotable later.'
+            archived || segment === 'new' ? undefined : t('inbox.empty.kept_hint')
           }
         />
       ) : (

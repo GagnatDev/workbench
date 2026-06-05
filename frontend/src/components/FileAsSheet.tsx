@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { BookOpen, ChevronRight, Image, ListChecks, Package, StickyNote } from 'lucide-react'
 import { BottomSheet } from './BottomSheet'
@@ -9,11 +10,11 @@ import { createSection, defaultSectionName, sectionsOfProject } from '@/db/secti
 import type { SectionKind } from '@/db/payload'
 import type { Idea, Section } from '@/db/types'
 
-const TARGETS: { kind: SectionKind; label: string; icon: typeof BookOpen }[] = [
-  { kind: 'journal', label: 'Entry', icon: BookOpen },
-  { kind: 'checklist', label: 'Task', icon: ListChecks },
-  { kind: 'moodboard', label: 'Pin', icon: Image },
-  { kind: 'materials', label: 'Material', icon: Package },
+const TARGETS: { kind: SectionKind; icon: typeof BookOpen }[] = [
+  { kind: 'journal', icon: BookOpen },
+  { kind: 'checklist', icon: ListChecks },
+  { kind: 'moodboard', icon: Image },
+  { kind: 'materials', icon: Package },
 ]
 
 /**
@@ -33,6 +34,7 @@ export function FileAsSheet({
   projectId: string
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   const sections = useLiveQuery(() => sectionsOfProject(projectId), [projectId]) ?? []
   const photo = useLiveQuery(async () => {
     const atts = await db.attachments.where('owner_id').equals(idea.id).toArray()
@@ -72,13 +74,15 @@ export function FileAsSheet({
           />
         )}
         <p id="file-as-title" className="min-w-0 flex-1 break-words text-charcoal">
-          {idea.content || (idea.link ?? 'Photo')}
+          {idea.content || (idea.link ?? t('common.photo'))}
         </p>
       </div>
 
       {pickKind ? (
         <div>
-          <p className="mb-2 text-sm text-charcoal-muted">Which {pickKind}?</p>
+          <p className="mb-2 text-sm text-charcoal-muted">
+            {t('file_as.which', { kind: t(`section_kind.${pickKind}`).toLowerCase() })}
+          </p>
           <ul className="flex flex-col">
             {ofPicked.map((s) => (
               <li key={s.id}>
@@ -98,21 +102,21 @@ export function FileAsSheet({
             onClick={() => setPickKind(null)}
             className="mt-2 text-sm text-charcoal-muted hover:text-charcoal"
           >
-            ← Back
+            ← {t('common.back')}
           </button>
         </div>
       ) : (
         <>
-          <p className="mb-2 text-xs uppercase tracking-wide text-charcoal-muted">File as</p>
+          <p className="mb-2 text-xs uppercase tracking-wide text-charcoal-muted">{t('file_as.header')}</p>
           <div className="grid grid-cols-2 gap-2">
-            {TARGETS.map(({ kind, label, icon: Icon }) => (
+            {TARGETS.map(({ kind, icon: Icon }) => (
               <button
                 key={kind}
                 type="button"
                 onClick={() => void chooseKind(kind)}
                 className="flex items-center gap-2 rounded-lg bg-oatmeal px-3 py-3 text-left text-charcoal hover:bg-stoneware"
               >
-                <Icon size={18} className="text-charcoal-muted" /> {label}
+                <Icon size={18} className="text-charcoal-muted" /> {t(`file_as.target.${kind}`)}
               </button>
             ))}
           </div>
@@ -124,7 +128,7 @@ export function FileAsSheet({
             }}
             className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-divider py-2.5 text-sm text-charcoal"
           >
-            <StickyNote size={16} /> Keep as note
+            <StickyNote size={16} /> {t('file_as.keep_as_note')}
           </button>
         </>
       )}

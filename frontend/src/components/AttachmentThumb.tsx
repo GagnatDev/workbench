@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/db/db'
 
@@ -15,13 +16,14 @@ export function AttachmentThumb({
   attachmentId,
   uploaded,
   className = '',
-  alt = 'Photo',
+  alt,
 }: {
   attachmentId: string
   uploaded?: boolean
   className?: string
   alt?: string
 }) {
+  const { t } = useTranslation()
   const blobRow = useLiveQuery(() => db.blobs.get(attachmentId), [attachmentId])
   const [blobUrl, setBlobUrl] = useState<string | null>(null)
 
@@ -39,11 +41,11 @@ export function AttachmentThumb({
 
   return (
     <span className="relative inline-block">
-      <img src={src} alt={alt} className={className} loading="lazy" />
+      <img src={src} alt={alt ?? t('common.photo')} className={className} loading="lazy" />
       {uploaded === false && (
         <span
-          aria-label="Not yet uploaded"
-          title="Queued for upload"
+          aria-label={t('attachment.not_uploaded_aria')}
+          title={t('attachment.queued_title')}
           className="absolute right-1 top-1 rounded-full bg-charcoal/70 px-1 text-[10px] leading-4 text-oatmeal"
         >
           ⤴

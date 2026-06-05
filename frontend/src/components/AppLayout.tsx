@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { NavLink, Outlet, useMatch } from 'react-router-dom'
 import { FolderOpen, Inbox, Plus, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -7,8 +8,8 @@ import { SyncStatus } from './SyncStatus'
 import { CaptureSheet } from './CaptureSheet'
 
 const NAV = [
-  { to: '/inbox', label: 'Inbox', icon: Inbox },
-  { to: '/projects', label: 'Projects', icon: FolderOpen },
+  { to: '/inbox', labelKey: 'nav.inbox', icon: Inbox },
+  { to: '/projects', labelKey: 'nav.projects', icon: FolderOpen },
 ] as const
 
 function navItemClass({ isActive }: { isActive: boolean }): string {
@@ -24,6 +25,7 @@ function navItemClass({ isActive }: { isActive: boolean }): string {
  * component tree, one breakpoint (ui-ux-design.md §1, §10).
  */
 export function AppLayout() {
+  const { t } = useTranslation()
   const [capturing, setCapturing] = useState(false)
   // Capture is context-aware: anywhere under a project, the default destination is
   // that project's inbox; elsewhere it's the global inbox (ui-ux-design.md §2).
@@ -38,7 +40,7 @@ export function AppLayout() {
   const captureButton = (
     <button
       type="button"
-      aria-label="Capture an idea"
+      aria-label={t('nav.capture_aria')}
       onClick={() => setCapturing(true)}
       className="flex h-14 w-14 items-center justify-center rounded-full bg-terracotta text-oatmeal shadow-md transition-transform active:scale-95"
     >
@@ -50,10 +52,10 @@ export function AppLayout() {
     <div className="flex h-full flex-col md:flex-row">
       {/* Left rail (desktop) */}
       <nav className="hidden border-r border-divider bg-oatmeal px-3 py-6 md:flex md:flex-col md:items-center md:gap-8">
-        {NAV.map(({ to, label, icon: Icon }) => (
-          <NavLink key={to} to={to} className={navItemClass} aria-label={label}>
+        {NAV.map(({ to, labelKey, icon: Icon }) => (
+          <NavLink key={to} to={to} className={navItemClass} aria-label={t(labelKey)}>
             <Icon size={24} />
-            <span>{label}</span>
+            <span>{t(labelKey)}</span>
           </NavLink>
         ))}
         {captureButton}
@@ -62,12 +64,12 @@ export function AppLayout() {
       {/* Main column */}
       <div className="flex min-h-0 flex-1 flex-col">
         <header className="flex items-center justify-between border-b border-divider px-4 py-3">
-          <h1 className="font-serif text-xl text-charcoal">Workbench</h1>
+          <h1 className="font-serif text-xl text-charcoal">{t('app.title')}</h1>
           <div className="flex items-center gap-4">
             <SyncStatus />
             <NavLink
               to="/settings"
-              aria-label="Settings and profile"
+              aria-label={t('nav.settings_aria')}
               className="text-charcoal-muted hover:text-charcoal"
             >
               <User size={22} />
@@ -82,14 +84,14 @@ export function AppLayout() {
 
       {/* Bottom bar (mobile) */}
       <nav className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-around border-t border-divider bg-oatmeal px-6 py-2 md:hidden">
-        <NavLink to="/inbox" className={navItemClass} aria-label="Inbox">
+        <NavLink to="/inbox" className={navItemClass} aria-label={t('nav.inbox')}>
           <Inbox size={24} />
-          <span>Inbox</span>
+          <span>{t('nav.inbox')}</span>
         </NavLink>
         <div className="-mt-6">{captureButton}</div>
-        <NavLink to="/projects" className={navItemClass} aria-label="Projects">
+        <NavLink to="/projects" className={navItemClass} aria-label={t('nav.projects')}>
           <FolderOpen size={24} />
-          <span>Projects</span>
+          <span>{t('nav.projects')}</span>
         </NavLink>
       </nav>
 

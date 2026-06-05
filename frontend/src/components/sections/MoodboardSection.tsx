@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link as LinkIcon, Plus, X } from 'lucide-react'
 import { BottomSheet } from '../BottomSheet'
 import { AttachmentThumb } from '../AttachmentThumb'
@@ -31,6 +32,7 @@ export function MoodboardSection({
   section: Section
   tagFilter?: string[]
 }) {
+  const { t } = useTranslation()
   const data = useSectionItems(section.id)
   const items = (data?.items ?? []).filter((i) => matchesTags(i.tags, tagFilter))
   const [adding, setAdding] = useState(false)
@@ -49,9 +51,7 @@ export function MoodboardSection({
   return (
     <div>
       {items.length === 0 && (
-        <p className="mb-4 text-center text-sm text-charcoal-muted">
-          Collect references — photos and links that set the mood.
-        </p>
+        <p className="mb-4 text-center text-sm text-charcoal-muted">{t('moodboard.empty')}</p>
       )}
 
       <div className="columns-2 gap-3">
@@ -90,7 +90,7 @@ export function MoodboardSection({
                     attachmentId={att.id}
                     uploaded={att.uploaded}
                     className="w-full rounded-card object-cover"
-                    alt={caption ?? 'Pin'}
+                    alt={caption ?? t('moodboard.pin_fallback')}
                   />
                 </button>
               ) : (
@@ -108,7 +108,7 @@ export function MoodboardSection({
           <button
             type="button"
             onClick={() => setAdding(true)}
-            aria-label="Add pin"
+            aria-label={t('moodboard.add_pin_aria')}
             className="flex aspect-square w-full items-center justify-center rounded-card border-2 border-dashed border-divider text-charcoal-muted hover:border-terracotta hover:text-terracotta"
           >
             <Plus size={28} />
@@ -130,12 +130,13 @@ export function MoodboardSection({
 
 /** A masonry cell with a hover/visible delete control (top-right). */
 function PinFrame({ children, onDelete }: { children: React.ReactNode; onDelete: () => void }) {
+  const { t } = useTranslation()
   return (
     <div className="relative mb-3 break-inside-avoid">
       {children}
       <button
         type="button"
-        aria-label="Delete pin"
+        aria-label={t('moodboard.delete_pin_aria')}
         onClick={onDelete}
         className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-charcoal/60 text-oatmeal"
       >
@@ -147,6 +148,7 @@ function PinFrame({ children, onDelete }: { children: React.ReactNode; onDelete:
 
 /** Add a pin: a photo (image pin) or a URL with optional caption (link pin). */
 function AddPinSheet({ section, onClose }: { section: Section; onClose: () => void }) {
+  const { t } = useTranslation()
   const [url, setUrl] = useState('')
   const [caption, setCaption] = useState('')
   const fileInput = useRef<HTMLInputElement>(null)
@@ -173,7 +175,7 @@ function AddPinSheet({ section, onClose }: { section: Section; onClose: () => vo
   return (
     <BottomSheet onClose={onClose} labelledBy="add-pin">
       <h2 id="add-pin" className="mb-3 font-serif text-lg text-charcoal">
-        Add to moodboard
+        {t('moodboard.add_title')}
       </h2>
 
       <button
@@ -181,7 +183,7 @@ function AddPinSheet({ section, onClose }: { section: Section; onClose: () => vo
         onClick={() => fileInput.current?.click()}
         className="flex w-full items-center justify-center gap-2 rounded-lg bg-terracotta py-3 text-oatmeal"
       >
-        <Plus size={18} /> Photo
+        <Plus size={18} /> {t('common.photo')}
       </button>
       <input
         ref={fileInput}
@@ -196,7 +198,7 @@ function AddPinSheet({ section, onClose }: { section: Section; onClose: () => vo
       />
 
       <div className="my-4 flex items-center gap-3 text-xs text-charcoal-muted">
-        <span className="h-px flex-1 bg-divider" /> or a link <span className="h-px flex-1 bg-divider" />
+        <span className="h-px flex-1 bg-divider" /> {t('moodboard.or_link')} <span className="h-px flex-1 bg-divider" />
       </div>
 
       <input
@@ -204,13 +206,13 @@ function AddPinSheet({ section, onClose }: { section: Section; onClose: () => vo
         inputMode="url"
         value={url}
         onChange={(e) => setUrl(e.target.value)}
-        placeholder="https://…"
+        placeholder={t('moodboard.url_placeholder')}
         className={field}
       />
       <input
         value={caption}
         onChange={(e) => setCaption(e.target.value)}
-        placeholder="Caption (optional)"
+        placeholder={t('moodboard.caption_placeholder')}
         className={`mt-2 ${field}`}
       />
       <button
@@ -219,7 +221,7 @@ function AddPinSheet({ section, onClose }: { section: Section; onClose: () => vo
         disabled={!url.trim()}
         className="mt-3 w-full rounded-lg bg-oatmeal py-3 text-charcoal disabled:opacity-40"
       >
-        Add link
+        {t('moodboard.add_link')}
       </button>
     </BottomSheet>
   )

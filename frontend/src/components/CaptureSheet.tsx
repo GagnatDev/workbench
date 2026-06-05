@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Check, ChevronDown, FolderOpen, Inbox } from 'lucide-react'
 import { BottomSheet } from './BottomSheet'
@@ -22,6 +23,7 @@ export function CaptureSheet({
   defaultProjectId?: string | null
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   const [draft, setDraft] = useState<ComposerDraft>(emptyDraft)
   const [dest, setDest] = useState<string | null>(defaultProjectId)
   const [picking, setPicking] = useState(false)
@@ -42,7 +44,7 @@ export function CaptureSheet({
   }
 
   const destProject = dest ? projects.find((p) => p.id === dest) : undefined
-  const destLabel = dest ? (destProject?.title ?? 'Project') : 'Inbox'
+  const destLabel = dest ? (destProject?.title ?? t('common.project_fallback')) : t('capture.inbox')
 
   return (
     <BottomSheet onClose={save} labelledBy="capture-dest">
@@ -60,7 +62,7 @@ export function CaptureSheet({
         {picking && (
           <ul className="mt-2 max-h-56 overflow-y-auto rounded-card bg-oatmeal py-1">
             <DestRow
-              label="Inbox (global)"
+              label={t('capture.inbox_global')}
               icon={<Inbox size={15} />}
               active={dest === null}
               onClick={() => {
@@ -84,11 +86,9 @@ export function CaptureSheet({
         )}
       </div>
 
-      <Composer draft={draft} onChange={setDraft} autoFocus placeholder="Type an idea…" />
+      <Composer draft={draft} onChange={setDraft} autoFocus placeholder={t('capture.placeholder')} />
       {!isDraftEmpty(draft) && (
-        <p className="mt-3 text-center text-xs text-charcoal-muted">
-          Swipe down or tap away to save
-        </p>
+        <p className="mt-3 text-center text-xs text-charcoal-muted">{t('capture.save_hint')}</p>
       )}
     </BottomSheet>
   )

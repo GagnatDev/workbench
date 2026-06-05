@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { BookOpen, Image, ListChecks, Package } from 'lucide-react'
 import { BottomSheet } from './BottomSheet'
@@ -19,6 +20,7 @@ const KIND_ICON: Record<SectionKind, typeof BookOpen> = {
  * create it drops you into the new section so you can start using it immediately.
  */
 export function AddSectionSheet({ projectId, onClose }: { projectId: string; onClose: () => void }) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [kind, setKind] = useState<SectionKind>('journal')
   const [name, setName] = useState('')
@@ -35,11 +37,11 @@ export function AddSectionSheet({ projectId, onClose }: { projectId: string; onC
   return (
     <BottomSheet onClose={onClose} labelledBy="add-section-title">
       <h2 id="add-section-title" className="mb-3 font-serif text-lg text-charcoal">
-        Add section
+        {t('project.add_section')}
       </h2>
 
       <div className="grid grid-cols-2 gap-2">
-        {SECTION_KINDS.map(({ kind: k, label }) => {
+        {SECTION_KINDS.map(({ kind: k }) => {
           const Icon = KIND_ICON[k]
           const active = k === kind
           return (
@@ -51,7 +53,7 @@ export function AddSectionSheet({ projectId, onClose }: { projectId: string; onC
                 active ? 'bg-terracotta text-oatmeal' : 'bg-oatmeal text-charcoal'
               }`}
             >
-              <Icon size={18} /> {label}
+              <Icon size={18} /> {t(`section_kind.${k}`)}
             </button>
           )
         })}
@@ -70,7 +72,7 @@ export function AddSectionSheet({ projectId, onClose }: { projectId: string; onC
         disabled={creating}
         className="mt-5 w-full rounded-lg bg-terracotta py-3 text-oatmeal disabled:opacity-60"
       >
-        Create section
+        {t('add_section.create')}
       </button>
     </BottomSheet>
   )

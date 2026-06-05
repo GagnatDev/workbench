@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Camera, Plus, Trash2, X } from 'lucide-react'
 import { BottomSheet } from '../BottomSheet'
@@ -34,6 +35,7 @@ export function MaterialsSection({
   section: Section
   tagFilter?: string[]
 }) {
+  const { t } = useTranslation()
   const data = useSectionItems(section.id)
   const items = (data?.items ?? []).filter((i) => matchesTags(i.tags, tagFilter))
   const [name, setName] = useState('')
@@ -49,7 +51,7 @@ export function MaterialsSection({
   return (
     <div>
       {items.length === 0 ? (
-        <EmptyState title="No materials yet." hint="List what this project needs." />
+        <EmptyState title={t('materials.empty.title')} hint={t('materials.empty.hint')} />
       ) : (
         <ReorderableList
           items={items}
@@ -77,7 +79,7 @@ export function MaterialsSection({
                 <span className="min-w-0 flex-1">
                   <span className="flex items-baseline justify-between gap-3">
                     <span className="min-w-0 break-words text-charcoal">
-                      {item.title || 'Untitled'}
+                      {item.title || t('common.untitled')}
                     </span>
                     {amount && (
                       <span className="tabular flex-shrink-0 text-sm text-charcoal-muted">
@@ -107,12 +109,12 @@ export function MaterialsSection({
               void add()
             }
           }}
-          placeholder="Add a material…"
+          placeholder={t('materials.placeholder')}
           className="min-w-0 flex-1 rounded-lg bg-oatmeal p-3 text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-terracotta/40"
         />
         <button
           type="button"
-          aria-label="Add material"
+          aria-label={t('materials.add_aria')}
           onClick={() => void add()}
           disabled={!name.trim()}
           className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-terracotta text-oatmeal disabled:opacity-40"
@@ -142,6 +144,7 @@ function MaterialEditSheet({
   photo: Attachment | null
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   const payload = item.payload as MaterialPayload
   const [title, setTitle] = useState(item.title ?? '')
   const [quantity, setQuantity] = useState(payload.quantity ?? '')
@@ -168,25 +171,25 @@ function MaterialEditSheet({
       labelledBy="material-edit"
     >
       <h2 id="material-edit" className="mb-3 font-serif text-lg text-charcoal">
-        Material
+        {t('materials.edit_title')}
       </h2>
       <input
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        placeholder="Name"
+        placeholder={t('materials.name_placeholder')}
         className={`w-full ${field}`}
       />
       <div className="mt-2 flex gap-2">
         <input
           value={quantity}
           onChange={(e) => setQuantity(e.target.value)}
-          placeholder="Quantity"
+          placeholder={t('materials.quantity_placeholder')}
           className={`tabular min-w-0 flex-1 ${field}`}
         />
         <input
           value={unit}
           onChange={(e) => setUnit(e.target.value)}
-          placeholder="Unit"
+          placeholder={t('materials.unit_placeholder')}
           className={`min-w-0 flex-1 ${field}`}
         />
       </div>
@@ -194,7 +197,7 @@ function MaterialEditSheet({
         rows={2}
         value={body}
         onChange={(e) => setBody(e.target.value)}
-        placeholder="Notes"
+        placeholder={t('materials.notes_placeholder')}
         className={`mt-2 w-full resize-none ${field}`}
       />
 
@@ -212,7 +215,7 @@ function MaterialEditSheet({
             />
             <button
               type="button"
-              aria-label="Remove photo"
+              aria-label={t('common.remove_photo')}
               onClick={() => void removeAttachment(photo.id)}
               className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-charcoal text-oatmeal"
             >
@@ -225,7 +228,7 @@ function MaterialEditSheet({
             onClick={() => fileInput.current?.click()}
             className="inline-flex items-center gap-1 text-sm text-charcoal-muted hover:text-charcoal"
           >
-            <Camera size={18} /> Add photo
+            <Camera size={18} /> {t('materials.add_photo')}
           </button>
         )}
         <input
@@ -250,7 +253,7 @@ function MaterialEditSheet({
         }}
         className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-brick"
       >
-        <Trash2 size={16} /> Delete material
+        <Trash2 size={16} /> {t('materials.delete')}
       </button>
     </BottomSheet>
   )

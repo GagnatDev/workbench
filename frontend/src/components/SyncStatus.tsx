@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { SyncDot } from './SyncDot'
 import { syncEngine } from '@/db/sync'
 import { useSyncState } from '@/db/useSyncState'
@@ -11,6 +12,7 @@ import { useSyncState } from '@/db/useSyncState'
  * (SyncDot); this wraps it with the popover and wires the manual trigger.
  */
 export function SyncStatus() {
+  const { t } = useTranslation()
   const sync = useSyncState()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -26,21 +28,21 @@ export function SyncStatus() {
   }, [open])
 
   const STATUS_LABEL = {
-    synced: 'Synced',
-    syncing: 'Syncing…',
-    offline: 'Offline',
-    error: 'Sync error',
+    synced: t('sync.status.synced'),
+    syncing: t('sync.status.syncing'),
+    offline: t('sync.status.offline'),
+    error: t('sync.status.error'),
   } as const
 
   const parts: string[] = []
-  if (sync.pending > 0) parts.push(`${sync.pending} ${sync.pending === 1 ? 'change' : 'changes'}`)
-  if (sync.photosQueued > 0) parts.push(`${sync.photosQueued} queued`)
+  if (sync.pending > 0) parts.push(t('sync.pending', { count: sync.pending }))
+  if (sync.photosQueued > 0) parts.push(t('sync.queued', { count: sync.photosQueued }))
 
   return (
     <div ref={ref} className="relative">
       <button
         type="button"
-        aria-label="Sync status"
+        aria-label={t('sync.aria')}
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
         className="flex items-center"
@@ -52,7 +54,7 @@ export function SyncStatus() {
         <div className="absolute right-0 z-50 mt-2 w-56 rounded-card bg-stoneware p-3 shadow-md">
           <p className="text-sm font-medium text-charcoal">{STATUS_LABEL[sync.status]}</p>
           <p className="mt-0.5 text-sm text-charcoal-muted">
-            {parts.length ? parts.join(' · ') : 'Everything is up to date.'}
+            {parts.length ? parts.join(' · ') : t('sync.up_to_date')}
           </p>
           <button
             type="button"
@@ -62,7 +64,7 @@ export function SyncStatus() {
             disabled={sync.status === 'syncing'}
             className="mt-3 w-full rounded-lg bg-terracotta py-2 text-sm text-oatmeal disabled:opacity-50"
           >
-            {sync.status === 'syncing' ? 'Syncing…' : 'Sync now'}
+            {sync.status === 'syncing' ? t('sync.status.syncing') : t('sync.action')}
           </button>
         </div>
       )}
