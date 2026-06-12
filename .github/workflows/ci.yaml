@@ -48,8 +48,8 @@ jobs:
       cancel-in-progress: true
     env:
       CI: "true"
-      # The harness detects DATABASE_URL + S3_ENDPOINT and uses these GitHub
-      # service containers instead of starting its own (Testcontainers locally).
+      # The harness detects DATABASE_URL + S3_ENDPOINT and skips Testcontainers.
+      # Postgres runs as a service container; MinIO is started as a step below.
       DATABASE_URL: postgresql://workbench:workbench@localhost:5432/workbench
       S3_ENDPOINT: http://localhost:9000
       S3_REGION: us-east-1
@@ -72,19 +72,17 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 5
-      minio:
-        # bitnami/minio auto-starts the server (the stock minio/minio image needs a
-        # `command:`, which service containers can't set). The harness waits for the
-        # endpoint and creates the bucket itself (ensureBucket), so no health-cmd is
-        # needed here — avoiding a dependency on `mc` being present in the image.
-        image: bitnami/minio:latest
-        env:
-          MINIO_ROOT_USER: workbench
-          MINIO_ROOT_PASSWORD: workbench-dev-secret
-        ports:
-          - 9000:9000
     steps:
       - uses: actions/checkout@v6
+
+      - name: Start MinIO
+        run: |
+          docker run -d --name minio \
+            -e MINIO_ROOT_USER=workbench \
+            -e MINIO_ROOT_PASSWORD=workbench-dev-secret \
+            -p 9000:9000 \
+            minio/minio:latest server /data
+          timeout 30 sh -c 'until curl -sf http://localhost:9000/minio/health/live; do sleep 1; done'
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v5
