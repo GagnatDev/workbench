@@ -51,10 +51,10 @@ describe("POST /api/invites", () => {
     expect(res.status).toBe(400);
   });
 
-  it("forwards the bearer + app scope to the auth service and returns its invite", async () => {
+  it("forwards the bearer + app scope and builds a redemption link from the token", async () => {
     const fetchMock = vi.fn(
       async (_url: string | URL, _init?: RequestInit) =>
-        new Response(JSON.stringify({ inviteUrl: "https://auth.test/i/abc" }), {
+        new Response(JSON.stringify({ token: "raw-invite-token" }), {
           status: 200,
           headers: { "Content-Type": "application/json" },
         }),
@@ -67,7 +67,9 @@ describe("POST /api/invites", () => {
       .send({ email: "friend@example.com" });
 
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ inviteUrl: "https://auth.test/i/abc" });
+    expect(res.body).toEqual({
+      inviteUrl: "https://auth.test/invite?token=raw-invite-token",
+    });
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, init] = fetchMock.mock.calls[0]!;

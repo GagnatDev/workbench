@@ -60,8 +60,12 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
+      // Only the API is proxied to the backend. The OAuth `/auth/callback` is
+      // handled client-side (see src/auth/Callback.tsx): login is SPA-initiated,
+      // so the callback must land in the SPA, not the backend client lib (which
+      // expects a server-set state cookie it never wrote). The SPA talks to the
+      // auth service directly for /authorize, /refresh and /logout.
       '/api': { target: apiProxyTarget, changeOrigin: true },
-      '/auth': { target: apiProxyTarget, changeOrigin: true },
     },
   },
 })

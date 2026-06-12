@@ -17,6 +17,15 @@ const CLIENT_ID = 'workbench'
 
 let accessToken: string | null = null
 
+// Coalesce concurrent refreshes into one in-flight request. The auth service
+// ROTATES the refresh token on every /refresh (the old one is deleted), so two
+// overlapping calls would race: the first rotates and succeeds, the second sends
+// the now-invalid token and gets a 401 that also clears the cookie. React
+// StrictMode double-invokes AuthProvider's bootstrap effect in dev, which is
+// exactly that scenario — and it also guards the real case of two authedFetch
+// 401s refreshing at once. Sharing the promise means one rotation, one result.
+let inflightRefresh: Promise<string | null> | null = null
+
 export interface AuthBrowserClient {
   /** Seed the in-memory token from the refresh cookie. Returns the token or null. */
   bootstrap(): Promise<string | null>
@@ -29,19 +38,27 @@ export interface AuthBrowserClient {
   readonly disabled: boolean
 }
 
-async function refresh(): Promise<string | null> {
-  try {
-    const res = await fetch(`${AUTH_SERVICE_URL}/refresh`, {
-      method: 'POST',
-      credentials: 'include',
-    })
-    if (!res.ok) return null
-    const data = (await res.json()) as { access_token?: string }
-    accessToken = data.access_token ?? null
-    return accessToken
-  } catch {
-    return null
-  }
+function refresh(): Promise<string | null> {
+  // Reuse an in-flight refresh so concurrent callers don't double-rotate the
+  // refresh token (see inflightRefresh above).
+  if (inflightRefresh) return inflightRefresh
+  inflightRefresh = (async () => {
+    try {
+      const res = await fetch(`${AUTH_SERVICE_URL}/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+      })
+      if (!res.ok) return null
+      const data = (await res.json()) as { access_token?: string }
+      accessToken = data.access_token ?? null
+      return accessToken
+    } catch {
+      return null
+    } finally {
+      inflightRefresh = null
+    }
+  })()
+  return inflightRefresh
 }
 
 export const authClient: AuthBrowserClient = {

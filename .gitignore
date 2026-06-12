@@ -17,6 +17,10 @@ npm-debug.log*
 .vite/
 *.tsbuildinfo
 *.local
+# Compiled output of vite.config.ts — Vite resolves .js before .ts, so a stray
+# vite.config.js silently shadows the real config. Never commit it.
+frontend/vite.config.js
+frontend/vite.config.d.ts
 .env
 .env.local
 .env.*.local
@@ -44,6 +48,7 @@ Thumbs.db
 *.tmp
 *.temp
 .cache/
+.issues/
 
 # Test / coverage
 coverage/

@@ -57,7 +57,20 @@ export function inviteRoutes(config: Env = env): Router {
         throw new HttpError(status, message);
       }
 
-      res.json(data);
+      // The auth service returns the bare redemption token (`{ token }`); the
+      // front-end needs a usable link. We own the redemption URL shape since we
+      // already know AUTH_SERVICE_URL — build it here so the SPA just renders it.
+      // Guard against a 2xx that lacks a token (shape drift / empty body falls
+      // back to `{}` above) so we never hand out a `?token=undefined` link, and
+      // encode the token so a non-URL-safe value can't corrupt the query string.
+      const token = (data as { token?: string }).token;
+      if (!token) {
+        logger.warn({ data }, "invite succeeded but returned no token");
+        throw new HttpError(502, "Invite service returned an unexpected response");
+      }
+      res.json({
+        inviteUrl: `${config.AUTH_SERVICE_URL}/invite?token=${encodeURIComponent(token)}`,
+      });
     } catch (err) {
       // A fetch rejection (auth service unreachable) is our 502, not a 500.
       if (err instanceof HttpError) return next(err);

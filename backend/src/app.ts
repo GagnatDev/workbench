@@ -47,10 +47,14 @@ export function buildApp(deps: AppDeps): Express {
 
   app.use(healthRouter);
 
-  // OAuth callback + logout (real provider only; public, no resolveUser).
-  if (authProvider.callbackHandler) {
-    app.get("/auth/callback", authProvider.callbackHandler);
-  }
+  // OAuth logout (real provider only; public, no resolveUser).
+  //
+  // No `/auth/callback` mount: login is SPA-initiated, so the callback is owned
+  // by the front-end (src/auth/Callback.tsx), which validates its own CSRF state
+  // and re-bootstraps from the auth service's session cookie. Routing it to the
+  // client lib's callbackHandler would fail — that handler requires a server-set
+  // `homectl_auth_state` cookie that only the server-initiated flow ever writes.
+  // Leaving it unmounted lets the SPA fallback below serve the callback route.
   if (authProvider.logoutHandler) {
     app.post("/auth/logout", authProvider.logoutHandler);
   }
