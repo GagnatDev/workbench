@@ -10,6 +10,7 @@ on:
 permissions:
   actions: read
   contents: read
+  packages: read
 
 concurrency:
   group: deploy-k8s-workbench
@@ -30,11 +31,15 @@ jobs:
           ref: ${{ env.IMAGE_TAG }}
 
       - name: Build and push image
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "${{ secrets.SCW_SECRET_KEY }}" | docker login rg.fr-par.scw.cloud \
             -u nologin --password-stdin
-          docker build -t rg.fr-par.scw.cloud/homectl/workbench:${{ env.IMAGE_TAG }} \
-                       -t rg.fr-par.scw.cloud/homectl/workbench:latest .
+          docker build \
+            --secret id=github_token,env=GITHUB_TOKEN \
+            -t rg.fr-par.scw.cloud/homectl/workbench:${{ env.IMAGE_TAG }} \
+            -t rg.fr-par.scw.cloud/homectl/workbench:latest .
           docker push rg.fr-par.scw.cloud/homectl/workbench:${{ env.IMAGE_TAG }}
           docker push rg.fr-par.scw.cloud/homectl/workbench:latest
 

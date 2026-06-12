@@ -16,6 +16,9 @@ importers:
       '@aws-sdk/s3-request-presigner':
         specifier: ^3.1062.0
         version: 3.1062.0
+      '@gagnatdev/homectl-auth-client':
+        specifier: 0.1.0
+        version: 0.1.0(express@5.2.1)
       cookie-parser:
         specifier: ^1.4.7
         version: 1.4.7
@@ -1342,6 +1345,11 @@ packages:
   '@fontsource-variable/playfair-display@5.2.8':
     resolution: {integrity: sha512-ZzVIXPOrL85yyOvZYoBzUszIJM+xKkHqni4IYn2CVLaGQQdJR8sBeC8yFNgjxSJ7ludTwta8qpULeOFuk5X75A==}
 
+  '@gagnatdev/homectl-auth-client@0.1.0':
+    resolution: {integrity: sha512-7SNwJk0B2jzcOAZhxvjUo6cvxe+ykvTj2gZoi3HS7GBI7lLpunZYUhsmPsCeO8j9YNW/7kKPC/giz+UzONt0MQ==, tarball: https://npm.pkg.github.com/download/@gagnatdev/homectl-auth-client/0.1.0/d296e89c50afba2b6f8266ad01069ee499b5e9ae}
+    peerDependencies:
+      express: ^4.x
+
   '@grpc/grpc-js@1.14.4':
     resolution: {integrity: sha512-k9Dj3DV/itK9D06Y8f190Qgop7/Ui+D0njFV3LHMPwPT75DpXLQohE9Wmz0QElrJnzsjB7KPWiKJbOl7IPDArQ==}
     engines: {node: '>=12.10.0'}
@@ -1766,8 +1774,14 @@ packages:
   '@types/http-errors@2.0.5':
     resolution: {integrity: sha512-r8Tayk8HJnX0FztbZN7oVqGccWgw98T/0neJphO91KkmOzug1KkofZURD4UaD5uH8AqcFLfdPErnBod0u71/qg==}
 
+  '@types/jsonwebtoken@9.0.10':
+    resolution: {integrity: sha512-asx5hIG9Qmf/1oStypjanR7iKTv0gXQ1Ov/jfrX6kS/EO0OFni8orbmGCn0672NHR3kXHwpAwR+B368ZGN/2rA==}
+
   '@types/methods@1.1.4':
     resolution: {integrity: sha512-ymXWVrDiCxTBE3+RIrrP533E70eA+9qu7zdWoHuOmGujkYtzf4HQF96b8nwHLqhuf4ykX61IGRIB38CC6/sImQ==}
+
+  '@types/ms@2.1.0':
+    resolution: {integrity: sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==}
 
   '@types/node@18.19.130':
     resolution: {integrity: sha512-GRaXQx6jGfL8sKfaIDD6OupbIHBr9jv7Jnaml9tB7l4v068PAOXqfcujMMo5PhbIs6ggR1XODELqahT2R8v0fg==}
@@ -2249,6 +2263,10 @@ packages:
   cookie-signature@1.2.2:
     resolution: {integrity: sha512-D76uU73ulSXrD1UXF4KE2TMxVVwhsnCgfAyTg9k8P6KGZjlXKrOLe4dJQKI3Bxi5wjesZoFXJWElNWBjPZMbhg==}
     engines: {node: '>=6.6.0'}
+
+  cookie@0.6.0:
+    resolution: {integrity: sha512-U71cyTamuh1CRNCfpGY6to28lxvNwPG4Guz/EVjgf3Jmzv0vlDp1atT9eS5dDjMYHucpHbWns6Lwf3BKz6svdw==}
+    engines: {node: '>= 0.6'}
 
   cookie@0.7.2:
     resolution: {integrity: sha512-yki5XnKuf750l50uGTllt6kKILY4nQ1eNIQatoXEByZ5dWgnKqbnqmTrBE5B4N7lrMJKQ2ytWMiTO2o0v6Ew/w==}
@@ -2988,6 +3006,12 @@ packages:
     resolution: {integrity: sha512-/imKNG4EbWNrVjoNC/1H5/9GFy+tqjGBHCaSsN+P2RnPqjsLmv6UD3Ej+Kj8nBWaRAwyk7kK5ZUc+OEatnTR3A==}
     hasBin: true
 
+  jose@4.15.9:
+    resolution: {integrity: sha512-1vUQX+IdDMVPj4k8kOxgUqlcK518yluMuGZwqlr44FS1ppZB/5GWh4rZG89erpOBOJjU/OBsnCVFfapsRz6nEA==}
+
+  jose@5.10.0:
+    resolution: {integrity: sha512-s+3Al/p9g32Iq+oqXxkW//7jk2Vig6FF1CFqzVXoTUXt2qz89YWbL+OwS17NFYEvxC35n0FKeGO2LGYSxeM2Gg==}
+
   joycon@3.1.1:
     resolution: {integrity: sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==}
     engines: {node: '>=10'}
@@ -3030,6 +3054,10 @@ packages:
     resolution: {integrity: sha512-p/nXbhSEcu3pZRdkW1OfJhpsVtW1gd4Wa1fnQc9YLiTfAjn0312eMKimbdIQzuZl9aa9xUGaRlP9T/CJE/ditQ==}
     engines: {node: '>=0.10.0'}
 
+  jwks-rsa@3.2.2:
+    resolution: {integrity: sha512-BqTyEDV+lS8F2trk3A+qJnxV5Q9EqKCBJOPti3W97r7qTympCZjb7h2X6f2kc+0K3rsSTY1/6YG2eaXKoj497w==}
+    engines: {node: '>=14'}
+
   kysely@0.27.6:
     resolution: {integrity: sha512-FIyV/64EkKhJmjgC0g2hygpBv5RNWVPyNCqSAD7eTCv6eFWNIi4PN1UvdSJGicN/o35bnevgis4Y0UDC0qi8jQ==}
     engines: {node: '>=14.0.0'}
@@ -3046,6 +3074,9 @@ packages:
     resolution: {integrity: sha512-/vlFKAoH5Cgt3Ie+JLhRbwOsCQePABiU3tJ1egGvyQ+33R/vcwM2Zl2QR/LzjsBeItPt3oSVXapn+m4nQDvpzw==}
     engines: {node: '>=14'}
 
+  limiter@1.1.5:
+    resolution: {integrity: sha512-FWWMIEOxz3GwUI4Ts/IvgVy6LPvoMPgjMdQ185nN6psJyBJ4yOpzqm695/h5umdLJg2vW3GR5iG11MAkR2AzJA==}
+
   lines-and-columns@1.2.4:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
 
@@ -3055,6 +3086,9 @@ packages:
 
   lodash.camelcase@4.3.0:
     resolution: {integrity: sha512-TwuEnCnxbc3rAvhf/LbG7tJUDzhqXyFnv3dtzLOPgCG/hODL7WFnsbwktkD7yUV0RrreP/l1PALq/YSg6VvjlA==}
+
+  lodash.clonedeep@4.5.0:
+    resolution: {integrity: sha512-H5ZhCF25riFd9uB5UCkVKo61m3S/xZk1x4wA6yp/L3RFP6Z/eHH1ymQcGLo7J3GMPfm0V/7m1tryHuGVxpqEBQ==}
 
   lodash.debounce@4.0.8:
     resolution: {integrity: sha512-FT1yDzDYEoYWhnSGnpE/4Kj1fLZkDFyqRb7fNt6FdYOSxlUWAtp42Eh6Wb0rGIv/m9Bgo7x4GhQbm5Ys4SG5ow==}
@@ -3084,6 +3118,13 @@ packages:
 
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
+
+  lru-cache@6.0.0:
+    resolution: {integrity: sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==}
+    engines: {node: '>=10'}
+
+  lru-memoizer@2.3.0:
+    resolution: {integrity: sha512-GXn7gyHAMhO13WSKrIiNfztwxodVsP8IoZ3XfrJV4yH2x0/OeTO/FIaAHTY5YekdGgW94njfuKmyyt1E0mR6Ug==}
 
   lucide-react@0.460.0:
     resolution: {integrity: sha512-BVtq/DykVeIvRTJvRAgCsOwaGL8Un3Bxh8MbDxMhEWlZay3T4IpEKDEpwt5KZ0KJMHzgm6jrltxlT5eXOWXDHg==}
@@ -4415,6 +4456,9 @@ packages:
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
 
+  yallist@4.0.0:
+    resolution: {integrity: sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A==}
+
   yaml@2.9.0:
     resolution: {integrity: sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA==}
     engines: {node: '>= 14.6'}
@@ -5629,6 +5673,15 @@ snapshots:
 
   '@fontsource-variable/playfair-display@5.2.8': {}
 
+  '@gagnatdev/homectl-auth-client@0.1.0(express@5.2.1)':
+    dependencies:
+      cookie: 0.6.0
+      express: 5.2.1
+      jose: 5.10.0
+      jwks-rsa: 3.2.2
+    transitivePeerDependencies:
+      - supports-color
+
   '@grpc/grpc-js@1.14.4':
     dependencies:
       '@grpc/proto-loader': 0.8.1
@@ -6023,7 +6076,14 @@ snapshots:
 
   '@types/http-errors@2.0.5': {}
 
+  '@types/jsonwebtoken@9.0.10':
+    dependencies:
+      '@types/ms': 2.1.0
+      '@types/node': 24.12.4
+
   '@types/methods@1.1.4': {}
+
+  '@types/ms@2.1.0': {}
 
   '@types/node@18.19.130':
     dependencies:
@@ -6558,6 +6618,8 @@ snapshots:
   cookie-signature@1.0.6: {}
 
   cookie-signature@1.2.2: {}
+
+  cookie@0.6.0: {}
 
   cookie@0.7.2: {}
 
@@ -7440,6 +7502,10 @@ snapshots:
 
   jiti@1.21.7: {}
 
+  jose@4.15.9: {}
+
+  jose@5.10.0: {}
+
   joycon@3.1.1: {}
 
   js-tokens@10.0.0: {}
@@ -7489,6 +7555,16 @@ snapshots:
 
   jsonpointer@5.0.1: {}
 
+  jwks-rsa@3.2.2:
+    dependencies:
+      '@types/jsonwebtoken': 9.0.10
+      debug: 4.4.3
+      jose: 4.15.9
+      limiter: 1.1.5
+      lru-memoizer: 2.3.0
+    transitivePeerDependencies:
+      - supports-color
+
   kysely@0.27.6: {}
 
   lazystream@1.0.1:
@@ -7499,11 +7575,15 @@ snapshots:
 
   lilconfig@3.1.3: {}
 
+  limiter@1.1.5: {}
+
   lines-and-columns@1.2.4: {}
 
   load-tsconfig@0.2.5: {}
 
   lodash.camelcase@4.3.0: {}
+
+  lodash.clonedeep@4.5.0: {}
 
   lodash.debounce@4.0.8: {}
 
@@ -7526,6 +7606,15 @@ snapshots:
   lru-cache@5.1.1:
     dependencies:
       yallist: 3.1.1
+
+  lru-cache@6.0.0:
+    dependencies:
+      yallist: 4.0.0
+
+  lru-memoizer@2.3.0:
+    dependencies:
+      lodash.clonedeep: 4.5.0
+      lru-cache: 6.0.0
 
   lucide-react@0.460.0(react@18.3.1):
     dependencies:
@@ -9112,6 +9201,8 @@ snapshots:
   y18n@5.0.8: {}
 
   yallist@3.1.1: {}
+
+  yallist@4.0.0: {}
 
   yaml@2.9.0: {}
 

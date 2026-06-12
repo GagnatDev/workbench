@@ -19,11 +19,6 @@ export default defineConfig({
   external: [
     "pg-native",
     "pino-pretty",
-    // The private auth client is dynamically imported only under AUTH_MODE=homectl.
-    // It is not installed in the default (dev) build, so keep esbuild from trying
-    // to resolve it — node resolves it at runtime when real auth is enabled.
-    "@gagnatdev/homectl-auth-client",
-    "@gagnatdev/homectl-auth-client/server",
   ],
   // Define a real module-scoped `require` so esbuild's CJS interop shim works for
   // bundled CommonJS deps (express et al.). Aliased to avoid a duplicate
