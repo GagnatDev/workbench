@@ -27,14 +27,13 @@ jobs:
           node-version: "24"
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
-
-      - name: Configure GitHub Packages auth
-        run: |
-          echo "@gagnatdev:registry=https://npm.pkg.github.com" >> .npmrc
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> .npmrc
+          registry-url: https://npm.pkg.github.com/
+          scope: "@gagnatdev"
 
       - name: Install workspace dependencies
         run: pnpm install --frozen-lockfile
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Backend tests spin up Postgres via Testcontainers (Docker is available on
       # ubuntu-latest). AUTH_MODE=dev so no auth service is needed.
@@ -102,14 +101,13 @@ jobs:
           node-version: "24"
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
-
-      - name: Configure GitHub Packages auth
-        run: |
-          echo "@gagnatdev:registry=https://npm.pkg.github.com" >> .npmrc
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> .npmrc
+          registry-url: https://npm.pkg.github.com/
+          scope: "@gagnatdev"
 
       - name: Install workspace dependencies
         run: pnpm install --frozen-lockfile
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Cache Playwright browsers
         id: pw-cache
