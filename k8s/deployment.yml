@@ -18,10 +18,23 @@ spec:
           image: rg.fr-par.scw.cloud/homectl/workbench:$IMAGE_TAG
           ports:
             - containerPort: 8080
-          # DATABASE_URL, AUTH_MODE, WORKBENCH_CLIENT_SECRET, S3_* live in this secret.
           envFrom:
             - secretRef:
+                name: workbench-terraform-secrets
+            - secretRef:
                 name: workbench-secrets
+                optional: true
+          env:
+            - name: S3_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: workbench-terraform-secrets
+                  key: S3_ACCESS_KEY
+            - name: S3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: workbench-terraform-secrets
+                  key: S3_SECRET_KEY
           startupProbe:
             httpGet:
               path: /health
