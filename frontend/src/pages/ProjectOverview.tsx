@@ -14,14 +14,17 @@ import {
   Trash2,
 } from 'lucide-react'
 import { AddSectionSheet } from '@/components/AddSectionSheet'
+import { AttachmentThumb } from '@/components/AttachmentThumb'
 import { BottomSheet } from '@/components/BottomSheet'
 import { CollectionPicker } from '@/components/CollectionPicker'
 import { DetailsBlock } from '@/components/DetailsBlock'
 import { EditProjectSheet } from '@/components/EditProjectSheet'
+import { PhotoViewer } from '@/components/PhotoViewer'
 import { ReorderableList } from '@/components/ReorderableList'
 import { SectionPreviewCard } from '@/components/SectionPreviewCard'
 import { StatusSheet } from '@/components/StatusSheet'
 import { db } from '@/db/db'
+import { projectIdeaPhotos } from '@/db/ideas'
 import { deleteProject, toggleFavourite } from '@/db/projects'
 import { deleteSection, renameSection, sectionsOfProject, setSectionRank } from '@/db/sections'
 import type { Section } from '@/db/types'
@@ -45,6 +48,9 @@ export function ProjectOverview() {
     [project?.collection_id],
   )
   const sections = useLiveQuery(() => (id ? sectionsOfProject(id) : []), [id]) ?? []
+  // The founding photo(s) carried over when an idea was promoted into this
+  // project — surfaced as a hero, tap to view full-screen (§7.2).
+  const ideaPhotos = useLiveQuery(() => (id ? projectIdeaPhotos(id) : []), [id]) ?? []
   // Untriaged ideas sitting in this project's inbox (drives the §6.1 banner).
   const inboxCount =
     useLiveQuery(async () => {
@@ -54,6 +60,7 @@ export function ProjectOverview() {
     }, [id]) ?? 0
 
   const [sheet, setSheet] = useState<Sheet>(null)
+  const [viewerStart, setViewerStart] = useState<number | null>(null)
   const [manageSection, setManageSection] = useState<Section | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -149,6 +156,22 @@ export function ProjectOverview() {
         </button>
       </div>
 
+      {ideaPhotos.length > 0 && (
+        <button
+          type="button"
+          onClick={() => setViewerStart(0)}
+          aria-label={t('project.view_photo')}
+          className="mt-3 block w-full overflow-hidden rounded-card"
+        >
+          <AttachmentThumb
+            attachmentId={ideaPhotos[0]!.id}
+            uploaded={ideaPhotos[0]!.uploaded}
+            className="max-h-64 w-full object-cover"
+            alt=""
+          />
+        </button>
+      )}
+
       {project.description && (
         <p className="mt-2 whitespace-pre-wrap text-charcoal-muted">{project.description}</p>
       )}
@@ -227,6 +250,13 @@ export function ProjectOverview() {
       )}
       {manageSection && (
         <SectionManageSheet section={manageSection} onClose={() => setManageSection(null)} />
+      )}
+      {viewerStart !== null && (
+        <PhotoViewer
+          attachmentIds={ideaPhotos.map((a) => a.id)}
+          startIndex={viewerStart}
+          onClose={() => setViewerStart(null)}
+        />
       )}
     </section>
   )

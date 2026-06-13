@@ -8,7 +8,7 @@ vi.mock('@/auth/authClient', () => ({
 }))
 
 const { db } = await import('./db')
-const { syncEngine, writeLocal } = await import('./sync')
+const { syncEngine, writeLocal, deleteLocal } = await import('./sync')
 const {
   createProject,
   setProjectStatus,
@@ -22,7 +22,7 @@ const {
 const { createCollection, renameCollection, deleteCollection, allCollections } = await import(
   './collections'
 )
-const { captureIdea, promoteIdea } = await import('./ideas')
+const { captureIdea, promoteIdea, projectIdeaPhotos } = await import('./ideas')
 const { SYNC_TABLES } = await import('./types')
 const i18n = (await import('@/i18n')).default
 
@@ -139,6 +139,46 @@ describe('deleteProject', () => {
     expect((await db.ideas.get(ideaId))!.deleted).toBe(true)
     const atts = await db.attachments.where('owner_id').equals(ideaId).toArray()
     expect(atts.every((a) => a.deleted)).toBe(true)
+  })
+})
+
+describe('projectIdeaPhotos', () => {
+  it('returns the promoted idea photos for the project, oldest first', async () => {
+    const ideaId = (await captureIdea({ text: 'thin rims', link: '', photo: null }, null))!
+    const pid = await promoteIdea((await db.ideas.get(ideaId))!, 'Cups', 'ceramics')
+    const older = crypto.randomUUID()
+    const newer = crypto.randomUUID()
+    await writeLocal('attachments', {
+      id: older, owner_type: 'idea', owner_id: ideaId, storage_key: null,
+      content_type: 'image/png', uploaded: true, created_at: '2026-01-01T00:00:00Z',
+    })
+    await writeLocal('attachments', {
+      id: newer, owner_type: 'idea', owner_id: ideaId, storage_key: null,
+      content_type: 'image/png', uploaded: true, created_at: '2026-02-01T00:00:00Z',
+    })
+
+    const photos = await projectIdeaPhotos(pid)
+    expect(photos.map((p) => p.id)).toEqual([older, newer])
+  })
+
+  it('excludes captured (inbox) ideas, deleted attachments, and item photos', async () => {
+    const ideaId = (await captureIdea({ text: 'x', link: '', photo: null }, null))!
+    const pid = await promoteIdea((await db.ideas.get(ideaId))!, 'P', 'ceramics')
+    // A captured idea sitting in the project inbox — not a founding image.
+    const captured = (await captureIdea({ text: 'later', link: '', photo: null }, pid))!
+    await writeLocal('attachments', {
+      id: crypto.randomUUID(), owner_type: 'idea', owner_id: captured, storage_key: null,
+      content_type: 'image/png', uploaded: false,
+    })
+    // A deleted attachment on the promoted idea.
+    const gone = crypto.randomUUID()
+    await writeLocal('attachments', {
+      id: gone, owner_type: 'idea', owner_id: ideaId, storage_key: null,
+      content_type: 'image/png', uploaded: false,
+    })
+    await deleteLocal('attachments', gone)
+
+    expect(await projectIdeaPhotos(pid)).toEqual([])
   })
 })
 

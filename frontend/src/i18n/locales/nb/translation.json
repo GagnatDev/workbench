@@ -74,7 +74,8 @@
     "inbox_count_one": "{{count}} idé å sortere",
     "inbox_count_other": "{{count}} idéer å sortere",
     "add_journal_hint": "Legg til en journal for å begynne å logge.",
-    "add_section": "Legg til seksjon"
+    "add_section": "Legg til seksjon",
+    "view_photo": "Vis bilde"
   },
   "section_manage": {
     "title": "Seksjon",

@@ -2,7 +2,7 @@ import { db } from './db'
 import { createItem } from './items'
 import { createProject } from './projects'
 import { deleteLocal, writeLocal } from './sync'
-import type { Idea, Section } from './types'
+import type { Attachment, Idea, Section } from './types'
 import { generateThumbnail } from '@/lib/thumbnail'
 import { isDraftEmpty, type ComposerDraft } from '@/components/Composer'
 
@@ -132,6 +132,24 @@ export async function fileIdea(idea: Idea, section: Section): Promise<string> {
 
   await writeLocal('ideas', { ...idea, state: 'filed' })
   return itemId
+}
+
+/**
+ * Photos from the idea(s) promoted into this project — the founding image(s)
+ * surfaced as the overview hero (see ProjectOverview). Scoped to `promoted`
+ * ideas so the hero is the founding image, not every un-triaged photo sitting in
+ * the project's inbox (those surface via the §6.1 inbox banner). Oldest first so
+ * the viewer pages in capture order.
+ */
+export async function projectIdeaPhotos(projectId: string): Promise<Attachment[]> {
+  const ideas = (await db.ideas.where('project_id').equals(projectId).toArray()).filter(
+    (i) => !i.deleted && i.state === 'promoted',
+  )
+  const ids = new Set(ideas.map((i) => i.id))
+  const atts = await db.attachments.toArray()
+  return atts
+    .filter((a) => !a.deleted && a.owner_type === 'idea' && ids.has(a.owner_id))
+    .sort((a, b) => (a.created_at ?? '').localeCompare(b.created_at ?? ''))
 }
 
 /** Distinct tags across the user's ideas, for the detail-sheet tag autocomplete. */
