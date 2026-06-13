@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link as LinkIcon, Plus, X } from 'lucide-react'
+import { ClipboardPaste, Link as LinkIcon, Plus, X } from 'lucide-react'
+import { clipboardReadSupported, imageFromPasteEvent, readImageFromClipboard } from '@/lib/clipboard'
 import { BottomSheet } from '../BottomSheet'
 import { AttachmentThumb } from '../AttachmentThumb'
 import { PhotoViewer } from '../PhotoViewer'
@@ -162,6 +163,18 @@ function AddPinSheet({ section, onClose }: { section: Section; onClose: () => vo
     onClose()
   }
 
+  const pastePhoto = async () => {
+    await addPhoto((await readImageFromClipboard()) ?? undefined)
+  }
+
+  const onPasteImage = (e: React.ClipboardEvent) => {
+    const file = imageFromPasteEvent(e.nativeEvent)
+    if (file) {
+      e.preventDefault()
+      void addPhoto(file)
+    }
+  }
+
   const addLink = async () => {
     const u = url.trim()
     if (!u) return
@@ -185,11 +198,19 @@ function AddPinSheet({ section, onClose }: { section: Section; onClose: () => vo
       >
         <Plus size={18} /> {t('common.photo')}
       </button>
+      {clipboardReadSupported() && (
+        <button
+          type="button"
+          onClick={() => void pastePhoto()}
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-oatmeal py-3 text-charcoal"
+        >
+          <ClipboardPaste size={18} /> {t('common.paste')}
+        </button>
+      )}
       <input
         ref={fileInput}
         type="file"
         accept="image/*"
-        capture="environment"
         className="hidden"
         onChange={(e) => {
           void addPhoto(e.target.files?.[0])
@@ -206,12 +227,14 @@ function AddPinSheet({ section, onClose }: { section: Section; onClose: () => vo
         inputMode="url"
         value={url}
         onChange={(e) => setUrl(e.target.value)}
+        onPaste={onPasteImage}
         placeholder={t('moodboard.url_placeholder')}
         className={field}
       />
       <input
         value={caption}
         onChange={(e) => setCaption(e.target.value)}
+        onPaste={onPasteImage}
         placeholder={t('moodboard.caption_placeholder')}
         className={`mt-2 ${field}`}
       />

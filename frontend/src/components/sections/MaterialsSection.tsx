@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Camera, Plus, Trash2, X } from 'lucide-react'
+import { Camera, ClipboardPaste, Plus, Trash2, X } from 'lucide-react'
+import { clipboardReadSupported, imageFromPasteEvent, readImageFromClipboard } from '@/lib/clipboard'
 import { BottomSheet } from '../BottomSheet'
 import { EmptyState } from '../EmptyState'
 import { ReorderableList } from '../ReorderableList'
@@ -159,6 +160,20 @@ function MaterialEditSheet({
     await setItemPayload(item, 'materials', { quantity: quantity.trim(), unit: unit.trim() })
   }
 
+  const pastePhoto = async () => {
+    const file = await readImageFromClipboard()
+    if (file) await addItemPhoto(item.id, file)
+  }
+
+  const onPasteImage = (e: React.ClipboardEvent) => {
+    if (photo) return // a material holds one photo; don't replace via stray paste
+    const file = imageFromPasteEvent(e.nativeEvent)
+    if (file) {
+      e.preventDefault()
+      void addItemPhoto(item.id, file)
+    }
+  }
+
   const field =
     'rounded-lg bg-oatmeal p-2.5 text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-terracotta/40'
 
@@ -197,6 +212,7 @@ function MaterialEditSheet({
         rows={2}
         value={body}
         onChange={(e) => setBody(e.target.value)}
+        onPaste={onPasteImage}
         placeholder={t('materials.notes_placeholder')}
         className={`mt-2 w-full resize-none ${field}`}
       />
@@ -223,19 +239,29 @@ function MaterialEditSheet({
             </button>
           </div>
         ) : (
-          <button
-            type="button"
-            onClick={() => fileInput.current?.click()}
-            className="inline-flex items-center gap-1 text-sm text-charcoal-muted hover:text-charcoal"
-          >
-            <Camera size={18} /> {t('materials.add_photo')}
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => fileInput.current?.click()}
+              className="inline-flex items-center gap-1 text-sm text-charcoal-muted hover:text-charcoal"
+            >
+              <Camera size={18} /> {t('materials.add_photo')}
+            </button>
+            {clipboardReadSupported() && (
+              <button
+                type="button"
+                onClick={() => void pastePhoto()}
+                className="inline-flex items-center gap-1 text-sm text-charcoal-muted hover:text-charcoal"
+              >
+                <ClipboardPaste size={18} /> {t('common.paste')}
+              </button>
+            )}
+          </div>
         )}
         <input
           ref={fileInput}
           type="file"
           accept="image/*"
-          capture="environment"
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0]

@@ -1,6 +1,7 @@
 import { useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Camera, Link as LinkIcon, X } from 'lucide-react'
+import { Camera, ClipboardPaste, Link as LinkIcon, X } from 'lucide-react'
+import { clipboardReadSupported, imageFromPasteEvent, readImageFromClipboard } from '@/lib/clipboard'
 
 /**
  * A single photo held in a draft: a local blob plus an object URL for preview.
@@ -79,6 +80,10 @@ export function Composer({
     onChange({ ...draft, photo: null })
   }
 
+  const pastePhoto = async () => {
+    pickPhoto((await readImageFromClipboard()) ?? undefined)
+  }
+
   return (
     <div>
       <textarea
@@ -86,6 +91,14 @@ export function Composer({
         rows={3}
         value={draft.text}
         onChange={(e) => onChange({ ...draft, text: e.target.value })}
+        onPaste={(e) => {
+          if (!allowPhoto) return
+          const file = imageFromPasteEvent(e.nativeEvent)
+          if (file) {
+            e.preventDefault()
+            pickPhoto(file)
+          }
+        }}
         onKeyDown={(e) => {
           // Bar mode commits on Enter (Shift+Enter still inserts a newline).
           if (onSubmit && e.key === 'Enter' && !e.shiftKey) {
@@ -136,6 +149,15 @@ export function Composer({
             <Camera size={18} /> {t('common.photo')}
           </button>
         )}
+        {allowPhoto && clipboardReadSupported() && (
+          <button
+            type="button"
+            onClick={() => void pastePhoto()}
+            className="inline-flex items-center gap-1 text-sm hover:text-charcoal"
+          >
+            <ClipboardPaste size={18} /> {t('common.paste')}
+          </button>
+        )}
         {allowLink && (
           <button
             type="button"
@@ -156,7 +178,6 @@ export function Composer({
         ref={fileInput}
         type="file"
         accept="image/*"
-        capture="environment"
         className="hidden"
         onChange={(e) => {
           pickPhoto(e.target.files?.[0])
