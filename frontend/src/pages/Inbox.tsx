@@ -22,7 +22,7 @@ function newestFirst(a: Idea, b: Idea): number {
 /**
  * Global Inbox (ui-ux-design.md §3): New / Kept segments (New = unprocessed
  * captures, the badge counts New only). Cards are newest-first; swipe right
- * archives, swipe left promotes (§3.2), tap opens the detail sheet. A tag filter
+ * promotes, swipe left archives (§3.2), tap opens the detail sheet. A tag filter
  * (§9.2) narrows the list. Archived ideas live on their own route (screen #3) —
  * `archived` renders that read-only view (reached from the overflow menu).
  */

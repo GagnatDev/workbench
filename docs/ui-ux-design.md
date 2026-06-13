@@ -76,7 +76,7 @@ Mobile-first throughout — the phone in the workshop is the primary device. Moc
 
 ### 3.2 Triage interaction
 
-**Decision:** Card list, newest first. **Swipe right = archive**, **swipe left = promote**. Tap opens a detail sheet for the slower actions (edit, tag, keep, delete, move to an existing project's inbox).
+**Decision:** Card list, newest first. **Swipe right = promote**, **swipe left = archive** (right = affirmative/advance, left = dismiss — matching card-stack, to-do, and mail conventions). Tap opens a detail sheet for the slower actions (edit, tag, keep, delete, move to an existing project's inbox).
 
 - One gesture for each of the two common outcomes; full control one tap deeper.
 - Swipe-to-triage is **inbox-only** — the gesture must never mean something different on another list (see §11 consistency rules).

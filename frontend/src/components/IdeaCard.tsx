@@ -20,8 +20,8 @@ function domainOf(link: string): string {
 
 /**
  * An inbox idea card with swipe-to-triage (ui-ux-design.md §3.2, §11.2 — swipe is
- * inbox-only). Swipe right reveals the olive archive underlay; swipe left the
- * terracotta promote underlay; release past threshold fires the action, a small
+ * inbox-only). Swipe right reveals the terracotta promote underlay; swipe left the
+ * olive archive underlay; release past threshold fires the action, a small
  * movement is a tap that opens the detail sheet. The detail sheet exposes the
  * same actions, so pointers without a swipe (desktop) lose nothing.
  */
@@ -59,8 +59,8 @@ export function IdeaCard({
     setDx(moveX)
   }
   const onPointerUp = () => {
-    if (dx >= SWIPE_THRESHOLD) onArchive()
-    else if (dx <= -SWIPE_THRESHOLD) onPromote()
+    if (dx >= SWIPE_THRESHOLD) onPromote()
+    else if (dx <= -SWIPE_THRESHOLD) onArchive()
     start.current = null
     setDx(0)
   }
@@ -70,15 +70,15 @@ export function IdeaCard({
       {/* Action underlays revealed by the swipe. */}
       <div className="absolute inset-0 flex items-center justify-between px-4 text-oatmeal">
         <span className={`flex items-center gap-1 ${dx > 0 ? 'opacity-100' : 'opacity-0'}`}>
-          <Archive size={18} /> {t('idea.archive')}
+          <FolderPlus size={18} /> {t('idea.promote_short')}
         </span>
         <span className={`flex items-center gap-1 ${dx < 0 ? 'opacity-100' : 'opacity-0'}`}>
-          {t('idea.promote_short')} <FolderPlus size={18} />
+          {t('idea.archive')} <Archive size={18} />
         </span>
       </div>
       <div
         className="absolute inset-0"
-        style={{ backgroundColor: dx > 0 ? '#7A826B' : dx < 0 ? '#C87A63' : 'transparent' }}
+        style={{ backgroundColor: dx > 0 ? '#C87A63' : dx < 0 ? '#7A826B' : 'transparent' }}
         aria-hidden
       />
 
