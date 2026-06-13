@@ -214,6 +214,47 @@ describe('photo upload pipeline', () => {
     expect(syncEngine.getState().photosQueued).toBe(1)
   })
 
+  it('a CORS-blocked PUT (thrown TypeError) does not abort the run: data syncs, photo stays queued', async () => {
+    // Regression: a direct browser→S3 PUT blocked by CORS makes fetch *reject*
+    // with a TypeError (not return a non-2xx response). That used to propagate out
+    // of uploadPending and abort the whole run, stranding pending data edits behind
+    // a false "offline". The data push/pull must still run and settle the run clean.
+    ;(globalThis.fetch as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new TypeError('Failed to fetch'),
+    )
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const attId = crypto.randomUUID()
+    await db.blobs.put({ id: attId, blob: new Blob(['x'], { type: 'image/png' }) })
+    await writeLocal('attachments', {
+      id: attId,
+      owner_type: 'idea',
+      owner_id: crypto.randomUUID(),
+      storage_key: null,
+      content_type: 'image/png',
+      uploaded: false,
+    })
+    // A separate idea must still reach the server despite the blocked photo PUT.
+    await writeLocal('ideas', {
+      id: crypto.randomUUID(),
+      content: 'still syncs despite CORS-blocked photo',
+      link: null,
+      project_id: null,
+      state: 'captured',
+      tags: [],
+    })
+
+    await syncEngine.syncNow()
+
+    // Data pushed and the run settled clean — not the false "offline".
+    expect(server.ideas).toHaveLength(1)
+    expect(syncEngine.getState().status).toBe('synced')
+    // The photo stays queued for a later retry; a blocked PUT isn't a logged error.
+    expect((await db.attachments.get(attId))?.uploaded).toBe(false)
+    expect(syncEngine.getState().photosQueued).toBe(1)
+    expect(errorSpy).not.toHaveBeenCalled()
+  })
+
   it('keeps the photo queued when upload fails (data sync still completes)', async () => {
     ;(globalThis.fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async () => {
       return { ok: false, status: 503 } as Response

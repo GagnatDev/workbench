@@ -171,14 +171,22 @@ class SyncEngine {
    * `storage_key` (a dirty edit the following push carries). The blob is kept
    * locally so the workshop phone keeps rendering it offline.
    *
+   * Photo upload is best-effort and isolated from data sync: a failing photo
+   * never aborts the run, so the following push/pull always gets to run — and
+   * those (they hit *our* API) are the authority on whether we're really offline.
    * Failure handling, by kind:
-   *  - **server unreachable** (TypeError) — rethrow; syncNow marks us offline and
-   *    the whole run (photos + data) retries later.
    *  - **storage not configured** (503) — expected when running without S3 (local
    *    dev, or before Phase 0 provisioning). Stop trying for the session and log
    *    once; photos stay queued and the sync dot shows the count. Reset on
    *    reconnect in case configuration changed.
-   *  - **one bad photo** (other non-2xx) — skip just that photo; data still syncs.
+   *  - **network error** (a fetch TypeError: our API or object storage
+   *    unreachable, or a CORS-blocked direct PUT) — stop uploading this round and
+   *    return *without* marking offline. Letting this propagate is what stranded a
+   *    user behind a false "offline" in prod: a CORS-blocked PUT threw here, the
+   *    whole run aborted, and pending *data* edits never pushed. Photos stay
+   *    queued and retry; the data push/pull below decides our real status.
+   *  - **one bad photo** (non-2xx response, or any other thrown error) — skip just
+   *    that photo; the remaining photos and the data sync still proceed.
    */
   private async uploadPending(): Promise<void> {
     if (this.uploadsDisabled) return
@@ -190,36 +198,45 @@ class SyncEngine {
       if (!blobRow?.blob) continue // nothing local to upload
       const contentType = att.content_type ?? blobRow.blob.type ?? 'application/octet-stream'
 
-      // A fetch TypeError here propagates (network down → offline).
-      const presign = await authClient.authedFetch(`${API_BASE}/api/uploads/presign`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ attachmentId: att.id, contentType }),
-      })
-      if (presign.status === 503) {
-        this.uploadsDisabled = true
-        console.info('[sync] object storage not configured — photos stay queued')
-        return
-      }
-      if (!presign.ok) {
-        console.warn(`[sync] presign failed for ${att.id}: ${presign.status}`)
-        continue // skip this photo; don't block the rest or the data sync
-      }
-      const { url, storageKey } = (await presign.json()) as { url: string; storageKey: string }
+      try {
+        const presign = await authClient.authedFetch(`${API_BASE}/api/uploads/presign`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ attachmentId: att.id, contentType }),
+        })
+        if (presign.status === 503) {
+          this.uploadsDisabled = true
+          console.info('[sync] object storage not configured — photos stay queued')
+          return
+        }
+        if (!presign.ok) {
+          console.warn(`[sync] presign failed for ${att.id}: ${presign.status}`)
+          continue // skip this photo; don't block the rest or the data sync
+        }
+        const { url, storageKey } = (await presign.json()) as { url: string; storageKey: string }
 
-      // Direct browser→S3 PUT — the presigned URL carries its own auth, so this
-      // is a plain fetch (no app bearer, and it never transits our backend).
-      const put = await fetch(url, {
-        method: 'PUT',
-        body: blobRow.blob,
-        headers: { 'Content-Type': contentType },
-      })
-      if (!put.ok) {
-        console.warn(`[sync] upload failed for ${att.id}: ${put.status}`)
+        // Direct browser→S3 PUT — the presigned URL carries its own auth, so this
+        // is a plain fetch (no app bearer, and it never transits our backend).
+        const put = await fetch(url, {
+          method: 'PUT',
+          body: blobRow.blob,
+          headers: { 'Content-Type': contentType },
+        })
+        if (!put.ok) {
+          console.warn(`[sync] upload failed for ${att.id}: ${put.status}`)
+          continue
+        }
+
+        await writeLocal('attachments', { ...att, storage_key: storageKey, uploaded: true })
+      } catch (err) {
+        // A fetch that never got a response (server/storage unreachable, or a
+        // CORS-blocked PUT) throws a TypeError: stop uploading this round but do
+        // NOT rethrow — the data push/pull is the authority on connectivity.
+        // Anything else is an unexpected per-photo failure: skip just this one.
+        if (isNetworkError(err)) return
+        console.warn(`[sync] upload error for ${att.id}`, err)
         continue
       }
-
-      await writeLocal('attachments', { ...att, storage_key: storageKey, uploaded: true })
     }
   }
 
