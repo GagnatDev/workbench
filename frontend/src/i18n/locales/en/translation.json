@@ -253,6 +253,17 @@
       "title": "Language",
       "nb": "Norsk",
       "en": "English"
+    },
+    "delete_account": {
+      "title": "Delete account",
+      "subtitle": "Delete your account and all data linked to it.",
+      "button": "Delete my account",
+      "warning": "This permanently deletes your account and everything in it — projects, notes, ideas and photos. This cannot be undone.",
+      "confirm_label": "Type your email address to confirm",
+      "confirm_label_dev": "Type DELETE to confirm",
+      "confirm_button": "Permanently delete account",
+      "deleting": "Deleting…",
+      "error": "Could not delete your account. Please try again."
     }
   },
   "login": {

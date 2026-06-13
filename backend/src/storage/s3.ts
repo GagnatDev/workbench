@@ -1,4 +1,8 @@
-import { S3Client } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  ListObjectsV2Command,
+  DeleteObjectsCommand,
+} from "@aws-sdk/client-s3";
 import { env } from "../config/env.js";
 
 /**
@@ -70,4 +74,34 @@ export function s3(): { client: S3Client; bucket: string } {
  */
 export function storageKeyFor(userId: string, attachmentId: string): string {
   return `${userId}/${attachmentId}`;
+}
+
+/**
+ * Delete every object under a user's `${userId}/` prefix — used when the user
+ * deletes their account, since the DB cascade can't reach object storage. Lists
+ * in pages and bulk-deletes each page. A no-op when object storage isn't
+ * configured (the user simply had no photos).
+ */
+export async function deleteUserObjects(userId: string): Promise<void> {
+  if (!s3Enabled()) return;
+  const { client, bucket } = s3();
+  const Prefix = `${userId}/`;
+  let ContinuationToken: string | undefined;
+  do {
+    const listed = await client.send(
+      new ListObjectsV2Command({ Bucket: bucket, Prefix, ContinuationToken }),
+    );
+    const objects = (listed.Contents ?? [])
+      .map((o) => o.Key)
+      .filter((key): key is string => key !== undefined)
+      .map((Key) => ({ Key }));
+    if (objects.length > 0) {
+      await client.send(
+        new DeleteObjectsCommand({ Bucket: bucket, Delete: { Objects: objects } }),
+      );
+    }
+    ContinuationToken = listed.IsTruncated
+      ? listed.NextContinuationToken
+      : undefined;
+  } while (ContinuationToken);
 }

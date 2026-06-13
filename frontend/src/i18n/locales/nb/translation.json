@@ -253,6 +253,17 @@
       "title": "Språk",
       "nb": "Norsk",
       "en": "English"
+    },
+    "delete_account": {
+      "title": "Slett konto",
+      "subtitle": "Slett kontoen din og alle data knyttet til den.",
+      "button": "Slett kontoen min",
+      "warning": "Dette sletter kontoen din og alt innholdet ditt permanent — prosjekter, notater, idéer og bilder. Handlingen kan ikke angres.",
+      "confirm_label": "Skriv inn e-postadressen din for å bekrefte",
+      "confirm_label_dev": "Skriv DELETE for å bekrefte",
+      "confirm_button": "Slett kontoen permanent",
+      "deleting": "Sletter…",
+      "error": "Kunne ikke slette kontoen. Prøv igjen."
     }
   },
   "login": {

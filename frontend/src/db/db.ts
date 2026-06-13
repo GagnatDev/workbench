@@ -50,3 +50,14 @@ export class WorkbenchDB extends Dexie {
 }
 
 export const db = new WorkbenchDB()
+
+/**
+ * Empty every local table — content, queued photo blobs, and the sync cursor in
+ * `_meta`. Used on account deletion so no data survives on the device; clearing
+ * the cursor means a later login pulls a fresh dataset from scratch. We clear the
+ * tables rather than `db.delete()` so the open instance stays usable (the app may
+ * still read it before the post-logout redirect unmounts).
+ */
+export async function wipeLocalDb(): Promise<void> {
+  await Promise.all(db.tables.map((table) => table.clear()))
+}

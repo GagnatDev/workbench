@@ -31,6 +31,16 @@ export async function getMe(): Promise<AppUser> {
 }
 
 /**
+ * Permanently delete the caller's account and all data linked to it (every
+ * content row plus their stored photos). The session is dead afterwards, so the
+ * caller should log out / redirect on success.
+ */
+export async function deleteAccount(): Promise<void> {
+  const res = await apiFetch('/api/account', { method: 'DELETE' })
+  if (!res.ok) throw new ApiError(res.status, 'Failed to delete account')
+}
+
+/**
  * Invite a friend to Workbench (Phase 6 stretch). The backend forwards to the
  * auth service, which decides whether the caller may invite. Returns whatever the
  * auth service hands back; we surface a link if one is present.

@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Check, Copy } from 'lucide-react'
+import { Check, Copy, Trash2 } from 'lucide-react'
 import { useAuth } from '@/auth/AuthContext'
 import { setLanguage } from '@/i18n'
 import { SUPPORTED_LOCALES } from '@/i18n/resources'
-import { ApiError, sendInvite } from '@/lib/api'
+import { ApiError, deleteAccount, sendInvite } from '@/lib/api'
+import { BottomSheet } from '@/components/BottomSheet'
+import { wipeLocalDb } from '@/db/db'
 
 /** Settings / profile (ui-ux-design.md §12, screen #19): identity, sign-out, and
  * the optional "Invite a friend" flow (Phase 6) for admins. */
@@ -38,7 +40,101 @@ export function Settings() {
       >
         {t('settings.sign_out')}
       </button>
+
+      <DangerZoneCard />
     </section>
+  )
+}
+
+/**
+ * Permanently delete the account and all linked data. An irreversible action, so
+ * the destructive button stays disabled until the user types their email (or, in
+ * dev mode where there's no email, the literal "DELETE"). On success the session
+ * is gone, so we log out — which redirects to /login.
+ */
+function DangerZoneCard() {
+  const { t } = useTranslation()
+  const { user, logout } = useAuth()
+  const [open, setOpen] = useState(false)
+  const [confirmText, setConfirmText] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const required = user?.email ?? 'DELETE'
+  const armed = confirmText.trim() === required
+
+  const close = () => {
+    if (deleting) return
+    setOpen(false)
+    setConfirmText('')
+    setError(null)
+  }
+
+  const remove = async () => {
+    if (!armed || deleting) return
+    setDeleting(true)
+    setError(null)
+    try {
+      await deleteAccount()
+      // Server data is gone; clear the local mirror (content, queued photos, sync
+      // cursor) so nothing survives on the device before we end the session.
+      await wipeLocalDb()
+      await logout()
+    } catch {
+      // Whether it's an ApiError or a network failure, the user just needs to know
+      // it didn't go through and can retry — one message covers both.
+      setError(t('settings.delete_account.error'))
+      setDeleting(false)
+    }
+  }
+
+  return (
+    <div className="rounded-card border border-brick/30 bg-stoneware p-4">
+      <p className="font-serif text-lg text-brick">{t('settings.delete_account.title')}</p>
+      <p className="mt-0.5 text-sm text-charcoal-muted">{t('settings.delete_account.subtitle')}</p>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="mt-3 flex items-center gap-2 rounded-lg border border-brick/40 px-4 py-2 text-sm text-brick hover:bg-brick/10"
+      >
+        <Trash2 size={15} /> {t('settings.delete_account.button')}
+      </button>
+
+      {open && (
+        <BottomSheet onClose={close} labelledBy="delete-account-title">
+          <h2 id="delete-account-title" className="mb-2 font-serif text-lg text-brick">
+            {t('settings.delete_account.title')}
+          </h2>
+          <p className="text-sm text-charcoal">{t('settings.delete_account.warning')}</p>
+
+          <label className="mt-4 block text-sm text-charcoal-muted">
+            {user?.email
+              ? t('settings.delete_account.confirm_label')
+              : t('settings.delete_account.confirm_label_dev')}
+          </label>
+          <input
+            type="text"
+            autoComplete="off"
+            value={confirmText}
+            onChange={(e) => setConfirmText(e.target.value)}
+            placeholder={required}
+            disabled={deleting}
+            className="mt-1 w-full rounded-lg bg-oatmeal p-2.5 text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-brick/40"
+          />
+
+          {error && <p className="mt-2 text-sm text-brick">{error}</p>}
+
+          <button
+            type="button"
+            onClick={() => void remove()}
+            disabled={!armed || deleting}
+            className="mt-4 w-full rounded-lg bg-brick px-4 py-2.5 text-sm text-oatmeal disabled:opacity-40"
+          >
+            {deleting ? t('settings.delete_account.deleting') : t('settings.delete_account.confirm_button')}
+          </button>
+        </BottomSheet>
+      )}
+    </div>
   )
 }
 

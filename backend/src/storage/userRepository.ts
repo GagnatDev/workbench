@@ -42,6 +42,16 @@ export class UserRepository {
       .executeTakeFirst();
   }
 
+  /**
+   * Hard-delete the user row. The `ON DELETE CASCADE` on every content table's
+   * `user_id` (migration 002) wipes all of the user's collections/projects/
+   * sections/items/ideas/attachments in the same statement. S3 objects are not
+   * covered by the cascade — clean those up separately before calling this.
+   */
+  async deleteById(id: string): Promise<void> {
+    await this.db.deleteFrom("users").where("id", "=", id).execute();
+  }
+
   async count(): Promise<number> {
     const row = await this.db
       .selectFrom("users")
