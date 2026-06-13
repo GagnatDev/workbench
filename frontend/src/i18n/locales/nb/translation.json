@@ -73,6 +73,8 @@
     "add_to_collection": "Legg til i samling",
     "inbox_count_one": "{{count}} idé å sortere",
     "inbox_count_other": "{{count}} idéer å sortere",
+    "notes_count_one": "{{count}} notat",
+    "notes_count_other": "{{count}} notater",
     "add_journal_hint": "Legg til en journal for å begynne å logge.",
     "add_section": "Legg til seksjon",
     "view_photo": "Vis bilde"

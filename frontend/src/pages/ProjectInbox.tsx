@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ChevronLeft, MoreHorizontal } from 'lucide-react'
 import { AttachmentThumb } from '@/components/AttachmentThumb'
@@ -33,7 +33,9 @@ export function ProjectInbox() {
   const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const project = useLiveQuery(() => (id ? db.projects.get(id) : undefined), [id])
-  const [segment, setSegment] = useState<Segment>('new')
+  const [params] = useSearchParams()
+  const initialSegment: Segment = params.get('tab') === 'kept' ? 'kept' : 'new'
+  const [segment, setSegment] = useState<Segment>(initialSegment)
   const [overflowOpen, setOverflowOpen] = useState(false)
   const [file, setFile] = useState<Idea | null>(null)
 

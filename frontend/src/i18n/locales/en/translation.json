@@ -73,6 +73,8 @@
     "add_to_collection": "Add to collection",
     "inbox_count_one": "{{count}} idea to file",
     "inbox_count_other": "{{count}} ideas to file",
+    "notes_count_one": "{{count}} note",
+    "notes_count_other": "{{count}} notes",
     "add_journal_hint": "Add a journal to start logging.",
     "add_section": "Add section",
     "view_photo": "View photo"

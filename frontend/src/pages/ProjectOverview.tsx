@@ -9,6 +9,7 @@ import {
   FolderInput,
   Inbox as InboxIcon,
   MoreHorizontal,
+  NotebookPen,
   Plus,
   Star,
   Trash2,
@@ -51,13 +52,19 @@ export function ProjectOverview() {
   // The founding photo(s) carried over when an idea was promoted into this
   // project — surfaced as a hero, tap to view full-screen (§7.2).
   const ideaPhotos = useLiveQuery(() => (id ? projectIdeaPhotos(id) : []), [id]) ?? []
-  // Untriaged ideas sitting in this project's inbox (drives the §6.1 banner).
-  const inboxCount =
+  // Ideas sitting in this project's inbox (drives the §6.1 banner). `toFile` are
+  // untriaged captures; `kept` are notes deliberately retained — both keep the
+  // inbox reachable so kept notes don't get stranded once captures are cleared.
+  const ideaCounts =
     useLiveQuery(async () => {
-      if (!id) return 0
+      if (!id) return { toFile: 0, kept: 0 }
       const ideas = await db.ideas.where('project_id').equals(id).toArray()
-      return ideas.filter((i) => !i.deleted && i.state === 'captured').length
-    }, [id]) ?? 0
+      const live = ideas.filter((i) => !i.deleted)
+      return {
+        toFile: live.filter((i) => i.state === 'captured').length,
+        kept: live.filter((i) => i.state === 'kept').length,
+      }
+    }, [id]) ?? { toFile: 0, kept: 0 }
 
   const [sheet, setSheet] = useState<Sheet>(null)
   const [viewerStart, setViewerStart] = useState<number | null>(null)
@@ -198,15 +205,26 @@ export function ProjectOverview() {
         </div>
       )}
 
-      {inboxCount > 0 && (
+      {ideaCounts.toFile > 0 ? (
         <Link
           to={`/projects/${project.id}/inbox`}
           className="mt-4 flex items-center gap-2 rounded-card bg-flax/20 px-3 py-2.5 text-sm text-charcoal"
         >
           <InboxIcon size={16} className="text-charcoal-muted" />
-          <span className="flex-1">{t('project.inbox_count', { count: inboxCount })}</span>
+          <span className="flex-1">{t('project.inbox_count', { count: ideaCounts.toFile })}</span>
           <ChevronRight size={16} className="text-charcoal-muted" />
         </Link>
+      ) : (
+        ideaCounts.kept > 0 && (
+          <Link
+            to={`/projects/${project.id}/inbox?tab=kept`}
+            className="mt-4 flex items-center gap-2 rounded-card bg-stoneware px-3 py-2.5 text-sm text-charcoal-muted hover:text-charcoal"
+          >
+            <NotebookPen size={16} className="text-charcoal-muted" />
+            <span className="flex-1">{t('project.notes_count', { count: ideaCounts.kept })}</span>
+            <ChevronRight size={16} className="text-charcoal-muted" />
+          </Link>
+        )
       )}
 
       <div className="mt-6">
