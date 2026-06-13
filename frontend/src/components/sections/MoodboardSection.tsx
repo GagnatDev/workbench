@@ -5,19 +5,13 @@ import { clipboardReadSupported, imageFromPasteEvent, readImageFromClipboard } f
 import { BottomSheet } from '../BottomSheet'
 import { AttachmentThumb } from '../AttachmentThumb'
 import { PhotoViewer } from '../PhotoViewer'
+import { Linkify } from '../Linkify'
 import { useSectionItems } from '@/db/useSectionItems'
 import { createItem, deleteItem } from '@/db/items'
 import { matchesTags } from '@/lib/tags'
+import { domainOf } from '@/lib/links'
 import type { PinPayload } from '@/db/payload'
 import type { Section } from '@/db/types'
-
-function domainOf(url: string): string {
-  try {
-    return new URL(url).hostname.replace(/^www\./, '')
-  } catch {
-    return url
-  }
-}
 
 /**
  * Moodboard section (ui-ux-design.md §7.2): a two-column masonry. Image pins
@@ -65,7 +59,7 @@ export function MoodboardSection({
                 <a
                   href={payload.url}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   className="block rounded-card bg-stoneware p-3"
                 >
                   <span className="flex items-center gap-1.5 text-terracotta">
@@ -99,7 +93,10 @@ export function MoodboardSection({
                 <div className="rounded-card bg-stoneware p-3 text-charcoal">{caption ?? '—'}</div>
               )}
               {att && caption && (
-                <span className="mt-1 block break-words text-sm text-charcoal-muted">{caption}</span>
+                <Linkify
+                  text={caption}
+                  className="mt-1 block break-words text-sm text-charcoal-muted"
+                />
               )}
             </PinFrame>
           )

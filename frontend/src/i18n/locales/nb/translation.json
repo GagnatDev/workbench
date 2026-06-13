@@ -14,7 +14,8 @@
     "paste": "Lim inn",
     "remove_photo": "Fjern foto",
     "confirm_again": "Trykk igjen for å bekrefte",
-    "project_fallback": "Prosjekt"
+    "project_fallback": "Prosjekt",
+    "open_link": "Åpne lenke"
   },
   "nav": {
     "inbox": "Innboks",

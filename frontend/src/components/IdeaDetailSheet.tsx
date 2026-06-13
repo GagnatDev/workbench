@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Archive, FolderPlus, Inbox as InboxIcon, Trash2 } from 'lucide-react'
+import { Archive, ExternalLink, FolderPlus, Inbox as InboxIcon, Trash2 } from 'lucide-react'
 import { BottomSheet } from './BottomSheet'
 import { TagInput } from './TagInput'
 import { AttachmentThumb } from './AttachmentThumb'
 import { db } from '@/db/db'
+import { openUrl } from '@/lib/links'
 import { allIdeaTags, deleteIdea, setIdeaState, updateIdea } from '@/db/ideas'
 import type { Idea } from '@/db/types'
 
@@ -86,14 +87,26 @@ export function IdeaDetailSheet({
         placeholder={t('idea.placeholder')}
         className="w-full resize-none rounded-lg bg-oatmeal p-3 text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-terracotta/40"
       />
-      <input
-        type="url"
-        inputMode="url"
-        value={link}
-        onChange={(e) => setLink(e.target.value)}
-        placeholder={t('idea.link_placeholder')}
-        className="mt-2 w-full rounded-lg bg-oatmeal p-2 text-sm text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-terracotta/40"
-      />
+      <div className="mt-2 flex items-center gap-2">
+        <input
+          type="url"
+          inputMode="url"
+          value={link}
+          onChange={(e) => setLink(e.target.value)}
+          placeholder={t('idea.link_placeholder')}
+          className="min-w-0 flex-1 rounded-lg bg-oatmeal p-2 text-sm text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+        />
+        {link.trim() && (
+          <button
+            type="button"
+            aria-label={t('common.open_link')}
+            onClick={() => openUrl(link.trim())}
+            className="flex-shrink-0 rounded-lg bg-oatmeal p-2 text-charcoal-muted hover:text-terracotta"
+          >
+            <ExternalLink size={16} />
+          </button>
+        )}
+      </div>
 
       <div className="mt-3">
         <TagInput tags={tags} onChange={setTags} suggestions={suggestions} />

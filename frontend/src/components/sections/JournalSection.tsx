@@ -9,6 +9,7 @@ import { AttachmentThumb } from '../AttachmentThumb'
 import { PhotoViewer } from '../PhotoViewer'
 import { EmptyState } from '../EmptyState'
 import { TagInput } from '../TagInput'
+import { Linkify } from '../Linkify'
 import { useSectionItems } from '@/db/useSectionItems'
 import { allItemTags, createItem, deleteItem, setItemPayload, updateItem } from '@/db/items'
 import { matchesTags } from '@/lib/tags'
@@ -161,7 +162,10 @@ export function JournalSection({
                   className="block w-full text-left"
                 >
                   {item.body && (
-                    <p className="whitespace-pre-wrap break-words text-charcoal">{item.body}</p>
+                    <Linkify
+                      text={item.body}
+                      className="block whitespace-pre-wrap break-words text-charcoal"
+                    />
                   )}
                 </button>
                 {photos.length > 0 && (

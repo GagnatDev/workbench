@@ -6,9 +6,11 @@ import { ChevronLeft, MoreHorizontal } from 'lucide-react'
 import { AttachmentThumb } from '@/components/AttachmentThumb'
 import { EmptyState } from '@/components/EmptyState'
 import { FileAsSheet } from '@/components/FileAsSheet'
+import { Linkify } from '@/components/Linkify'
 import { db } from '@/db/db'
 import type { Idea } from '@/db/types'
 import { timeAgo } from '@/lib/time'
+import { domainOf } from '@/lib/links'
 
 type Segment = 'new' | 'kept' | 'archived'
 const STATE_OF: Record<Segment, Idea['state']> = {
@@ -150,9 +152,13 @@ function InboxCard({ idea, onTap }: { idea: Idea; onTap: () => void }) {
         />
       )}
       <span className="min-w-0 flex-1">
-        <span className="line-clamp-2 block break-words text-charcoal">
-          {idea.content || (idea.link ?? t('common.photo'))}
-        </span>
+        {idea.content ? (
+          <Linkify text={idea.content} className="line-clamp-2 block break-words text-charcoal" />
+        ) : (
+          <span className="line-clamp-2 block break-words text-charcoal">
+            {idea.link ? domainOf(idea.link) : t('common.photo')}
+          </span>
+        )}
         <span className="mt-1 block text-xs text-charcoal-muted">{timeAgo(idea.created_at)}</span>
       </span>
     </button>

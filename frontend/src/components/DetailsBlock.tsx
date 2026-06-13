@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Check, Pencil, Plus, X } from 'lucide-react'
 import { setProjectDetails } from '@/db/projects'
+import { Linkify } from './Linkify'
 import type { Project } from '@/db/types'
 
 interface Row {
@@ -53,7 +54,9 @@ export function DetailsBlock({ project }: { project: Project }) {
           {filled.map(({ key, value }) => (
             <div key={key} className="contents">
               <dt className="text-charcoal-muted">{key}</dt>
-              <dd className="tabular text-charcoal">{value}</dd>
+              <dd className="tabular text-charcoal">
+                <Linkify text={value} />
+              </dd>
             </div>
           ))}
         </dl>

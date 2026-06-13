@@ -5,18 +5,12 @@ import { Archive, FolderPlus, Link as LinkIcon } from 'lucide-react'
 import { db } from '@/db/db'
 import type { Idea } from '@/db/types'
 import { timeAgo } from '@/lib/time'
+import { domainOf, openUrl } from '@/lib/links'
 import { AttachmentThumb } from './AttachmentThumb'
+import { Linkify } from './Linkify'
 
 const SWIPE_THRESHOLD = 96
 const TAP_SLOP = 8
-
-function domainOf(link: string): string {
-  try {
-    return new URL(link).hostname.replace(/^www\./, '')
-  } catch {
-    return link
-  }
-}
 
 /**
  * An inbox idea card with swipe-to-triage (ui-ux-design.md §3.2, §11.2 — swipe is
@@ -102,13 +96,32 @@ export function IdeaCard({
           />
         )}
         <span className="min-w-0 flex-1">
-          <span className="line-clamp-2 block break-words text-charcoal">
-            {idea.content || (idea.link ? domainOf(idea.link) : t('common.photo'))}
-          </span>
+          {idea.content ? (
+            <Linkify text={idea.content} className="line-clamp-2 block break-words text-charcoal" />
+          ) : (
+            <span className="line-clamp-2 block break-words text-charcoal">
+              {idea.link ? domainOf(idea.link) : t('common.photo')}
+            </span>
+          )}
           <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-charcoal-muted">
             <span>{timeAgo(idea.created_at)}</span>
             {idea.link && (
-              <span className="inline-flex items-center gap-0.5">
+              <span
+                role="link"
+                tabIndex={0}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  openUrl(idea.link!)
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.stopPropagation()
+                    e.preventDefault()
+                    openUrl(idea.link!)
+                  }
+                }}
+                className="inline-flex cursor-pointer items-center gap-0.5 text-terracotta underline-offset-2 hover:underline"
+              >
                 <LinkIcon size={11} /> {domainOf(idea.link)}
               </span>
             )}

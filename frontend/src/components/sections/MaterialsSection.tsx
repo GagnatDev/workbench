@@ -8,6 +8,7 @@ import { EmptyState } from '../EmptyState'
 import { ReorderableList } from '../ReorderableList'
 import { AttachmentThumb } from '../AttachmentThumb'
 import { TagInput } from '../TagInput'
+import { Linkify } from '../Linkify'
 import { useSectionItems } from '@/db/useSectionItems'
 import {
   addItemPhoto,
@@ -89,9 +90,10 @@ export function MaterialsSection({
                     )}
                   </span>
                   {item.body && (
-                    <span className="mt-0.5 block break-words text-sm text-charcoal-muted">
-                      {item.body}
-                    </span>
+                    <Linkify
+                      text={item.body}
+                      className="mt-0.5 block break-words text-sm text-charcoal-muted"
+                    />
                   )}
                 </span>
               </button>
