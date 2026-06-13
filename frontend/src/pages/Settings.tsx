@@ -5,6 +5,7 @@ import { useAuth } from '@/auth/AuthContext'
 import { setLanguage } from '@/i18n'
 import { SUPPORTED_LOCALES } from '@/i18n/resources'
 import { ApiError, deleteAccount, sendInvite } from '@/lib/api'
+import { resetHints, setHintsEnabled, useHintsEnabled } from '@/lib/hints'
 import { BottomSheet } from '@/components/BottomSheet'
 import { wipeLocalDb } from '@/db/db'
 
@@ -30,6 +31,8 @@ export function Settings() {
       </div>
 
       <LanguageCard />
+
+      <HintsCard />
 
       {!authDisabled && <InviteCard />}
 
@@ -165,6 +168,53 @@ function LanguageCard() {
           )
         })}
       </div>
+    </div>
+  )
+}
+
+/** Onboarding hints: a toggle for the friendly per-screen guidance, plus a way to replay
+ * hints already dismissed. Both are client-local (lib/hints.ts). */
+function HintsCard() {
+  const { t } = useTranslation()
+  const enabled = useHintsEnabled()
+
+  return (
+    <div className="rounded-card bg-stoneware p-4">
+      <div className="flex items-center justify-between gap-4">
+        <div className="min-w-0">
+          <p className="font-serif text-lg text-charcoal">{t('settings.hints.title')}</p>
+          <p className="mt-0.5 text-sm text-charcoal-muted">{t('settings.hints.description')}</p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={enabled}
+          aria-label={t('settings.hints.title')}
+          onClick={() => void setHintsEnabled(!enabled)}
+          className={
+            enabled
+              ? 'flex h-7 w-12 flex-shrink-0 items-center rounded-full bg-terracotta px-0.5'
+              : 'flex h-7 w-12 flex-shrink-0 items-center rounded-full bg-oatmeal px-0.5'
+          }
+        >
+          <span
+            className={
+              enabled
+                ? 'h-6 w-6 translate-x-5 rounded-full bg-oatmeal transition-transform'
+                : 'h-6 w-6 translate-x-0 rounded-full bg-charcoal-muted transition-transform'
+            }
+          />
+        </button>
+      </div>
+      {enabled && (
+        <button
+          type="button"
+          onClick={() => void resetHints()}
+          className="mt-3 text-sm text-terracotta hover:underline"
+        >
+          {t('settings.hints.reset')}
+        </button>
+      )}
     </div>
   )
 }

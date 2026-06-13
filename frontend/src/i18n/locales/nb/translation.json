@@ -232,6 +232,16 @@
     "manage_aria": "Administrer seksjon",
     "empty": "Tom — trykk for å legge til."
   },
+  "hints": {
+    "dismiss_aria": "Skjul hintet",
+    "inbox": "Sveip til høyre for å forfremme en idé til et prosjekt, til venstre for å arkivere.",
+    "projects": "Idéer blir prosjekter — trykk ➕ for å fange en, så forfremmer du den.",
+    "project_overview": "Legg til en seksjon — journal, moodboard, sjekkliste eller materialliste — for å organisere prosjektet.",
+    "section_journal": "Skriv ned hva du gjorde og legg det til i loggen.",
+    "section_moodboard": "Legg til bilder eller lenker for å sette stemningen.",
+    "section_checklist": "Skriv en oppgave i feltet nedenfor for å legge den til, og kryss den av når den er ferdig.",
+    "section_materials": "Skriv et materiale i feltet nedenfor for å legge det til i listen."
+  },
   "settings": {
     "title": "Innstillinger",
     "signed_in_as": "Logget inn som",
@@ -239,6 +249,11 @@
     "role": "Rolle: {{role}}",
     "dev_mode": "Utviklermodus — autentisering forbigått",
     "sign_out": "Logg ut",
+    "hints": {
+      "title": "Hint",
+      "description": "Vis vennlige tips mens du blir kjent med appen.",
+      "reset": "Vis hint på nytt"
+    },
     "invite": {
       "title": "Inviter en venn",
       "subtitle": "Workbench er kun for inviterte. Send en venn en invitasjon for å bli med.",

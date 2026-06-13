@@ -232,6 +232,16 @@
     "manage_aria": "Manage section",
     "empty": "Empty — tap to add."
   },
+  "hints": {
+    "dismiss_aria": "Dismiss hint",
+    "inbox": "Swipe right to promote an idea into a project, left to archive.",
+    "projects": "Ideas become projects — tap ➕ to capture one, then promote it.",
+    "project_overview": "Add a section — a journal, moodboard, checklist or materials list — to organise this project.",
+    "section_journal": "Jot down what you did and add it to the log.",
+    "section_moodboard": "Add photos or links to set the mood.",
+    "section_checklist": "Type a task in the field below to add it, then check it off when it's done.",
+    "section_materials": "Type a material in the field below to add it to the list."
+  },
   "settings": {
     "title": "Settings",
     "signed_in_as": "Signed in as",
@@ -239,6 +249,11 @@
     "role": "Role: {{role}}",
     "dev_mode": "Dev mode — auth bypassed",
     "sign_out": "Sign out",
+    "hints": {
+      "title": "Hints",
+      "description": "Show friendly tips while you get to know the app.",
+      "reset": "Show hints again"
+    },
     "invite": {
       "title": "Invite a friend",
       "subtitle": "Workbench is invite-only. Send a friend an invite to join.",

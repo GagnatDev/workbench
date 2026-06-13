@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { syncEngine } from '@/db/sync'
 import { SyncStatus } from './SyncStatus'
 import { CaptureSheet } from './CaptureSheet'
+import { HintBanner } from './HintBanner'
 
 const NAV = [
   { to: '/inbox', labelKey: 'nav.inbox', icon: Inbox },
@@ -78,6 +79,7 @@ export function AppLayout() {
         </header>
 
         <main className="mx-auto w-full max-w-[680px] flex-1 overflow-y-auto px-4 py-6 pb-24 md:pb-6">
+          <HintBanner />
           <Outlet />
         </main>
       </div>
