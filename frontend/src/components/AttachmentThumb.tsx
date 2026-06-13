@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/db/db'
 import { writeLocal } from '@/db/sync'
+import { authClient } from '@/auth/authClient'
 import { generateThumbnail } from '@/lib/thumbnail'
 
 const API_BASE = import.meta.env.VITE_API_URL ?? ''
@@ -72,9 +73,7 @@ export function AttachmentThumb({
     let cancelled = false
     ;(async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/files/${attachmentId}`, {
-          credentials: 'include',
-        })
+        const res = await authClient.authedFetch(`${API_BASE}/api/files/${attachmentId}`)
         if (!res.ok) return
         const blob = await res.blob()
         if (!cancelled) await db.blobs.put({ id: attachmentId, blob })

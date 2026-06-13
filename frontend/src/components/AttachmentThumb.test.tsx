@@ -10,6 +10,7 @@ vi.mock('@/auth/authClient', () => ({
 
 const { db } = await import('@/db/db')
 const { syncEngine } = await import('@/db/sync')
+const { authClient } = await import('@/auth/authClient')
 const { AttachmentThumb } = await import('./AttachmentThumb')
 await import('@/i18n')
 
@@ -48,21 +49,20 @@ function attachment(over: Partial<Record<string, unknown>> = {}) {
 }
 
 it('renders the inline thumbnail without fetching the full image', async () => {
-  const fetchSpy = vi.fn()
-  vi.stubGlobal('fetch', fetchSpy)
+  const authedFetch = vi.mocked(authClient.authedFetch)
   await db.attachments.put(attachment({ thumb: 'data:image/webp;base64,THUMB' }))
 
   render(<AttachmentThumb attachmentId="a1" />)
 
   const img = (await screen.findByRole('img')) as HTMLImageElement
   expect(img.src).toBe('data:image/webp;base64,THUMB')
-  expect(fetchSpy).not.toHaveBeenCalled()
+  expect(authedFetch).not.toHaveBeenCalled()
 })
 
-it('full variant fetches /api/files once and caches the blob in Dexie', async () => {
+it('full variant fetches /api/files once (with bearer) and caches the blob in Dexie', async () => {
   const blob = new Blob(['bytes'], { type: 'image/png' })
-  const fetchSpy = vi.fn(async () => ({ ok: true, blob: async () => blob }) as unknown as Response)
-  vi.stubGlobal('fetch', fetchSpy)
+  const authedFetch = vi.mocked(authClient.authedFetch)
+  authedFetch.mockResolvedValue({ ok: true, blob: async () => blob } as unknown as Response)
   await db.attachments.put(attachment()) // uploaded, no thumb, no local blob
 
   render(<AttachmentThumb attachmentId="a1" variant="full" />)
@@ -72,11 +72,9 @@ it('full variant fetches /api/files once and caches the blob in Dexie', async ()
   await waitFor(async () => {
     expect(await db.blobs.get('a1')).toBeDefined()
   })
-  expect(fetchSpy).toHaveBeenCalledTimes(1)
-  expect(fetchSpy).toHaveBeenCalledWith(
-    expect.stringContaining('/api/files/a1'),
-    expect.objectContaining({ credentials: 'include' }),
-  )
+  // authedFetch attaches the bearer token — a raw fetch would 401 on another device.
+  expect(authedFetch).toHaveBeenCalledTimes(1)
+  expect(authedFetch).toHaveBeenCalledWith(expect.stringContaining('/api/files/a1'))
   // Renders from the cached blob's object URL, not the raw /api/files endpoint.
   const img = (await screen.findByRole('img')) as HTMLImageElement
   expect(img.src).toBe('blob:mock')
