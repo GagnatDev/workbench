@@ -66,6 +66,12 @@ export interface Attachment extends SyncEnvelope {
   storage_key: string | null
   content_type: string | null
   uploaded: boolean
+  /**
+   * Small base64 (data URL) thumbnail, generated client-side at capture. Rides
+   * the sync so every device renders list/grid views instantly without fetching
+   * the full image. Null on legacy rows until backfilled on first view.
+   */
+  thumb: string | null
 }
 
 /** Local-only photo blob, held until the presigned upload lands (Phase 3). */

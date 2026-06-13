@@ -58,7 +58,14 @@ const SYNC_TABLES = {
     json: new Set(["tags"]),
   },
   attachments: {
-    columns: ["owner_type", "owner_id", "storage_key", "content_type", "uploaded"],
+    columns: [
+      "owner_type",
+      "owner_id",
+      "storage_key",
+      "content_type",
+      "uploaded",
+      "thumb",
+    ],
     json: new Set<string>(),
   },
 } satisfies Record<string, TableSpec>;

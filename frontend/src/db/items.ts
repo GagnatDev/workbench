@@ -1,5 +1,6 @@
 import { db } from './db'
 import { deleteLocal, writeLocal } from './sync'
+import { generateThumbnail } from '@/lib/thumbnail'
 import type { Item, Section } from './types'
 import { validatePayload, type SectionKind, type TaskPayload } from './payload'
 import { compareRank, rankAfter } from '@/lib/rank'
@@ -53,6 +54,7 @@ export async function createItem(section: Section, fields: NewItemFields): Promi
       storage_key: null,
       content_type: fields.photo.blob.type || 'image/jpeg',
       uploaded: false,
+      thumb: await generateThumbnail(fields.photo.blob),
     })
   }
 
@@ -114,6 +116,7 @@ export async function addItemPhoto(itemId: string, blob: Blob): Promise<string> 
     storage_key: null,
     content_type: blob.type || 'image/jpeg',
     uploaded: false,
+    thumb: await generateThumbnail(blob),
   })
   return id
 }

@@ -106,6 +106,40 @@ describe("project tags (Phase 6)", () => {
   });
 });
 
+/**
+ * A minimal valid `attachments` row. owner_type and owner_id are NOT NULL, and
+ * the upsert sets every data column explicitly — including the new `thumb`.
+ */
+function attachment(overrides: Record<string, unknown> = {}) {
+  return {
+    id: randomUUID(),
+    owner_type: "item",
+    owner_id: randomUUID(),
+    uploaded: false,
+    updated_at: new Date().toISOString(),
+    ...overrides,
+  };
+}
+
+describe("attachment thumbnails (Phase 7)", () => {
+  it("round-trips the inline thumb data URL", async () => {
+    const thumb = "data:image/webp;base64,AAAA";
+    const row = attachment({ thumb, uploaded: true, storage_key: "u1/x" });
+    const pushed = await push(app, { attachments: [row] });
+    expect(pushed.status).toBe(200);
+    expect(pushed.body.applied.attachments[0].thumb).toBe(thumb);
+
+    const pulled = await pull(app);
+    expect(pulled.body.changes.attachments[0].thumb).toBe(thumb);
+  });
+
+  it("stores null when the client omits a thumb (legacy rows)", async () => {
+    await push(app, { attachments: [attachment()] });
+    const pulled = await pull(app);
+    expect(pulled.body.changes.attachments[0].thumb ?? null).toBeNull();
+  });
+});
+
 describe("last-write-wins", () => {
   it("rejects a write older than the stored row, accepts a newer one", async () => {
     const id = randomUUID();

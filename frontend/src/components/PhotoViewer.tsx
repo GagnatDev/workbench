@@ -77,6 +77,7 @@ export function PhotoViewer({
       <AttachmentThumb
         key={id}
         attachmentId={id}
+        variant="full"
         className="max-h-[90vh] max-w-[92vw] object-contain"
         alt={t('common.photo')}
       />

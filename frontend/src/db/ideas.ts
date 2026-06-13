@@ -3,6 +3,7 @@ import { createItem } from './items'
 import { createProject } from './projects'
 import { deleteLocal, writeLocal } from './sync'
 import type { Idea, Section } from './types'
+import { generateThumbnail } from '@/lib/thumbnail'
 import { isDraftEmpty, type ComposerDraft } from '@/components/Composer'
 
 /**
@@ -34,6 +35,7 @@ export async function captureIdea(
       storage_key: null,
       content_type: draft.photo.blob.type || 'image/jpeg',
       uploaded: false,
+      thumb: await generateThumbnail(draft.photo.blob),
     })
   }
 

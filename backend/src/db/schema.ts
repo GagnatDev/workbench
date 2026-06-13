@@ -92,6 +92,8 @@ export interface AttachmentsTable extends SyncColumns {
   storage_key: string | null;
   content_type: string | null;
   uploaded: ColumnType<boolean, boolean | undefined, boolean>;
+  /** Inline base64 (data URL) thumbnail; rides the sync so every device renders it instantly. */
+  thumb: string | null;
 }
 
 export interface Database {
