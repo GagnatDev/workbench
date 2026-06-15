@@ -152,6 +152,18 @@ export async function projectIdeaPhotos(projectId: string): Promise<Attachment[]
     .sort((a, b) => (a.created_at ?? '').localeCompare(b.created_at ?? ''))
 }
 
+/**
+ * The founding idea(s) promoted into this project — surfaced on the overview
+ * (text + link) beside the founding photo (see ProjectOverview). Scoped to
+ * `promoted` ideas like `projectIdeaPhotos`; oldest first to match the hero.
+ */
+export async function projectFoundingIdeas(projectId: string): Promise<Idea[]> {
+  const ideas = (await db.ideas.where('project_id').equals(projectId).toArray()).filter(
+    (i) => !i.deleted && i.state === 'promoted',
+  )
+  return ideas.sort((a, b) => (a.created_at ?? '').localeCompare(b.created_at ?? ''))
+}
+
 /** Distinct tags across the user's ideas, for the detail-sheet tag autocomplete. */
 export async function allIdeaTags(): Promise<string[]> {
   const ideas = await db.ideas.toArray()

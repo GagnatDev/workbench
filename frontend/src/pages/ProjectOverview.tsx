@@ -8,6 +8,7 @@ import {
   ChevronRight,
   FolderInput,
   Inbox as InboxIcon,
+  Link as LinkIcon,
   MoreHorizontal,
   NotebookPen,
   Plus,
@@ -20,15 +21,17 @@ import { BottomSheet } from '@/components/BottomSheet'
 import { CollectionPicker } from '@/components/CollectionPicker'
 import { DetailsBlock } from '@/components/DetailsBlock'
 import { EditProjectSheet } from '@/components/EditProjectSheet'
+import { Linkify } from '@/components/Linkify'
 import { PhotoViewer } from '@/components/PhotoViewer'
 import { ReorderableList } from '@/components/ReorderableList'
 import { SectionPreviewCard } from '@/components/SectionPreviewCard'
 import { StatusSheet } from '@/components/StatusSheet'
 import { db } from '@/db/db'
-import { projectIdeaPhotos } from '@/db/ideas'
+import { projectFoundingIdeas, projectIdeaPhotos } from '@/db/ideas'
 import { deleteProject, toggleFavourite } from '@/db/projects'
 import { deleteSection, renameSection, sectionsOfProject, setSectionRank } from '@/db/sections'
 import type { Section } from '@/db/types'
+import { domainOf, openUrl } from '@/lib/links'
 
 type Sheet = 'status' | 'collection' | 'edit' | 'addSection' | null
 
@@ -52,6 +55,9 @@ export function ProjectOverview() {
   // The founding photo(s) carried over when an idea was promoted into this
   // project — surfaced as a hero, tap to view full-screen (§7.2).
   const ideaPhotos = useLiveQuery(() => (id ? projectIdeaPhotos(id) : []), [id]) ?? []
+  // The founding idea(s) promoted into this project — their text and link, shown
+  // beside the hero photo so a promoted idea's note isn't stranded out of view.
+  const foundingIdeas = useLiveQuery(() => (id ? projectFoundingIdeas(id) : []), [id]) ?? []
   // Ideas sitting in this project's inbox (drives the §6.1 banner). `toFile` are
   // untriaged captures; `kept` are notes deliberately retained — both keep the
   // inbox reachable so kept notes don't get stranded once captures are cleared.
@@ -178,6 +184,31 @@ export function ProjectOverview() {
           />
         </button>
       )}
+
+      {foundingIdeas.map((idea) => (
+        <div key={idea.id} className="mt-3">
+          {idea.content && (
+            <Linkify text={idea.content} className="block whitespace-pre-wrap text-charcoal" />
+          )}
+          {idea.link && (
+            <span
+              role="link"
+              tabIndex={0}
+              aria-label={t('common.open_link')}
+              onClick={() => openUrl(idea.link!)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  openUrl(idea.link!)
+                }
+              }}
+              className="mt-1 inline-flex cursor-pointer items-center gap-1 text-sm text-terracotta underline-offset-2 hover:underline"
+            >
+              <LinkIcon size={13} /> {domainOf(idea.link)}
+            </span>
+          )}
+        </div>
+      ))}
 
       {project.description && (
         <p className="mt-2 whitespace-pre-wrap text-charcoal-muted">{project.description}</p>
