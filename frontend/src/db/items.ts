@@ -1,8 +1,8 @@
 import { db } from './db'
 import { deleteLocal, writeLocal } from './sync'
 import { generateThumbnail } from '@/lib/thumbnail'
-import type { Item, Section } from './types'
-import { validatePayload, type SectionKind, type TaskPayload } from './payload'
+import type { Attachment, Item, Section } from './types'
+import { validatePayload, type MaterialPayload, type SectionKind, type TaskPayload } from './payload'
 import { compareRank, rankAfter } from '@/lib/rank'
 
 /**
@@ -144,4 +144,124 @@ export async function allItemTags(): Promise<string[]> {
     for (const tag of item.tags ?? []) set.add(tag)
   }
   return [...set].sort()
+}
+
+/**
+ * A remembered material: its name, the unit it was last used with, and the id of
+ * the source item it came from (the most recent occurrence) so it can be cloned
+ * with its tags, notes, and photo.
+ */
+export interface MaterialSuggestion {
+  name: string
+  unit: string
+  sourceItemId: string
+}
+
+/**
+ * Distinct material names drawn from projects *related* to this section's project,
+ * each carrying the unit it was most recently used with — powering the
+ * add-material autocomplete so recurring supplies (a glaze, a clay body) don't get
+ * re-typed each project. Two projects are related when they share a collection
+ * (same non-null `collection_id`) or at least one tag; the section's own project is
+ * always included. A project with no collection and no tags is therefore related
+ * only to itself, so suggestions fall back to its own past materials.
+ */
+export async function materialSuggestions(section: Section): Promise<MaterialSuggestion[]> {
+  const project = await db.projects.get(section.project_id)
+  if (!project) return []
+
+  const [projects, sections, items] = await Promise.all([
+    db.projects.toArray(),
+    db.sections.toArray(),
+    db.items.toArray(),
+  ])
+
+  // Projects related to ours — by shared collection or a shared tag (self included).
+  const related = new Set<string>()
+  for (const p of projects) {
+    if (p.deleted) continue
+    const sameCollection = p.collection_id != null && p.collection_id === project.collection_id
+    const sharedTag = project.tags.some((t) => (p.tags ?? []).includes(t))
+    if (p.id === project.id || sameCollection || sharedTag) related.add(p.id)
+  }
+
+  // Their materials sections.
+  const materialSectionIds = new Set(
+    sections.filter((s) => !s.deleted && s.kind === 'materials' && related.has(s.project_id)).map((s) => s.id),
+  )
+
+  // Group live, named items by normalized title; the newest occurrence is the
+  // clone source (its tags/notes/photo) and supplies the unit.
+  const byName = new Map<string, { name: string; unit: string; at: string; sourceId: string }>()
+  for (const item of items) {
+    if (item.deleted || !materialSectionIds.has(item.section_id)) continue
+    const name = item.title?.trim()
+    if (!name) continue
+    const key = name.toLowerCase()
+    const unit = ((item.payload as MaterialPayload).unit ?? '').trim()
+    const at = item.updated_at
+    const prev = byName.get(key)
+    if (!prev || at > prev.at) {
+      // Newer wins, but don't let a blank unit erase a remembered one.
+      byName.set(key, { name, unit: unit || prev?.unit || '', at, sourceId: item.id })
+    } else if (!prev.unit && unit) {
+      prev.unit = unit
+    }
+  }
+
+  return [...byName.values()]
+    .map(({ name, unit, sourceId }) => ({ name, unit, sourceItemId: sourceId }))
+    .sort((a, b) => a.name.localeCompare(b.name))
+}
+
+/**
+ * Clone a material into `section` from a remembered one (the autocomplete "use a
+ * past material" action): copies its unit, tags, notes, and photo, but leaves the
+ * quantity blank — the amount is per-project. Returns the new item id (or `null`
+ * if the source vanished). The photo is duplicated, not moved, so the source keeps
+ * its own (contrast `fileIdea`, which re-points a consumed idea's attachment).
+ */
+export async function cloneMaterial(
+  section: Section,
+  sourceItemId: string,
+): Promise<string | null> {
+  const source = await db.items.get(sourceItemId)
+  if (!source || source.deleted) return null
+
+  const { unit } = source.payload as MaterialPayload
+  const itemId = await createItem(section, {
+    title: source.title,
+    body: source.body,
+    payload: { quantity: '', unit: (unit ?? '').trim() },
+    tags: source.tags ?? [],
+  })
+
+  const photo = (await db.attachments.where('owner_id').equals(source.id).toArray()).find(
+    (a) => !a.deleted && a.owner_type === 'item',
+  )
+  if (photo) await duplicateItemPhoto(photo, itemId)
+  return itemId
+}
+
+/**
+ * Duplicate an item photo onto another item. The new row carries the source's
+ * `storage_key`/`uploaded`/`thumb`: if the source was uploaded both rows resolve
+ * the same stored object (`GET /api/files/:id` reads each row's key; soft-deletes
+ * never remove the object, so sharing is safe); if not, the copied local blob is
+ * uploaded as a fresh object on the next sync. The inline `thumb` makes it render
+ * instantly either way.
+ */
+async function duplicateItemPhoto(source: Attachment, itemId: string): Promise<void> {
+  const id = crypto.randomUUID()
+  const blobRow = await db.blobs.get(source.id)
+  if (blobRow) await db.blobs.put({ id, blob: blobRow.blob })
+  await writeLocal('attachments', {
+    id,
+    owner_type: 'item',
+    owner_id: itemId,
+    storage_key: source.storage_key,
+    content_type: source.content_type,
+    uploaded: source.uploaded,
+    thumb: source.thumb,
+  })
 }

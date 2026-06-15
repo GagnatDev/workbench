@@ -13,8 +13,10 @@ import { useSectionItems } from '@/db/useSectionItems'
 import {
   addItemPhoto,
   allItemTags,
+  cloneMaterial,
   createItem,
   deleteItem,
+  materialSuggestions,
   removeAttachment,
   setItemPayload,
   setItemRank,
@@ -43,10 +45,23 @@ export function MaterialsSection({
   const [name, setName] = useState('')
   const [editing, setEditing] = useState<Item | null>(null)
 
+  // Material names remembered from related projects, with their last-used unit.
+  const suggestions = useLiveQuery(() => materialSuggestions(section), [section.id]) ?? []
+  const present = new Set((data?.items ?? []).map((i) => i.title?.trim().toLowerCase()))
+  const query = name.trim().toLowerCase()
+  const matches = query
+    ? suggestions.filter((s) => s.name.toLowerCase().includes(query) && !present.has(s.name.toLowerCase())).slice(0, 5)
+    : []
+
   const add = async () => {
     const title = name.trim()
     if (!title) return
     await createItem(section, { title, payload: { quantity: '', unit: '' } })
+    setName('')
+  }
+
+  const addSuggestion = async (s: { sourceItemId: string }) => {
+    await cloneMaterial(section, s.sourceItemId)
     setName('')
   }
 
@@ -125,6 +140,22 @@ export function MaterialsSection({
           <Plus size={20} />
         </button>
       </div>
+
+      {matches.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {matches.map((s) => (
+            <button
+              key={s.name}
+              type="button"
+              onClick={() => void addSuggestion(s)}
+              className="rounded-full border border-divider px-2.5 py-0.5 text-sm text-charcoal-muted hover:text-charcoal"
+            >
+              {s.name}
+              {s.unit && <span className="text-charcoal-muted/70"> · {s.unit}</span>}
+            </button>
+          ))}
+        </div>
+      )}
 
       {editing && (
         <MaterialEditSheet
