@@ -185,30 +185,37 @@ export function ProjectOverview() {
         </button>
       )}
 
-      {foundingIdeas.map((idea) => (
-        <div key={idea.id} className="mt-3">
-          {idea.content && (
-            <Linkify text={idea.content} className="block whitespace-pre-wrap text-charcoal" />
-          )}
-          {idea.link && (
-            <span
-              role="link"
-              tabIndex={0}
-              aria-label={t('common.open_link')}
-              onClick={() => openUrl(idea.link!)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault()
-                  openUrl(idea.link!)
-                }
-              }}
-              className="mt-1 inline-flex cursor-pointer items-center gap-1 text-sm text-terracotta underline-offset-2 hover:underline"
-            >
-              <LinkIcon size={13} /> {domainOf(idea.link)}
-            </span>
-          )}
-        </div>
-      ))}
+      {foundingIdeas.map((idea) => {
+        // Skip the text when it just repeats the project title — promotion
+        // prefills the title from the idea's content, so an unedited title
+        // would otherwise duplicate the note verbatim.
+        const showText = idea.content.trim() !== '' && idea.content.trim() !== project.title.trim()
+        if (!showText && !idea.link) return null
+        return (
+          <div key={idea.id} className="mt-3">
+            {showText && (
+              <Linkify text={idea.content} className="block whitespace-pre-wrap text-charcoal" />
+            )}
+            {idea.link && (
+              <span
+                role="link"
+                tabIndex={0}
+                aria-label={t('common.open_link')}
+                onClick={() => openUrl(idea.link!)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    openUrl(idea.link!)
+                  }
+                }}
+                className="mt-1 inline-flex cursor-pointer items-center gap-1 text-sm text-terracotta underline-offset-2 hover:underline"
+              >
+                <LinkIcon size={13} /> {domainOf(idea.link)}
+              </span>
+            )}
+          </div>
+        )
+      })}
 
       {project.description && (
         <p className="mt-2 whitespace-pre-wrap text-charcoal-muted">{project.description}</p>
