@@ -178,15 +178,26 @@ export async function loadProjectCards(): Promise<ProjectCard[]> {
   const newest = (a?: string, b?: string) =>
     (a ?? '').localeCompare(b ?? '') >= 0 ? (a ?? '') : (b ?? '')
 
+  // Ideas promoted into a project supply its founding "hero" photo (mirrors
+  // ProjectOverview's projectIdeaPhotos), preferred over the latest photo below.
+  const promotedIdeaIds = new Set(liveIdeas.filter((i) => i.state === 'promoted').map((i) => i.id))
+
   return live(projects)
     .sort(projectOrder)
     .map((project) => {
-      // Latest photo: newest attachment anywhere under this project.
-      let photo: Attachment | null = null
+      // Card photo: the hero — oldest photo from an idea promoted into this
+      // project, matching the overview hero — and otherwise the newest photo
+      // anywhere under the project.
+      let hero: Attachment | null = null
+      let latest: Attachment | null = null
       for (const att of liveAtts) {
         if (projectOfAttachment(att) !== project.id) continue
-        if (!photo || (att.created_at ?? '') > (photo.created_at ?? '')) photo = att
+        if (!latest || (att.created_at ?? '') > (latest.created_at ?? '')) latest = att
+        if (att.owner_type === 'idea' && promotedIdeaIds.has(att.owner_id)) {
+          if (!hero || (att.created_at ?? '') < (hero.created_at ?? '')) hero = att
+        }
       }
+      const photo = hero ?? latest
 
       // Last activity: most recent of the project row, its ideas, and its items.
       let lastActivity = project.updated_at
