@@ -4,6 +4,7 @@ import { createProject } from './projects'
 import { deleteLocal, writeLocal } from './sync'
 import type { Attachment, Idea, Section } from './types'
 import { generateThumbnail } from '@/lib/thumbnail'
+import { compressImageForUpload } from '@/lib/image'
 import { isDraftEmpty, type ComposerDraft } from '@/components/Composer'
 
 /**
@@ -27,15 +28,16 @@ export async function captureIdea(
   const ideaId = crypto.randomUUID()
 
   if (draft.photo) {
-    await db.blobs.put({ id: draft.photo.id, blob: draft.photo.blob })
+    const blob = await compressImageForUpload(draft.photo.blob)
+    await db.blobs.put({ id: draft.photo.id, blob })
     await writeLocal('attachments', {
       id: draft.photo.id,
       owner_type: 'idea',
       owner_id: ideaId,
       storage_key: null,
-      content_type: draft.photo.blob.type || 'image/jpeg',
+      content_type: blob.type || 'image/jpeg',
       uploaded: false,
-      thumb: await generateThumbnail(draft.photo.blob),
+      thumb: await generateThumbnail(blob),
     })
   }
 

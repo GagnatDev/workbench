@@ -1,6 +1,7 @@
 import { db } from './db'
 import { deleteLocal, writeLocal } from './sync'
 import { generateThumbnail } from '@/lib/thumbnail'
+import { compressImageForUpload } from '@/lib/image'
 import type { Attachment, Item, Section } from './types'
 import { validatePayload, type MaterialPayload, type SectionKind, type TaskPayload } from './payload'
 import { compareRank, rankAfter } from '@/lib/rank'
@@ -46,15 +47,16 @@ export async function createItem(section: Section, fields: NewItemFields): Promi
   const itemId = crypto.randomUUID()
 
   if (fields.photo) {
-    await db.blobs.put({ id: fields.photo.id, blob: fields.photo.blob })
+    const blob = await compressImageForUpload(fields.photo.blob)
+    await db.blobs.put({ id: fields.photo.id, blob })
     await writeLocal('attachments', {
       id: fields.photo.id,
       owner_type: 'item',
       owner_id: itemId,
       storage_key: null,
-      content_type: fields.photo.blob.type || 'image/jpeg',
+      content_type: blob.type || 'image/jpeg',
       uploaded: false,
-      thumb: await generateThumbnail(fields.photo.blob),
+      thumb: await generateThumbnail(blob),
     })
   }
 
@@ -108,15 +110,16 @@ export async function setItemRank(item: Item, rank: string): Promise<void> {
  */
 export async function addItemPhoto(itemId: string, blob: Blob): Promise<string> {
   const id = crypto.randomUUID()
-  await db.blobs.put({ id, blob })
+  const compressed = await compressImageForUpload(blob)
+  await db.blobs.put({ id, blob: compressed })
   await writeLocal('attachments', {
     id,
     owner_type: 'item',
     owner_id: itemId,
     storage_key: null,
-    content_type: blob.type || 'image/jpeg',
+    content_type: compressed.type || 'image/jpeg',
     uploaded: false,
-    thumb: await generateThumbnail(blob),
+    thumb: await generateThumbnail(compressed),
   })
   return id
 }
