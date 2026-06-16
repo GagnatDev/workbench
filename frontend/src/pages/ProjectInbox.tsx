@@ -7,6 +7,7 @@ import { AttachmentThumb } from '@/components/AttachmentThumb'
 import { EmptyState } from '@/components/EmptyState'
 import { FileAsSheet } from '@/components/FileAsSheet'
 import { Linkify } from '@/components/Linkify'
+import { LinkBadge } from '@/components/LinkBadge'
 import { db } from '@/db/db'
 import type { Idea } from '@/db/types'
 import { timeAgo } from '@/lib/time'
@@ -161,7 +162,10 @@ function InboxCard({ idea, onTap }: { idea: Idea; onTap: () => void }) {
             {idea.link ? domainOf(idea.link) : t('common.photo')}
           </span>
         )}
-        <span className="mt-1 block text-xs text-charcoal-muted">{timeAgo(idea.created_at)}</span>
+        <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-charcoal-muted">
+          <span>{timeAgo(idea.created_at)}</span>
+          {idea.link && <LinkBadge link={idea.link} />}
+        </span>
       </span>
     </button>
   )

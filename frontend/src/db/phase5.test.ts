@@ -187,6 +187,34 @@ describe('fileIdea', () => {
     expect(item.title).toBe('order glaze')
     expect(item.payload).toEqual({ done: false })
   })
+
+  it("carries a captured link into the kind's text so it survives filing", async () => {
+    const pid = await createProject('P', 'kanban')
+    const link = 'https://example.com/glaze'
+    const capture = async () =>
+      (await db.ideas.get((await captureIdea({ text: 'glaze recipe', link, photo: null }, pid))!))!
+
+    const journalItem = (await db.items.get(await fileIdea(await capture(), await section(pid, 'journal'))))!
+    expect(journalItem.body).toBe(`glaze recipe\n\n${link}`)
+
+    const checklistItem = (await db.items.get(await fileIdea(await capture(), await section(pid, 'checklist'))))!
+    expect(checklistItem.title).toBe(`glaze recipe ${link}`)
+
+    const materialItem = (await db.items.get(await fileIdea(await capture(), await section(pid, 'materials'))))!
+    expect(materialItem.title).toBe('glaze recipe')
+    expect(materialItem.body).toBe(link)
+
+    const moodboardItem = (await db.items.get(await fileIdea(await capture(), await section(pid, 'moodboard'))))!
+    expect(moodboardItem.payload).toEqual({ subtype: 'link', url: link })
+  })
+
+  it('files a link-only idea (no text) keeping just the link', async () => {
+    const pid = await createProject('P', 'kanban')
+    const link = 'https://example.com/only'
+    const ideaId = (await captureIdea({ text: '', link, photo: null }, pid))!
+    const item = (await db.items.get(await fileIdea((await db.ideas.get(ideaId))!, await section(pid, 'journal'))))!
+    expect(item.body).toBe(link)
+  })
 })
 
 describe('cascading deletes', () => {

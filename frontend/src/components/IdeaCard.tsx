@@ -1,13 +1,14 @@
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Archive, FolderPlus, Link as LinkIcon } from 'lucide-react'
+import { Archive, FolderPlus } from 'lucide-react'
 import { db } from '@/db/db'
 import type { Idea } from '@/db/types'
 import { timeAgo } from '@/lib/time'
-import { domainOf, openUrl } from '@/lib/links'
+import { domainOf } from '@/lib/links'
 import { AttachmentThumb } from './AttachmentThumb'
 import { Linkify } from './Linkify'
+import { LinkBadge } from './LinkBadge'
 
 const SWIPE_THRESHOLD = 96
 const TAP_SLOP = 8
@@ -105,26 +106,7 @@ export function IdeaCard({
           )}
           <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-charcoal-muted">
             <span>{timeAgo(idea.created_at)}</span>
-            {idea.link && (
-              <span
-                role="link"
-                tabIndex={0}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  openUrl(idea.link!)
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.stopPropagation()
-                    e.preventDefault()
-                    openUrl(idea.link!)
-                  }
-                }}
-                className="inline-flex cursor-pointer items-center gap-0.5 text-terracotta underline-offset-2 hover:underline"
-              >
-                <LinkIcon size={11} /> {domainOf(idea.link)}
-              </span>
-            )}
+            {idea.link && <LinkBadge link={idea.link} />}
             {(idea.tags ?? []).map((t) => (
               <span key={t}>#{t}</span>
             ))}

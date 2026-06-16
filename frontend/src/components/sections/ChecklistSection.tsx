@@ -6,6 +6,7 @@ import { BottomSheet } from '../BottomSheet'
 import { EmptyState } from '../EmptyState'
 import { ReorderableList } from '../ReorderableList'
 import { TagInput } from '../TagInput'
+import { Linkify } from '../Linkify'
 import { useSectionItems } from '@/db/useSectionItems'
 import { allItemTags, createItem, deleteItem, setItemRank, toggleTask, updateItem } from '@/db/items'
 import { matchesTags } from '@/lib/tags'
@@ -70,7 +71,7 @@ export function ChecklistSection({
                     done ? 'text-charcoal-muted line-through' : 'text-charcoal'
                   }`}
                 >
-                  {item.title || t('checklist.untitled')}
+                  {item.title ? <Linkify text={item.title} /> : t('checklist.untitled')}
                 </button>
               </div>
             )

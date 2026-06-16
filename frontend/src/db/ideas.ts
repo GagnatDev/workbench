@@ -98,26 +98,33 @@ export async function promoteIdea(
  */
 export async function fileIdea(idea: Idea, section: Section): Promise<string> {
   const content = idea.content
+  const link = idea.link
   let title: string | null = null
   let body: string | null = null
   let payload: Record<string, unknown>
   switch (section.kind) {
     case 'journal':
-      body = content
+      // Item has no link field; fold a captured link into the kind's Linkified
+      // text so it survives filing and renders tappable (the journal body is
+      // whitespace-pre-wrap + Linkify, so the URL lands on its own line).
+      body = [content, link].filter(Boolean).join('\n\n')
       payload = { entry_at: idea.created_at ?? new Date().toISOString() }
       break
     case 'checklist':
-      title = content
+      // Single-line task title; the checklist renderer Linkifies it.
+      title = [content, link].filter(Boolean).join(' ')
       payload = { done: false }
       break
     case 'moodboard':
       title = content
       // A captured link becomes a link pin; otherwise an image pin (it carries
       // the idea's photo below, or renders as a caption-only card if there's none).
-      payload = idea.link ? { subtype: 'link', url: idea.link } : { subtype: 'image' }
+      payload = link ? { subtype: 'link', url: link } : { subtype: 'image' }
       break
     case 'materials':
+      // Name stays the text; the link rides in the notes line (Linkified there).
       title = content
+      body = link
       payload = { quantity: '', unit: '' }
       break
   }
