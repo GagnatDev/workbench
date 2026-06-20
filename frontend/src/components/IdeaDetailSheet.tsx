@@ -77,6 +77,7 @@ export function IdeaDetailSheet({
           attachmentId={photo.id}
           uploaded={photo.uploaded}
           className="mb-3 max-h-48 rounded-lg object-cover"
+          zoomable
         />
       )}
 

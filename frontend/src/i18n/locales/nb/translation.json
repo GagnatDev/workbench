@@ -230,7 +230,8 @@
   },
   "attachment": {
     "not_uploaded_aria": "Ikke lastet opp ennå",
-    "queued_title": "I kø for opplasting"
+    "queued_title": "I kø for opplasting",
+    "view_aria": "Vis bilde"
   },
   "section_card": {
     "manage_aria": "Administrer seksjon",

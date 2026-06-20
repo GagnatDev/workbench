@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/db/db'
 import { writeLocal } from '@/db/sync'
 import { authClient } from '@/auth/authClient'
 import { generateThumbnail } from '@/lib/thumbnail'
+import { usePhotoViewerOptional } from './PhotoViewerProvider'
 
 const API_BASE = import.meta.env.VITE_API_URL ?? ''
 
@@ -34,14 +35,29 @@ export function AttachmentThumb({
   className = '',
   alt,
   variant = 'thumb',
+  imgStyle,
+  zoomable = false,
+  zoomIds,
+  zoomIndex = 0,
 }: {
   attachmentId: string
   uploaded?: boolean
   className?: string
   alt?: string
   variant?: 'thumb' | 'full'
+  /** Inline style on the <img> — used by the PhotoViewer for its zoom transform. */
+  imgStyle?: CSSProperties
+  /**
+   * When set, the thumbnail is tappable and opens the full-screen PhotoViewer.
+   * `zoomIds`/`zoomIndex` describe the navigable group (defaults to this photo
+   * alone); requires a PhotoViewerProvider above (no-ops without one).
+   */
+  zoomable?: boolean
+  zoomIds?: string[]
+  zoomIndex?: number
 }) {
   const { t } = useTranslation()
+  const openViewer = usePhotoViewerOptional()
   const att = useLiveQuery(() => db.attachments.get(attachmentId), [attachmentId])
   const blobRow = useLiveQuery(() => db.blobs.get(attachmentId), [attachmentId])
   const [blobUrl, setBlobUrl] = useState<string | null>(null)
@@ -107,13 +123,28 @@ export function AttachmentThumb({
     })()
   }, [att, blobRow, attachmentId])
 
+  const image = src ? (
+    <img src={src} alt={alt ?? t('common.photo')} className={className} style={imgStyle} loading="lazy" />
+  ) : (
+    // Bytes in flight (or offline with nothing cached): hold the layout box.
+    <span className={className} aria-hidden />
+  )
+
+  const canZoom = zoomable && !!openViewer && !!src
+
   return (
     <span className="relative inline-block">
-      {src ? (
-        <img src={src} alt={alt ?? t('common.photo')} className={className} loading="lazy" />
+      {canZoom ? (
+        <button
+          type="button"
+          aria-label={t('attachment.view_aria')}
+          onClick={() => openViewer!(zoomIds ?? [attachmentId], zoomIndex)}
+          className="block cursor-zoom-in"
+        >
+          {image}
+        </button>
       ) : (
-        // Bytes in flight (or offline with nothing cached): hold the layout box.
-        <span className={className} aria-hidden />
+        image
       )}
       {uploaded === false && (
         <span

@@ -230,7 +230,8 @@
   },
   "attachment": {
     "not_uploaded_aria": "Not yet uploaded",
-    "queued_title": "Queued for upload"
+    "queued_title": "Queued for upload",
+    "view_aria": "View photo"
   },
   "section_card": {
     "manage_aria": "Manage section",

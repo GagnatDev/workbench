@@ -71,6 +71,7 @@ export function FileAsSheet({
             uploaded={photo.uploaded}
             className="h-12 w-12 flex-shrink-0 rounded-lg object-cover"
             alt=""
+            zoomable
           />
         )}
         <p id="file-as-title" className="min-w-0 flex-1 break-words text-charcoal">

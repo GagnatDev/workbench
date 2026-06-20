@@ -261,6 +261,7 @@ function MaterialEditSheet({
               attachmentId={photo.id}
               uploaded={photo.uploaded}
               className="max-h-32 rounded-lg object-cover"
+              zoomable
             />
             <button
               type="button"

@@ -22,7 +22,7 @@ import { DetailsBlock } from '@/components/DetailsBlock'
 import { EditProjectSheet } from '@/components/EditProjectSheet'
 import { Linkify } from '@/components/Linkify'
 import { LinkBadge } from '@/components/LinkBadge'
-import { PhotoViewer } from '@/components/PhotoViewer'
+import { usePhotoViewer } from '@/components/PhotoViewerProvider'
 import { ReorderableList } from '@/components/ReorderableList'
 import { SectionPreviewCard } from '@/components/SectionPreviewCard'
 import { StatusSheet } from '@/components/StatusSheet'
@@ -72,7 +72,7 @@ export function ProjectOverview() {
     }, [id]) ?? { toFile: 0, kept: 0 }
 
   const [sheet, setSheet] = useState<Sheet>(null)
-  const [viewerStart, setViewerStart] = useState<number | null>(null)
+  const openViewer = usePhotoViewer()
   const [manageSection, setManageSection] = useState<Section | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -171,7 +171,7 @@ export function ProjectOverview() {
       {ideaPhotos.length > 0 && (
         <button
           type="button"
-          onClick={() => setViewerStart(0)}
+          onClick={() => openViewer(ideaPhotos.map((a) => a.id), 0)}
           aria-label={t('project.view_photo')}
           className="mt-3 block w-full overflow-hidden rounded-card"
         >
@@ -296,13 +296,6 @@ export function ProjectOverview() {
       )}
       {manageSection && (
         <SectionManageSheet section={manageSection} onClose={() => setManageSection(null)} />
-      )}
-      {viewerStart !== null && (
-        <PhotoViewer
-          attachmentIds={ideaPhotos.map((a) => a.id)}
-          startIndex={viewerStart}
-          onClose={() => setViewerStart(null)}
-        />
       )}
     </section>
   )

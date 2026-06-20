@@ -4,7 +4,7 @@ import { ClipboardPaste, Link as LinkIcon, Plus, X } from 'lucide-react'
 import { clipboardReadSupported, imageFromPasteEvent, readImageFromClipboard } from '@/lib/clipboard'
 import { BottomSheet } from '../BottomSheet'
 import { AttachmentThumb } from '../AttachmentThumb'
-import { PhotoViewer } from '../PhotoViewer'
+import { usePhotoViewer } from '../PhotoViewerProvider'
 import { Linkify } from '../Linkify'
 import { useSectionItems } from '@/db/useSectionItems'
 import { createItem, deleteItem } from '@/db/items'
@@ -31,7 +31,7 @@ export function MoodboardSection({
   const data = useSectionItems(section.id)
   const items = (data?.items ?? []).filter((i) => matchesTags(i.tags, tagFilter))
   const [adding, setAdding] = useState(false)
-  const [viewer, setViewer] = useState<{ ids: string[]; start: number } | null>(null)
+  const openViewer = usePhotoViewer()
 
   // The ordered list of image-pin attachment ids, so the viewer can page between
   // them (and a tapped image opens at its own position).
@@ -78,7 +78,7 @@ export function MoodboardSection({
               {att ? (
                 <button
                   type="button"
-                  onClick={() => setViewer({ ids: imageIds, start: Math.max(0, at) })}
+                  onClick={() => openViewer(imageIds, Math.max(0, at))}
                   className="block w-full overflow-hidden rounded-card"
                 >
                   <AttachmentThumb
@@ -115,13 +115,6 @@ export function MoodboardSection({
       </div>
 
       {adding && <AddPinSheet section={section} onClose={() => setAdding(false)} />}
-      {viewer && (
-        <PhotoViewer
-          attachmentIds={viewer.ids}
-          startIndex={viewer.start}
-          onClose={() => setViewer(null)}
-        />
-      )}
     </div>
   )
 }

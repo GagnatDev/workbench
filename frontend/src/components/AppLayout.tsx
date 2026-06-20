@@ -7,6 +7,7 @@ import { syncEngine } from '@/db/sync'
 import { SyncStatus } from './SyncStatus'
 import { CaptureSheet } from './CaptureSheet'
 import { HintBanner } from './HintBanner'
+import { PhotoViewerProvider } from './PhotoViewerProvider'
 
 const NAV = [
   { to: '/inbox', labelKey: 'nav.inbox', icon: Inbox },
@@ -50,56 +51,58 @@ export function AppLayout() {
   )
 
   return (
-    <div className="flex h-full flex-col md:flex-row">
-      {/* Left rail (desktop) */}
-      <nav className="hidden border-r border-divider bg-oatmeal px-3 py-6 md:flex md:flex-col md:items-center md:gap-8">
-        {NAV.map(({ to, labelKey, icon: Icon }) => (
-          <NavLink key={to} to={to} className={navItemClass} aria-label={t(labelKey)}>
-            <Icon size={24} />
-            <span>{t(labelKey)}</span>
-          </NavLink>
-        ))}
-        {captureButton}
-      </nav>
-
-      {/* Main column */}
-      <div className="flex min-h-0 flex-1 flex-col">
-        <header className="flex items-center justify-between border-b border-divider px-4 py-3">
-          <h1 className="font-serif text-xl text-charcoal">{t('app.title')}</h1>
-          <div className="flex items-center gap-4">
-            <SyncStatus />
-            <NavLink
-              to="/settings"
-              aria-label={t('nav.settings_aria')}
-              className="text-charcoal-muted hover:text-charcoal"
-            >
-              <User size={22} />
+    <PhotoViewerProvider>
+      <div className="flex h-full flex-col md:flex-row">
+        {/* Left rail (desktop) */}
+        <nav className="hidden border-r border-divider bg-oatmeal px-3 py-6 md:flex md:flex-col md:items-center md:gap-8">
+          {NAV.map(({ to, labelKey, icon: Icon }) => (
+            <NavLink key={to} to={to} className={navItemClass} aria-label={t(labelKey)}>
+              <Icon size={24} />
+              <span>{t(labelKey)}</span>
             </NavLink>
-          </div>
-        </header>
+          ))}
+          {captureButton}
+        </nav>
 
-        <main className="mx-auto w-full max-w-[680px] flex-1 overflow-y-auto px-4 py-6 pb-24 md:pb-6">
-          <HintBanner />
-          <Outlet />
-        </main>
+        {/* Main column */}
+        <div className="flex min-h-0 flex-1 flex-col">
+          <header className="flex items-center justify-between border-b border-divider px-4 py-3">
+            <h1 className="font-serif text-xl text-charcoal">{t('app.title')}</h1>
+            <div className="flex items-center gap-4">
+              <SyncStatus />
+              <NavLink
+                to="/settings"
+                aria-label={t('nav.settings_aria')}
+                className="text-charcoal-muted hover:text-charcoal"
+              >
+                <User size={22} />
+              </NavLink>
+            </div>
+          </header>
+
+          <main className="mx-auto w-full max-w-[680px] flex-1 overflow-y-auto px-4 py-6 pb-24 md:pb-6">
+            <HintBanner />
+            <Outlet />
+          </main>
+        </div>
+
+        {/* Bottom bar (mobile) */}
+        <nav className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-around border-t border-divider bg-oatmeal px-6 py-2 md:hidden">
+          <NavLink to="/inbox" className={navItemClass} aria-label={t('nav.inbox')}>
+            <Inbox size={24} />
+            <span>{t('nav.inbox')}</span>
+          </NavLink>
+          <div className="-mt-6">{captureButton}</div>
+          <NavLink to="/projects" className={navItemClass} aria-label={t('nav.projects')}>
+            <FolderOpen size={24} />
+            <span>{t('nav.projects')}</span>
+          </NavLink>
+        </nav>
+
+        {capturing && (
+          <CaptureSheet defaultProjectId={currentProjectId} onClose={() => setCapturing(false)} />
+        )}
       </div>
-
-      {/* Bottom bar (mobile) */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-around border-t border-divider bg-oatmeal px-6 py-2 md:hidden">
-        <NavLink to="/inbox" className={navItemClass} aria-label={t('nav.inbox')}>
-          <Inbox size={24} />
-          <span>{t('nav.inbox')}</span>
-        </NavLink>
-        <div className="-mt-6">{captureButton}</div>
-        <NavLink to="/projects" className={navItemClass} aria-label={t('nav.projects')}>
-          <FolderOpen size={24} />
-          <span>{t('nav.projects')}</span>
-        </NavLink>
-      </nav>
-
-      {capturing && (
-        <CaptureSheet defaultProjectId={currentProjectId} onClose={() => setCapturing(false)} />
-      )}
-    </div>
+    </PhotoViewerProvider>
   )
 }

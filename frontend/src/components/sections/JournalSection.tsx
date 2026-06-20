@@ -6,7 +6,7 @@ import i18n, { activeLocale } from '@/i18n'
 import { BottomSheet } from '../BottomSheet'
 import { Composer, emptyDraft, isDraftEmpty, type ComposerDraft } from '../Composer'
 import { AttachmentThumb } from '../AttachmentThumb'
-import { PhotoViewer } from '../PhotoViewer'
+import { usePhotoViewer } from '../PhotoViewerProvider'
 import { EmptyState } from '../EmptyState'
 import { TagInput } from '../TagInput'
 import { Linkify } from '../Linkify'
@@ -69,7 +69,7 @@ export function JournalSection({
   const [entryAt, setEntryAt] = useState<string | null>(null) // null = now
   const [showBackdate, setShowBackdate] = useState(false)
   const [editing, setEditing] = useState<Item | null>(null)
-  const [viewer, setViewer] = useState<string[] | null>(null)
+  const openViewer = usePhotoViewer()
 
   const items = (data?.items ?? [])
     .filter((i) => matchesTags(i.tags, tagFilter))
@@ -174,7 +174,7 @@ export function JournalSection({
                       <button
                         key={p.id}
                         type="button"
-                        onClick={() => setViewerAt(photos, i, setViewer)}
+                        onClick={() => openViewer(photos.map((ph) => ph.id), i)}
                         className="overflow-hidden rounded-lg"
                       >
                         <AttachmentThumb
@@ -193,20 +193,8 @@ export function JournalSection({
       )}
 
       {editing && <JournalEntrySheet item={editing} onClose={() => setEditing(null)} />}
-      {viewer && <PhotoViewer attachmentIds={viewer} onClose={() => setViewer(null)} />}
     </div>
   )
-}
-
-/** Helper so the strip can open the viewer starting on the tapped photo. */
-function setViewerAt(
-  photos: { id: string }[],
-  i: number,
-  setViewer: (ids: string[]) => void,
-): void {
-  // Rotate so the tapped photo is first (PhotoViewer starts at index 0).
-  const ids = photos.map((p) => p.id)
-  setViewer([...ids.slice(i), ...ids.slice(0, i)])
 }
 
 /** Edit an entry: text, backdate, delete (the slower actions behind a tap). */
