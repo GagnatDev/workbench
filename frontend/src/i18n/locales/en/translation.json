@@ -77,7 +77,8 @@
     "notes_count_other": "{{count}} notes",
     "add_journal_hint": "Add a journal to start logging.",
     "add_section": "Add section",
-    "view_photo": "View photo"
+    "view_photo": "View photo",
+    "change_cover": "Change cover"
   },
   "section_manage": {
     "title": "Section",
@@ -217,6 +218,22 @@
     "none": "None",
     "new_placeholder": "New collection…",
     "create_aria": "Create collection"
+  },
+  "cover": {
+    "title": "Cover image",
+    "automatic": "Automatic",
+    "defaults": "Defaults",
+    "from_project": "From this project",
+    "upload": "Upload photo",
+    "uploading": "Uploading…",
+    "use_photo_aria": "Use this photo as cover",
+    "motif": {
+      "woven": "Woven",
+      "arcs": "Arcs",
+      "dots": "Dots",
+      "grid": "Grid",
+      "pebbles": "Pebbles"
+    }
   },
   "tags": {
     "add_placeholder": "Add tags…",

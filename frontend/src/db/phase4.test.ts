@@ -207,7 +207,7 @@ describe('loadProjectCards', () => {
 
     const cards = await loadProjectCards()
     const card = cards.find((c) => c.project.id === pid)!
-    expect(card.photoAttachmentId).toBe(attId)
+    expect(card.cover).toEqual({ kind: 'attachment', id: attId, uploaded: false })
 
     await deleteProject(pid)
     expect((await loadProjectCards()).find((c) => c.project.id === pid)).toBeUndefined()

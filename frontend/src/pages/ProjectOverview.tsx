@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
   FolderInput,
+  ImagePlus,
   Inbox as InboxIcon,
   MoreHorizontal,
   NotebookPen,
@@ -15,24 +16,24 @@ import {
   Trash2,
 } from 'lucide-react'
 import { AddSectionSheet } from '@/components/AddSectionSheet'
-import { AttachmentThumb } from '@/components/AttachmentThumb'
 import { BottomSheet } from '@/components/BottomSheet'
 import { CollectionPicker } from '@/components/CollectionPicker'
 import { DetailsBlock } from '@/components/DetailsBlock'
 import { EditProjectSheet } from '@/components/EditProjectSheet'
 import { Linkify } from '@/components/Linkify'
 import { LinkBadge } from '@/components/LinkBadge'
-import { usePhotoViewer } from '@/components/PhotoViewerProvider'
+import { ProjectCover } from '@/components/ProjectCover'
+import { ProjectCoverSheet } from '@/components/ProjectCoverSheet'
 import { ReorderableList } from '@/components/ReorderableList'
 import { SectionPreviewCard } from '@/components/SectionPreviewCard'
 import { StatusSheet } from '@/components/StatusSheet'
 import { db } from '@/db/db'
-import { projectFoundingIdeas, projectIdeaPhotos } from '@/db/ideas'
-import { deleteProject, toggleFavourite } from '@/db/projects'
+import { projectFoundingIdeas } from '@/db/ideas'
+import { deleteProject, projectCover, projectPhotos, toggleFavourite } from '@/db/projects'
 import { deleteSection, renameSection, sectionsOfProject, setSectionRank } from '@/db/sections'
 import type { Section } from '@/db/types'
 
-type Sheet = 'status' | 'collection' | 'edit' | 'addSection' | null
+type Sheet = 'status' | 'collection' | 'edit' | 'addSection' | 'cover' | null
 
 /**
  * Project overview (ui-ux-design.md §6.1): the header (title, status chip,
@@ -51,9 +52,11 @@ export function ProjectOverview() {
     [project?.collection_id],
   )
   const sections = useLiveQuery(() => (id ? sectionsOfProject(id) : []), [id]) ?? []
-  // The founding photo(s) carried over when an idea was promoted into this
-  // project — surfaced as a hero, tap to view full-screen (§7.2).
-  const ideaPhotos = useLiveQuery(() => (id ? projectIdeaPhotos(id) : []), [id]) ?? []
+  // The project's resolved cover (chosen photo/motif, else founding photo, else a
+  // default motif) shown as the hero, and every photo under the project for the
+  // full-screen viewer when the cover is a photo (§7.2).
+  const cover = useLiveQuery(() => (id ? projectCover(id) : undefined), [id])
+  const photos = useLiveQuery(() => (id ? projectPhotos(id) : []), [id]) ?? []
   // The founding idea(s) promoted into this project — their text and link, shown
   // beside the hero photo so a promoted idea's note isn't stranded out of view.
   const foundingIdeas = useLiveQuery(() => (id ? projectFoundingIdeas(id) : []), [id]) ?? []
@@ -72,7 +75,6 @@ export function ProjectOverview() {
     }, [id]) ?? { toFile: 0, kept: 0 }
 
   const [sheet, setSheet] = useState<Sheet>(null)
-  const openViewer = usePhotoViewer()
   const [manageSection, setManageSection] = useState<Section | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -132,6 +134,16 @@ export function ProjectOverview() {
                 <button
                   type="button"
                   onClick={() => {
+                    setSheet('cover')
+                    setMenuOpen(false)
+                  }}
+                  className="block w-full px-4 py-2 text-left text-sm text-charcoal hover:bg-oatmeal"
+                >
+                  {t('project.change_cover')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
                     setSheet('edit')
                     setMenuOpen(false)
                   }}
@@ -168,20 +180,32 @@ export function ProjectOverview() {
         </button>
       </div>
 
-      {ideaPhotos.length > 0 && (
-        <button
-          type="button"
-          onClick={() => openViewer(ideaPhotos.map((a) => a.id), 0)}
-          aria-label={t('project.view_photo')}
-          className="mt-3 block w-full overflow-hidden rounded-card"
-        >
-          <AttachmentThumb
-            attachmentId={ideaPhotos[0]!.id}
-            uploaded={ideaPhotos[0]!.uploaded}
-            className="max-h-64 w-full object-cover"
-            alt=""
-          />
-        </button>
+      {cover && (
+        <div className="relative mt-3 overflow-hidden rounded-card">
+          {cover.kind === 'attachment' ? (
+            <ProjectCover
+              cover={cover}
+              zoomable
+              zoomIds={photos.map((p) => p.id)}
+              zoomIndex={Math.max(
+                0,
+                photos.findIndex((p) => p.id === cover.id),
+              )}
+              className="max-h-64 w-full object-cover"
+              alt=""
+            />
+          ) : (
+            <ProjectCover cover={cover} className="h-40 w-full object-cover" alt="" />
+          )}
+          <button
+            type="button"
+            aria-label={t('project.change_cover')}
+            onClick={() => setSheet('cover')}
+            className="absolute bottom-2 right-2 z-10 flex items-center gap-1.5 rounded-full bg-charcoal/70 px-3 py-1.5 text-xs text-oatmeal"
+          >
+            <ImagePlus size={14} /> {t('project.change_cover')}
+          </button>
+        </div>
       )}
 
       {foundingIdeas.map((idea) => {
@@ -291,6 +315,7 @@ export function ProjectOverview() {
         <CollectionPicker project={project} onClose={() => setSheet(null)} />
       )}
       {sheet === 'edit' && <EditProjectSheet project={project} onClose={() => setSheet(null)} />}
+      {sheet === 'cover' && <ProjectCoverSheet project={project} onClose={() => setSheet(null)} />}
       {sheet === 'addSection' && (
         <AddSectionSheet projectId={project.id} onClose={() => setSheet(null)} />
       )}

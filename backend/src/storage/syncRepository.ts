@@ -42,6 +42,7 @@ const SYNC_TABLES = {
       "favourite",
       "tags",
       "rank",
+      "cover",
     ],
     json: new Set(["stages", "details", "tags"]),
   },

@@ -55,6 +55,8 @@ export interface ProjectsTable extends SyncColumns {
   /** Tags for local per-list filtering (Phase 6), like ideas/items. */
   tags: ColumnType<string[], string, string>;
   rank: string;
+  /** Chosen main image: null (auto) | `default:<key>` (motif) | `att:<id>` (photo). */
+  cover: string | null;
 }
 
 export interface SectionsTable extends SyncColumns {
@@ -86,7 +88,7 @@ export interface IdeasTable extends SyncColumns {
 }
 
 export interface AttachmentsTable extends SyncColumns {
-  /** `idea` | `item` — polymorphic owner. */
+  /** `idea` | `item` | `project` — polymorphic owner. */
   owner_type: string;
   owner_id: string;
   storage_key: string | null;

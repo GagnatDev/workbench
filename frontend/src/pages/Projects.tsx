@@ -3,9 +3,9 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Plus } from 'lucide-react'
-import { AttachmentThumb } from '@/components/AttachmentThumb'
 import { EmptyState } from '@/components/EmptyState'
 import { NewProjectSheet } from '@/components/NewProjectSheet'
+import { ProjectCover } from '@/components/ProjectCover'
 import { TagFilterBar } from '@/components/TagFilterBar'
 import { allCollections } from '@/db/collections'
 import { loadProjectCards } from '@/db/projects'
@@ -73,22 +73,17 @@ export function Projects() {
         <EmptyState title={t('projects.empty.no_match')} />
       ) : (
         <ul className="flex flex-col gap-2">
-          {shown.map(({ project, photoAttachmentId, photoUploaded, lastActivity }) => (
+          {shown.map(({ project, cover, lastActivity }) => (
             <li key={project.id}>
               <Link
                 to={`/projects/${project.id}`}
                 className="flex items-stretch gap-3 overflow-hidden rounded-card bg-stoneware"
               >
-                {photoAttachmentId ? (
-                  <AttachmentThumb
-                    attachmentId={photoAttachmentId}
-                    uploaded={photoUploaded}
-                    className="h-20 w-20 flex-shrink-0 object-cover"
-                    alt=""
-                  />
-                ) : (
-                  <span className="h-20 w-20 flex-shrink-0 bg-oatmeal" aria-hidden />
-                )}
+                <ProjectCover
+                  cover={cover}
+                  className="h-20 w-20 flex-shrink-0 object-cover"
+                  alt=""
+                />
                 <span className="flex min-w-0 flex-1 flex-col justify-center py-2 pr-3">
                   <span className="block truncate font-serif text-lg text-charcoal">
                     {project.favourite && <span className="text-flax">★ </span>}

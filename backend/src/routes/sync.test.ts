@@ -106,6 +106,24 @@ describe("project tags (Phase 6)", () => {
   });
 });
 
+describe("project cover", () => {
+  it("round-trips the chosen cover pointer", async () => {
+    const row = project({ cover: "default:woven" });
+    const pushed = await push(app, { projects: [row] });
+    expect(pushed.status).toBe(200);
+    expect(pushed.body.applied.projects[0].cover).toBe("default:woven");
+
+    const pulled = await pull(app);
+    expect(pulled.body.changes.projects[0].cover).toBe("default:woven");
+  });
+
+  it("defaults to null when the client omits cover", async () => {
+    await push(app, { projects: [project()] });
+    const pulled = await pull(app);
+    expect(pulled.body.changes.projects[0].cover).toBeNull();
+  });
+});
+
 /**
  * A minimal valid `attachments` row. owner_type and owner_id are NOT NULL, and
  * the upsert sets every data column explicitly — including the new `thumb`.

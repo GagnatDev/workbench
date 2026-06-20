@@ -77,7 +77,8 @@
     "notes_count_other": "{{count}} notater",
     "add_journal_hint": "Legg til en journal for å begynne å logge.",
     "add_section": "Legg til seksjon",
-    "view_photo": "Vis bilde"
+    "view_photo": "Vis bilde",
+    "change_cover": "Endre forsidebilde"
   },
   "section_manage": {
     "title": "Seksjon",
@@ -217,6 +218,22 @@
     "none": "Ingen",
     "new_placeholder": "Ny samling…",
     "create_aria": "Opprett samling"
+  },
+  "cover": {
+    "title": "Forsidebilde",
+    "automatic": "Automatisk",
+    "defaults": "Standardbilder",
+    "from_project": "Fra dette prosjektet",
+    "upload": "Last opp bilde",
+    "uploading": "Laster opp…",
+    "use_photo_aria": "Bruk dette bildet som forside",
+    "motif": {
+      "woven": "Vevd",
+      "arcs": "Buer",
+      "dots": "Prikker",
+      "grid": "Rutenett",
+      "pebbles": "Småstein"
+    }
   },
   "tags": {
     "add_placeholder": "Legg til tagger…",

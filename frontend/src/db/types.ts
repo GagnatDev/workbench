@@ -34,6 +34,13 @@ export interface Project extends SyncEnvelope {
   favourite: boolean
   tags: string[]
   rank: string
+  /**
+   * Chosen main image (list thumbnail + overview hero). `null` = automatic
+   * (oldest promoted-idea photo, else a default motif); `default:<key>` = a
+   * built-in motif; `att:<id>` = a specific attachment. Changing it only
+   * re-points this pointer, so prior images are never lost. See db/projects.ts.
+   */
+  cover: string | null
 }
 
 export interface Section extends SyncEnvelope {
@@ -61,7 +68,7 @@ export interface Idea extends SyncEnvelope {
 }
 
 export interface Attachment extends SyncEnvelope {
-  owner_type: 'idea' | 'item'
+  owner_type: 'idea' | 'item' | 'project'
   owner_id: string
   storage_key: string | null
   content_type: string | null
