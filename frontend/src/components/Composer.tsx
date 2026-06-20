@@ -2,6 +2,7 @@ import { useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Camera, ClipboardPaste, Link as LinkIcon, X } from 'lucide-react'
 import { clipboardReadSupported, imageFromPasteEvent, readImageFromClipboard } from '@/lib/clipboard'
+import { TagInput } from './TagInput'
 
 /**
  * A single photo held in a draft: a local blob plus an object URL for preview.
@@ -18,10 +19,12 @@ export interface ComposerDraft {
   text: string
   link: string
   photo: ComposerPhoto | null
+  /** Optional tags, only surfaced when the composer is rendered with `allowTags`. */
+  tags?: string[]
 }
 
 export function emptyDraft(): ComposerDraft {
-  return { text: '', link: '', photo: null }
+  return { text: '', link: '', photo: null, tags: [] }
 }
 
 /** The §11.1 grammar's discard rule: a draft with no text, link, or photo is empty. */
@@ -43,6 +46,8 @@ export function Composer({
   autoFocus = false,
   allowPhoto = true,
   allowLink = true,
+  allowTags = false,
+  tagSuggestions = [],
   onSubmit,
   trailing,
 }: {
@@ -52,6 +57,10 @@ export function Composer({
   autoFocus?: boolean
   allowPhoto?: boolean
   allowLink?: boolean
+  /** Capture mode: surface the tag chip input below the affordance row. */
+  allowTags?: boolean
+  /** Existing tags offered as autocomplete in the tag input (when `allowTags`). */
+  tagSuggestions?: string[]
   /** Bar mode (journal/checklist): pressing Enter or the send glyph commits. */
   onSubmit?: () => void
   /** Optional control rendered on the affordance row (e.g. a backdate button). */
@@ -173,6 +182,16 @@ export function Composer({
         <span className="flex-1" />
         {trailing}
       </div>
+
+      {allowTags && (
+        <div className="mt-3">
+          <TagInput
+            tags={draft.tags ?? []}
+            onChange={(tags) => onChange({ ...draft, tags })}
+            suggestions={tagSuggestions}
+          />
+        </div>
+      )}
 
       <input
         ref={fileInput}

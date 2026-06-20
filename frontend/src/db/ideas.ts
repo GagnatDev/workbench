@@ -47,7 +47,7 @@ export async function captureIdea(
     link: draft.link.trim() || null,
     project_id: projectId,
     state: 'captured',
-    tags: [],
+    tags: (draft.tags ?? []).map((t) => t.trim().toLowerCase()).filter(Boolean),
   })
   return ideaId
 }

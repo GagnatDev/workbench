@@ -5,7 +5,7 @@ import { Check, ChevronDown, FolderOpen, Inbox } from 'lucide-react'
 import { BottomSheet } from './BottomSheet'
 import { Composer, emptyDraft, isDraftEmpty, type ComposerDraft } from './Composer'
 import { db } from '@/db/db'
-import { captureIdea } from '@/db/ideas'
+import { allIdeaTags, captureIdea } from '@/db/ideas'
 import { projectOrder } from '@/db/projects'
 
 /**
@@ -33,6 +33,8 @@ export function CaptureSheet({
       const all = await db.projects.toArray()
       return all.filter((p) => !p.deleted).sort(projectOrder)
     }, []) ?? []
+
+  const tagSuggestions = useLiveQuery(() => allIdeaTags(), []) ?? []
 
   // The latest draft + destination, read at dismiss time without re-binding onClose.
   const stateRef = useRef({ draft, dest })
@@ -86,7 +88,14 @@ export function CaptureSheet({
         )}
       </div>
 
-      <Composer draft={draft} onChange={setDraft} autoFocus placeholder={t('capture.placeholder')} />
+      <Composer
+        draft={draft}
+        onChange={setDraft}
+        autoFocus
+        allowTags
+        tagSuggestions={tagSuggestions}
+        placeholder={t('capture.placeholder')}
+      />
       {!isDraftEmpty(draft) && (
         <p className="mt-3 text-center text-xs text-charcoal-muted">{t('capture.save_hint')}</p>
       )}

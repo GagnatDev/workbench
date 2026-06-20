@@ -97,6 +97,30 @@ describe('captureIdea', () => {
     expect(await db.ideas.count()).toBe(0)
   })
 
+  it('persists tags supplied on the draft', async () => {
+    const id = await captureIdea(
+      { text: 'try ash glaze', link: '', photo: null, tags: ['glaze', 'experiment'] },
+      null,
+    )
+    const idea = await db.ideas.get(id!)
+    expect(idea!.tags).toEqual(['glaze', 'experiment'])
+  })
+
+  it('normalizes draft tags to trimmed lowercase and drops blanks', async () => {
+    const id = await captureIdea(
+      { text: 'try ash glaze', link: '', photo: null, tags: ['  Glaze ', 'RAKU', '   '] },
+      null,
+    )
+    const idea = await db.ideas.get(id!)
+    expect(idea!.tags).toEqual(['glaze', 'raku'])
+  })
+
+  it('defaults to no tags when the draft omits them', async () => {
+    const id = await captureIdea({ text: 'try ash glaze', link: '', photo: null }, null)
+    const idea = await db.ideas.get(id!)
+    expect(idea!.tags).toEqual([])
+  })
+
   it('stores a photo as a local blob + an un-uploaded attachment', async () => {
     const photoId = crypto.randomUUID()
     const blob = new Blob(['x'], { type: 'image/png' })
