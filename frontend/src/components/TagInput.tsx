@@ -50,6 +50,9 @@ export function TagInput({
         ))}
         <input
           value={input}
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ',') {
