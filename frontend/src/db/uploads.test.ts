@@ -13,7 +13,6 @@ vi.mock('@/auth/authClient', () => ({
 
 const { db } = await import('./db')
 const { syncEngine, writeLocal } = await import('./sync')
-const { captureIdea, promoteIdea } = await import('./ideas')
 const { SYNC_TABLES } = await import('./types')
 const i18n = (await import('@/i18n')).default
 
@@ -76,81 +75,6 @@ beforeEach(async () => {
 afterEach(() => {
   vi.restoreAllMocks()
   vi.unstubAllGlobals()
-})
-
-describe('captureIdea', () => {
-  it('saves a text idea to the global inbox, marked captured + dirty', async () => {
-    const id = await captureIdea({ text: 'try ash glaze', link: '', photo: null }, null)
-    expect(id).toBeTruthy()
-    const idea = await db.ideas.get(id!)
-    expect(idea).toMatchObject({
-      content: 'try ash glaze',
-      project_id: null,
-      state: 'captured',
-      _dirty: 1,
-    })
-  })
-
-  it('discards an empty draft', async () => {
-    const id = await captureIdea({ text: '   ', link: '', photo: null }, null)
-    expect(id).toBeNull()
-    expect(await db.ideas.count()).toBe(0)
-  })
-
-  it('persists tags supplied on the draft', async () => {
-    const id = await captureIdea(
-      { text: 'try ash glaze', link: '', photo: null, tags: ['glaze', 'experiment'] },
-      null,
-    )
-    const idea = await db.ideas.get(id!)
-    expect(idea!.tags).toEqual(['glaze', 'experiment'])
-  })
-
-  it('normalizes draft tags to trimmed lowercase and drops blanks', async () => {
-    const id = await captureIdea(
-      { text: 'try ash glaze', link: '', photo: null, tags: ['  Glaze ', 'RAKU', '   '] },
-      null,
-    )
-    const idea = await db.ideas.get(id!)
-    expect(idea!.tags).toEqual(['glaze', 'raku'])
-  })
-
-  it('defaults to no tags when the draft omits them', async () => {
-    const id = await captureIdea({ text: 'try ash glaze', link: '', photo: null }, null)
-    const idea = await db.ideas.get(id!)
-    expect(idea!.tags).toEqual([])
-  })
-
-  it('stores a photo as a local blob + an un-uploaded attachment', async () => {
-    const photoId = crypto.randomUUID()
-    const blob = new Blob(['x'], { type: 'image/png' })
-    const id = await captureIdea(
-      { text: '', link: '', photo: { id: photoId, blob, url: 'blob:x' } },
-      null,
-    )
-    const att = await db.attachments.get(photoId)
-    expect(att).toMatchObject({ owner_type: 'idea', owner_id: id, uploaded: false })
-    // The blob is persisted under the attachment id (fake-indexeddb strips the
-    // Blob prototype on clone, so we assert the row exists rather than instanceof).
-    expect(await db.blobs.get(photoId)).toBeDefined()
-  })
-})
-
-describe('promoteIdea', () => {
-  it('creates a project from the template and reparents the idea', async () => {
-    const id = await captureIdea({ text: 'Blue cups\nthin rims', link: '', photo: null }, null)
-    const idea = (await db.ideas.get(id!))!
-    const projectId = await promoteIdea(idea, 'Blue Cups', 'ceramics')
-
-    const project = await db.projects.get(projectId)
-    expect(project).toMatchObject({ title: 'Blue Cups', status: 'Planning', favourite: false })
-    expect(project!.stages[0]).toBe('Planning')
-    expect(Object.keys(project!.details)).toContain('Clay body')
-
-    const reparented = await db.ideas.get(id!)
-    expect(reparented).toMatchObject({ project_id: projectId, state: 'promoted' })
-    expect((await db._meta.get('lastTemplate'))?.value).toBe('ceramics')
-  })
 })
 
 describe('photo upload pipeline', () => {

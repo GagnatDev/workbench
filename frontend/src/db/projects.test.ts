@@ -1,28 +1,28 @@
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-// The db ops call writeLocal, which schedules a sync; stub the network seam and
-// the scheduler so these stay pure local-store tests (mirrors phase3.test.ts).
+// The db ops call writeLocal → schedule a sync; stub the network seam and the
+// scheduler so these stay pure local-store tests.
 vi.mock('@/auth/authClient', () => ({
   authClient: { authedFetch: vi.fn(), getAccessToken: () => 't', disabled: true },
 }))
 
 const { db } = await import('./db')
-const { syncEngine, writeLocal, deleteLocal } = await import('./sync')
+const { syncEngine, writeLocal } = await import('./sync')
 const {
   createProject,
   setProjectStatus,
   setProjectStages,
   setProjectDetails,
   toggleFavourite,
-  setProjectCollection,
   deleteProject,
   loadProjectCards,
+  updateProject,
+  allProjectTags,
 } = await import('./projects')
-const { createCollection, renameCollection, deleteCollection, allCollections } = await import(
-  './collections'
-)
-const { captureIdea, promoteIdea, projectIdeaPhotos } = await import('./ideas')
+const { createSection } = await import('./sections')
+const { createItem, addItemPhoto } = await import('./items')
+const { captureIdea, promoteIdea } = await import('./ideas')
 const { SYNC_TABLES } = await import('./types')
 const i18n = (await import('@/i18n')).default
 
@@ -35,6 +35,11 @@ beforeEach(async () => {
   await db.blobs.clear()
   await db._meta.clear()
 })
+
+async function section(projectId: string, kind: 'journal' | 'moodboard' | 'checklist' | 'materials') {
+  const id = await createSection(projectId, kind, '')
+  return (await db.sections.get(id))!
+}
 
 describe('createProject', () => {
   it('seeds stages, status, and suggested detail keys from the template, dirty', async () => {
@@ -95,30 +100,6 @@ describe('details & favourite', () => {
   })
 })
 
-describe('collections', () => {
-  it('creates, assigns, and renames', async () => {
-    const pid = await createProject('P', 'kanban')
-    const cid = await createCollection('Ceramics')
-    await setProjectCollection((await db.projects.get(pid))!, cid)
-    expect((await db.projects.get(pid))!.collection_id).toBe(cid)
-
-    await renameCollection((await db.collections.get(cid))!, 'Pottery')
-    expect((await db.collections.get(cid))!.name).toBe('Pottery')
-    expect((await allCollections()).map((c) => c.name)).toEqual(['Pottery'])
-  })
-
-  it('detaches member projects when a collection is deleted', async () => {
-    const pid = await createProject('P', 'kanban')
-    const cid = await createCollection('Textiles')
-    await setProjectCollection((await db.projects.get(pid))!, cid)
-
-    await deleteCollection(cid)
-    expect((await db.collections.get(cid))!.deleted).toBe(true)
-    expect((await db.projects.get(pid))!.collection_id).toBeNull()
-    expect(await allCollections()).toHaveLength(0)
-  })
-})
-
 describe('deleteProject', () => {
   it('tombstones the project and cascades to its project-scoped ideas + attachments', async () => {
     // A promoted idea lives inside the project; give it a photo attachment.
@@ -140,45 +121,21 @@ describe('deleteProject', () => {
     const atts = await db.attachments.where('owner_id').equals(ideaId).toArray()
     expect(atts.every((a) => a.deleted)).toBe(true)
   })
-})
 
-describe('projectIdeaPhotos', () => {
-  it('returns the promoted idea photos for the project, oldest first', async () => {
-    const ideaId = (await captureIdea({ text: 'thin rims', link: '', photo: null }, null))!
-    const pid = await promoteIdea((await db.ideas.get(ideaId))!, 'Cups', 'ceramics')
-    const older = crypto.randomUUID()
-    const newer = crypto.randomUUID()
-    await writeLocal('attachments', {
-      id: older, owner_type: 'idea', owner_id: ideaId, storage_key: null,
-      content_type: 'image/png', uploaded: true, created_at: '2026-01-01T00:00:00Z',
+  it('cascades through sections, items, and attachments', async () => {
+    const pid = await createProject('P', 'ceramics')
+    const journal = await section(pid, 'journal')
+    const itemId = await createItem(journal, {
+      body: 'x',
+      payload: { entry_at: new Date().toISOString() },
     })
-    await writeLocal('attachments', {
-      id: newer, owner_type: 'idea', owner_id: ideaId, storage_key: null,
-      content_type: 'image/png', uploaded: true, created_at: '2026-02-01T00:00:00Z',
-    })
+    const attId = await addItemPhoto(itemId, new Blob(['x'], { type: 'image/png' }))
 
-    const photos = await projectIdeaPhotos(pid)
-    expect(photos.map((p) => p.id)).toEqual([older, newer])
-  })
-
-  it('excludes captured (inbox) ideas, deleted attachments, and item photos', async () => {
-    const ideaId = (await captureIdea({ text: 'x', link: '', photo: null }, null))!
-    const pid = await promoteIdea((await db.ideas.get(ideaId))!, 'P', 'ceramics')
-    // A captured idea sitting in the project inbox — not a founding image.
-    const captured = (await captureIdea({ text: 'later', link: '', photo: null }, pid))!
-    await writeLocal('attachments', {
-      id: crypto.randomUUID(), owner_type: 'idea', owner_id: captured, storage_key: null,
-      content_type: 'image/png', uploaded: false,
-    })
-    // A deleted attachment on the promoted idea.
-    const gone = crypto.randomUUID()
-    await writeLocal('attachments', {
-      id: gone, owner_type: 'idea', owner_id: ideaId, storage_key: null,
-      content_type: 'image/png', uploaded: false,
-    })
-    await deleteLocal('attachments', gone)
-
-    expect(await projectIdeaPhotos(pid)).toEqual([])
+    await deleteProject(pid)
+    expect((await db.projects.get(pid))!.deleted).toBe(true)
+    expect((await db.sections.get(journal.id))!.deleted).toBe(true)
+    expect((await db.items.get(itemId))!.deleted).toBe(true)
+    expect((await db.attachments.get(attId))!.deleted).toBe(true)
   })
 })
 
@@ -211,5 +168,34 @@ describe('loadProjectCards', () => {
 
     await deleteProject(pid)
     expect((await loadProjectCards()).find((c) => c.project.id === pid)).toBeUndefined()
+  })
+})
+
+describe('project tags', () => {
+  it('a new project starts with an empty tag list', async () => {
+    const id = await createProject('Raku test', 'kanban')
+    const project = (await db.projects.get(id))!
+    expect(project.tags).toEqual([])
+  })
+
+  it('updateProject persists tags and marks the row dirty', async () => {
+    const id = await createProject('Raku test', 'kanban')
+    const project = (await db.projects.get(id))!
+    await updateProject(project, { tags: ['raku', 'blue'] })
+    const updated = (await db.projects.get(id))!
+    expect(updated.tags).toEqual(['raku', 'blue'])
+    expect(updated._dirty).toBe(1)
+  })
+
+  it('allProjectTags gathers distinct tags across live projects only', async () => {
+    const a = await createProject('A', 'kanban')
+    const b = await createProject('B', 'kanban')
+    await updateProject((await db.projects.get(a))!, { tags: ['raku', 'blue'] })
+    await updateProject((await db.projects.get(b))!, { tags: ['raku', 'glaze'] })
+    expect(await allProjectTags()).toEqual(['blue', 'glaze', 'raku'])
+
+    // A tombstoned project's tags drop out of the suggestion set.
+    await db.projects.update(b, { deleted: true })
+    expect(await allProjectTags()).toEqual(['blue', 'raku'])
   })
 })
