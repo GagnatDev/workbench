@@ -44,6 +44,12 @@
     },
     "archived": "Archived",
     "view_archived": "View archived",
+    "hint": {
+      "keep": "Swipe right to keep",
+      "archive": "Swipe left to archive",
+      "promote": "Hold to promote to a project",
+      "dismiss": "Got it"
+    },
     "empty": {
       "archived": "No archived ideas.",
       "new": "Tap ➕ to capture your first idea.",
@@ -101,7 +107,6 @@
     "placeholder": "Idea…",
     "link_placeholder": "Link (optional)",
     "promote": "Promote to project",
-    "promote_short": "Promote",
     "move_to_new": "Move to New",
     "keep": "Keep",
     "archive": "Archive"

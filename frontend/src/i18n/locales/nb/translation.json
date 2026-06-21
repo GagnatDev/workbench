@@ -44,6 +44,12 @@
     },
     "archived": "Arkivert",
     "view_archived": "Vis arkiverte",
+    "hint": {
+      "keep": "Sveip høyre for å beholde",
+      "archive": "Sveip venstre for å arkivere",
+      "promote": "Hold inne for å forfremme til prosjekt",
+      "dismiss": "Skjønner"
+    },
     "empty": {
       "archived": "Ingen arkiverte idéer.",
       "new": "Trykk ➕ for å fange din første idé.",
@@ -101,7 +107,6 @@
     "placeholder": "Idé…",
     "link_placeholder": "Lenke (valgfritt)",
     "promote": "Forfrem til prosjekt",
-    "promote_short": "Forfrem",
     "move_to_new": "Flytt til Nye",
     "keep": "Behold",
     "archive": "Arkivér"

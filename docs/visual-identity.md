@@ -69,7 +69,7 @@ How the identity lands on the key screens from [`ui-ux-design.md`](./ui-ux-desig
 
 - **Bottom bar / rail** — Oatmeal with a hairline top divider; inactive icons Charcoal-muted, active icon Terracotta. The ➕ is a filled Terracotta circle, slightly raised — the single most prominent element in the app.
 - **Capture sheet & composers** — Stoneware surface, serif-free, placeholder text in muted Charcoal; the destination chip is a small Stoneware pill.
-- **Inbox cards** — Stoneware on Oatmeal; swipe reveals olive (archive) and terracotta (promote) action underlays.
+- **Inbox cards** — Stoneware on Oatmeal; swipe right reveals the olive keep underlay, swipe left the terracotta archive underlay; a long-press promotes.
 - **Project cards** — photo thumbnail left, serif title, Stoneware status badge, muted "2d ago".
 - **Journal feed** — date dividers as thin rules with small-caps muted labels; entries are plain text on the base background (no per-entry card boxes — the feed reads as a page, not a stack of widgets).
 - **Moodboard** — masonry images carry no frames; link pins are Stoneware cards with a Terracotta 🔗 glyph.

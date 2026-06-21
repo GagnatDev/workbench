@@ -76,14 +76,16 @@ Mobile-first throughout — the phone in the workshop is the primary device. Moc
 
 ### 3.2 Triage interaction
 
-**Decision:** Card list, newest first. **Swipe right = promote**, **swipe left = archive** (right = affirmative/advance, left = dismiss — matching card-stack, to-do, and mail conventions). Tap opens a detail sheet for the slower actions (edit, tag, keep, delete, move to an existing project's inbox).
+**Decision:** Card list, newest first. **Swipe right = keep** (olive underlay), **swipe left = archive** (terracotta underlay — the warmer, redder colour reads as "remove"). A **long-press = promote to project** — promote is the most deliberate action, so it sits behind a deliberate press rather than an easy swipe. Tap opens a detail sheet for the slower actions (edit, tag, keep, archive, promote, delete, move to an existing project's inbox), so every action stays reachable without a gesture.
 
-- One gesture for each of the two common outcomes; full control one tap deeper.
-- Swipe-to-triage is **inbox-only** — the gesture must never mean something different on another list (see §11 consistency rules).
+- A gesture for each of the two lightweight outcomes (keep / archive); promote and full control one press or tap deeper.
+- A first-time **hint** in the New segment spells out the three gestures; it's dismissible and stays dismissed.
+- An already-kept card has no keep underlay and right-swipe is a no-op.
+- Swipe/long-press triage is **inbox-only** — the gesture must never mean something different on another list (see §11 consistency rules).
 
 ### 3.3 Promote flow
 
-**Decision:** Swiping to promote opens a **mini-sheet**: title prefilled from the idea's first line (editable), stage-template picker defaulting to the **last-used template**, no Collection asked (assign later). Confirm → creates the Project, reparents the Idea into its inbox (per the domain model), and **navigates into the new project**.
+**Decision:** Long-pressing to promote (or the detail sheet's Promote) opens a **mini-sheet**: title prefilled from the idea's first line (editable), stage-template picker defaulting to the **last-used template**, no Collection asked (assign later). Confirm → creates the Project, reparents the Idea into its inbox (per the domain model), and **navigates into the new project**.
 
 ```
 ┌─────────────────────────┐
@@ -95,7 +97,7 @@ Mobile-first throughout — the phone in the workshop is the primary device. Moc
 └─────────────────────────┘
 ```
 
-- Fast enough to keep the swipe's momentum, but never creates an untitled mystery project or one with the wrong stage list (instant-create-with-undo was rejected for exactly those failure modes).
+- Fast enough to keep the press's momentum, but never creates an untitled mystery project or one with the wrong stage list (instant-create-with-undo was rejected for exactly those failure modes).
 
 ---
 
@@ -347,7 +349,7 @@ Conventional lists — no novel interaction:
 Two rules that hold the system together; treat violations as bugs:
 
 1. **One composer grammar.** The capture sheet (§2), journal composer (§7.1), checklist/materials add-fields (§7.3), and promote mini-sheet (§3.3) share one interaction pattern — *type → dismiss/confirm = saved, empty = discarded*. Build it as **one reusable component**, not four lookalikes.
-2. **Swipe means triage, only in inboxes.** Swipe-to-archive/promote exists on inbox idea cards and nowhere else. No swipe actions on tasks, journal entries, pins, or project cards — a gesture that means different things on different lists erodes trust in all of them.
+2. **Swipe/long-press means triage, only in inboxes.** Swipe-to-keep/archive and long-press-to-promote exist on inbox idea cards and nowhere else. No swipe actions on tasks, journal entries, pins, or project cards — a gesture that means different things on different lists erodes trust in all of them.
 
 ---
 
@@ -360,7 +362,7 @@ Two rules that hold the system together; treat violations as bugs:
 | 3 | Archived ideas | `/inbox/archived` | inbox overflow |
 | 4 | Idea detail sheet | (sheet) | tap idea |
 | 5 | Capture sheet | (sheet, global) | ➕ |
-| 6 | Promote mini-sheet | (sheet) | swipe-promote / Projects ➕ |
+| 6 | Promote mini-sheet | (sheet) | long-press-promote / Projects ➕ |
 | 7 | Projects list | `/projects` | tab |
 | 8 | Project overview | `/projects/:id` | project card |
 | 9 | Project inbox (New/Kept) | `/projects/:id/inbox` | inbox banner |

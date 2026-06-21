@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ChevronLeft, MoreHorizontal } from 'lucide-react'
+import { ArrowLeft, ArrowRight, ChevronLeft, Hand, MoreHorizontal, X } from 'lucide-react'
 import { EmptyState } from '@/components/EmptyState'
 import { IdeaCard } from '@/components/IdeaCard'
 import { IdeaDetailSheet } from '@/components/IdeaDetailSheet'
@@ -14,6 +14,9 @@ import { collectTags, matchesTags } from '@/lib/tags'
 import type { Idea } from '@/db/types'
 
 type Segment = 'new' | 'kept'
+
+// Persisted dismissal of the one-time swipe/long-press gesture hint.
+const GESTURE_HINT_KEY = 'workbench.inboxGestureHintDismissed'
 
 function newestFirst(a: Idea, b: Idea): number {
   return (b.created_at ?? '').localeCompare(a.created_at ?? '')
@@ -33,6 +36,13 @@ export function Inbox({ archived = false }: { archived?: boolean }) {
   const [tagFilter, setTagFilter] = useState<string[]>([])
   const [detail, setDetail] = useState<Idea | null>(null)
   const [promote, setPromote] = useState<Idea | null>(null)
+  const [hintDismissed, setHintDismissed] = useState(
+    () => localStorage.getItem(GESTURE_HINT_KEY) === '1',
+  )
+  const dismissHint = () => {
+    localStorage.setItem(GESTURE_HINT_KEY, '1')
+    setHintDismissed(true)
+  }
 
   // Global ideas only (project_id == null); project inboxes have their own screen.
   const ideas =
@@ -130,17 +140,46 @@ export function Inbox({ archived = false }: { archived?: boolean }) {
           }
         />
       ) : (
-        <ul className="flex flex-col gap-2">
-          {list.map((idea) => (
-            <IdeaCard
-              key={idea.id}
-              idea={idea}
-              onTap={() => setDetail(idea)}
-              onArchive={() => void setIdeaState(idea, 'archived')}
-              onPromote={() => setPromote(idea)}
-            />
-          ))}
-        </ul>
+        <>
+          {!archived && segment === 'new' && !hintDismissed && (
+            <div className="mb-3 flex items-start gap-3 rounded-card bg-stoneware px-3 py-2.5 text-xs text-charcoal-muted">
+              <ul className="flex flex-1 flex-col gap-1">
+                <li className="flex items-center gap-1.5">
+                  <ArrowRight size={14} className="flex-shrink-0 text-olive" />
+                  {t('inbox.hint.keep')}
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <ArrowLeft size={14} className="flex-shrink-0 text-terracotta" />
+                  {t('inbox.hint.archive')}
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <Hand size={14} className="flex-shrink-0" />
+                  {t('inbox.hint.promote')}
+                </li>
+              </ul>
+              <button
+                type="button"
+                aria-label={t('inbox.hint.dismiss')}
+                onClick={dismissHint}
+                className="flex-shrink-0 text-charcoal-muted hover:text-charcoal"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          )}
+          <ul className="flex flex-col gap-2">
+            {list.map((idea) => (
+              <IdeaCard
+                key={idea.id}
+                idea={idea}
+                onTap={() => setDetail(idea)}
+                onArchive={() => void setIdeaState(idea, 'archived')}
+                onKeep={() => void setIdeaState(idea, 'kept')}
+                onPromote={() => setPromote(idea)}
+              />
+            ))}
+          </ul>
+        </>
       )}
 
       {detail && (
