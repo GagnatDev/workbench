@@ -10,7 +10,8 @@
     "workbench-backend": "dist/server.js"
   },
   "scripts": {
-    "dev": "tsx watch --env-file-if-exists=../.env src/server.ts",
+    "dev": "tsx watch --env-file-if-exists=../.env --env-file-if-exists=../.env.development src/server.ts",
+    "dev:homectl": "tsx watch --env-file-if-exists=../.env --env-file-if-exists=../.env.homectl src/server.ts",
     "build": "tsc --noEmit && tsup",
     "typecheck": "tsc --noEmit",
     "start": "node dist/server.js",

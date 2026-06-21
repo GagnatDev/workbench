@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "pnpm -r --parallel run dev",
+    "dev:homectl": "pnpm -r --parallel run dev:homectl",
     "build": "pnpm -r run build",
     "test": "pnpm -r run test",
     "dev:frontend": "pnpm --filter @workbench/frontend run dev",
