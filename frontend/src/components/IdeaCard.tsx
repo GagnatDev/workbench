@@ -121,11 +121,16 @@ export function IdeaCard({
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
+        onContextMenu={(e) => e.preventDefault()}
         onClick={() => {
           if (!swiped.current && !longPressed.current) onTap()
         }}
-        style={{ transform: `translateX(${dx}px)` }}
-        className="relative flex w-full touch-pan-y items-start gap-3 bg-stoneware p-3 text-left transition-transform"
+        // The long-press is our own promote gesture, so suppress the native
+        // iOS text-selection callout that the hold would otherwise raise on the
+        // card text (issue #1). select-none covers user-select; the inline
+        // WebkitTouchCallout disables the Copy/Look-up menu Tailwind can't reach.
+        style={{ transform: `translateX(${dx}px)`, WebkitTouchCallout: 'none' }}
+        className="relative flex w-full touch-pan-y select-none items-start gap-3 bg-stoneware p-3 text-left transition-transform"
       >
         {photo && (
           <AttachmentThumb
