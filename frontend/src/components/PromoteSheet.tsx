@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
@@ -28,6 +28,14 @@ export function PromoteSheet({ idea, onClose }: { idea: Idea; onClose: () => voi
   const [title, setTitle] = useState(() => firstLine(idea))
   const [templateId, setTemplateId] = useState(DEFAULT_TEMPLATE_ID)
   const [creating, setCreating] = useState(false)
+  const createRef = useRef<HTMLButtonElement>(null)
+
+  // The title is already prefilled (§3.3), so move focus to the primary action
+  // on open rather than the input — Create confirms immediately, title stays
+  // editable (issue #1).
+  useEffect(() => {
+    createRef.current?.focus()
+  }, [])
 
   // Default to the last template the user picked (§3.3).
   useEffect(() => {
@@ -64,6 +72,7 @@ export function PromoteSheet({ idea, onClose }: { idea: Idea; onClose: () => voi
       </div>
 
       <button
+        ref={createRef}
         type="button"
         onClick={() => void create()}
         disabled={creating}

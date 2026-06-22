@@ -27,6 +27,24 @@ test.describe("Idea promotion & filing", () => {
     await expect(fresh.getByRole("link", { name: "Build a shed" })).toBeVisible();
   });
 
+  test("promotes via the inbox long-press gesture, focusing Create", async ({ page }) => {
+    await page.goto("/inbox");
+    await captureIdea(page, "Plant a garden");
+
+    // Long-press the card (hold without moving) — the inbox promote gesture (#1).
+    const card = page.getByText("Plant a garden");
+    await card.hover();
+    await page.mouse.down();
+    await page.waitForTimeout(700); // past LONG_PRESS_MS (500ms)
+    await page.mouse.up();
+
+    // Promote sheet opens with the title prefilled and Create focused so the
+    // user can confirm immediately (title stays editable).
+    const promote = page.getByRole("dialog");
+    await expect(promote.getByRole("textbox")).toHaveValue("Plant a garden");
+    await expect(promote.getByRole("button", { name: "Create" })).toBeFocused();
+  });
+
   test("files an idea captured in a project into a checklist section", async ({
     page,
     openFresh,
