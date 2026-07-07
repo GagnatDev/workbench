@@ -1,0 +1,75 @@
+# TEMPORARY — dispatched manually from the claude/homectl-auth-0-2-0-* branch to
+# resolve @gagnatdev/homectl-auth-client@0.2.0 with CI's packages:read token
+# (the remote session has no registry access). Prints the resulting
+# package.json/pnpm-lock.yaml diff and the package's docs + type declarations
+# to the job log. Deleted before the branch is merged.
+name: Probe auth client 0.2.0
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          registry-url: https://npm.pkg.github.com/
+          scope: "@gagnatdev"
+
+      - name: List available versions
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "::group::versions"
+          npm view @gagnatdev/homectl-auth-client versions --json
+          echo "::endgroup::"
+
+      - name: Resolve 0.2.0 into the lockfile (no install)
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pnpm --filter @workbench/backend add @gagnatdev/homectl-auth-client@0.2.0 --lockfile-only
+
+      - name: Print lockfile and manifest diff
+        run: |
+          echo "::group::LOCKFILE_DIFF"
+          git diff -U3 -- backend/package.json pnpm-lock.yaml
+          echo "::endgroup::"
+
+      - name: Dump package docs and type declarations
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npm pack @gagnatdev/homectl-auth-client@0.2.0
+          mkdir -p /tmp/pkg && tar -xzf gagnatdev-homectl-auth-client-0.2.0.tgz -C /tmp/pkg
+          cd /tmp/pkg/package
+          echo "::group::FILE_LIST"
+          find . -type f | sort
+          echo "::endgroup::"
+          echo "::group::PACKAGE_JSON"
+          cat package.json
+          echo "::endgroup::"
+          for f in README.md CHANGELOG.md; do
+            if [ -f "$f" ]; then
+              echo "::group::$f"
+              cat "$f"
+              echo "::endgroup::"
+            fi
+          done
+          find . -name '*.d.ts' -o -name '*.d.mts' -o -name '*.d.cts' | sort | while read -r f; do
+            echo "::group::DTS $f"
+            cat "$f"
+            echo "::endgroup::"
+          done
