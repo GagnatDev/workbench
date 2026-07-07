@@ -7,6 +7,9 @@ name: Probe auth client 0.2.0
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - claude/homectl-auth-0-2-0-*
 
 permissions:
   contents: read
