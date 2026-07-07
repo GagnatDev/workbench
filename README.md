@@ -114,29 +114,13 @@ Two providers, selected by `AUTH_MODE`:
 
   Then set `AUTH_MODE=homectl` and `WORKBENCH_CLIENT_SECRET`.
 
-  All auth service calls use `AUTH_INTERNAL_URL` when set — in k8s this is the
-  in-cluster service address (`http://homectl-auth.homectl.svc.cluster.local`),
-  so auth traffic rides service discovery instead of the public auth ingress.
-  That covers both the backend's own calls (token exchange, JWKS, invite
-  forwarding) and the browser session flows, which the backend fronts
-  same-origin via `backend/src/routes/authGateway.ts` (`/auth/login`,
-  `/auth/callback`, `/auth/refresh`, `/auth/logout`). `AUTH_SERVICE_URL` stays
-  the public URL: it is the JWT issuer and the target of the one flow that must
-  stay public — the human `/authorize` redirect to the hosted login (plus
-  invite redemption links).
-
-  The gateway relies on homectl-auth scoping its refresh cookie to
-  `Domain=.homectl.no`, so the browser also presents it to
-  `workbench.homectl.no` and the backend has a credential to forward
-  in-cluster. **Deploy that homectl-auth change first** — with a host-only
-  cookie, the gateway's `/auth/refresh` receives nothing and every login
-  bounces back to the sign-in screen.
-
-  Local `pnpm dev:homectl` cannot use the gateway (the `*.homectl.no` cookie
-  never reaches a localhost backend), so setting `VITE_AUTH_SERVICE_URL`
-  switches the SPA to direct mode: it talks to the public auth service itself
-  and handles the OAuth callback client-side (`frontend/src/auth/Callback.tsx`).
-  Production builds leave `VITE_AUTH_SERVICE_URL` unset.
+  Server-to-server calls (token exchange, JWKS, invite forwarding) use
+  `AUTH_INTERNAL_URL` when set — in k8s this is the in-cluster service address
+  (`http://homectl-auth.homectl.svc.cluster.local`), so backend traffic rides
+  service discovery instead of the public auth ingress. `AUTH_SERVICE_URL`
+  stays the public URL: it is the JWT issuer and the target for everything the
+  browser itself must reach (`/authorize`, `/refresh`, `/logout` — the refresh
+  cookie lives on the auth service's origin, so those cannot be proxied).
 
 ## Deploy
 
