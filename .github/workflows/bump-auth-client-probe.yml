@@ -71,8 +71,8 @@ jobs:
               echo "::endgroup::"
             fi
           done
-          find . -name '*.d.ts' -o -name '*.d.mts' -o -name '*.d.cts' | sort | while read -r f; do
-            echo "::group::DTS $f"
+          for f in src/server.ts src/browser.ts src/__tests__/server.test.ts; do
+            echo "::group::SRC $f"
             cat "$f"
             echo "::endgroup::"
           done
