@@ -6,12 +6,10 @@
  * without the private GitHub Packages dependency, and to add a dev bypass.
  *
  * Two transports:
- * - Gateway (default; production): login/callback go same-origin to the backend
- *   (/auth/login, /auth/callback — backend/src/routes/authGateway.ts), which
- *   fronts the auth service over in-cluster service discovery. Refresh and
- *   logout hit the public auth service directly so the host-only session cookie
- *   on auth.homectl.no is sent; once homectl-auth scopes that cookie to
- *   Domain=.homectl.no, these can move behind /auth/refresh too.
+ * - Gateway (default; production): every flow goes same-origin to the backend
+ *   (/auth/login, /auth/refresh, /auth/logout), which fronts the auth service
+ *   over in-cluster service discovery (backend/src/routes/authGateway.ts). The
+ *   auth service's public ingress only ever sees the human /authorize redirect.
  * - Direct (VITE_AUTH_SERVICE_URL set; local `pnpm dev:homectl`): the browser
  *   talks to the public auth service itself — login is SPA-initiated with the
  *   CSRF state kept in sessionStorage and validated by src/auth/Callback.tsx.
@@ -24,15 +22,11 @@
  */
 
 const AUTH_DISABLED = import.meta.env.VITE_DISABLE_AUTH === 'true'
-const DIRECT_AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || undefined
+const DIRECT_AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL
 const CLIENT_ID = 'workbench'
 
-// Session endpoints must reach the auth service origin so the browser sends the
-// refresh cookie. In gateway mode that cookie is still host-only on auth.homectl.no.
-const PUBLIC_AUTH_URL = DIRECT_AUTH_URL ?? 'https://auth.homectl.no'
-const REFRESH_URL = `${PUBLIC_AUTH_URL}/refresh`
-const LOGOUT_URL = `${PUBLIC_AUTH_URL}/logout`
-const GATEWAY_LOGIN = !DIRECT_AUTH_URL
+const REFRESH_URL = DIRECT_AUTH_URL ? `${DIRECT_AUTH_URL}/refresh` : '/auth/refresh'
+const LOGOUT_URL = DIRECT_AUTH_URL ? `${DIRECT_AUTH_URL}/logout` : '/auth/logout'
 
 let accessToken: string | null = null
 
@@ -114,7 +108,7 @@ export const authClient: AuthBrowserClient = {
 
   login() {
     if (AUTH_DISABLED) return
-    if (GATEWAY_LOGIN) {
+    if (!DIRECT_AUTH_URL) {
       // Gateway mode: the backend builds the /authorize redirect and owns the
       // CSRF state (a signed cookie its callback route validates).
       window.location.href = '/auth/login'
