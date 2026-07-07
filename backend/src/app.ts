@@ -9,6 +9,7 @@ import { httpLogger } from "./logger.js";
 import { errorHandler } from "./middleware/error.js";
 import { resolveUser } from "./middleware/resolveUser.js";
 import { healthRouter } from "./routes/health.js";
+import { authGatewayRoutes } from "./routes/authGateway.js";
 import { meRoutes } from "./routes/me.js";
 import { accountRoutes } from "./routes/account.js";
 import { syncRoutes } from "./routes/sync.js";
@@ -44,21 +45,18 @@ export function buildApp(deps: AppDeps): Express {
   app.use(httpLogger);
   app.use(express.json({ limit: "1mb" }));
   app.use(cookieParser());
+
+  // Browser-facing auth flows (/auth/login|callback|refresh|logout), fronting
+  // the auth service over the in-cluster address. Empty under dev auth, where
+  // these paths fall through to the SPA fallback below. Mounted BEFORE cors():
+  // /auth/refresh trades the session cookie for a readable access token, and
+  // the permissive reflect-any-origin CORS below would let any site do that
+  // cross-origin — with no CORS headers, these endpoints stay same-origin only.
+  app.use(authGatewayRoutes());
+
   app.use(cors({ origin: true, credentials: true }));
 
   app.use(healthRouter);
-
-  // OAuth logout (real provider only; public, no resolveUser).
-  //
-  // No `/auth/callback` mount: login is SPA-initiated, so the callback is owned
-  // by the front-end (src/auth/Callback.tsx), which validates its own CSRF state
-  // and re-bootstraps from the auth service's session cookie. Routing it to the
-  // client lib's callbackHandler would fail — that handler requires a server-set
-  // `homectl_auth_state` cookie that only the server-initiated flow ever writes.
-  // Leaving it unmounted lets the SPA fallback below serve the callback route.
-  if (authProvider.logoutHandler) {
-    app.post("/auth/logout", authProvider.logoutHandler);
-  }
 
   // Authenticated API: verify token -> map to app user (JIT-provision) -> routes.
   const api = Router();
