@@ -17,8 +17,8 @@ importers:
         specifier: ^3.1062.0
         version: 3.1062.0
       '@gagnatdev/homectl-auth-client':
-        specifier: 0.1.0
-        version: 0.1.0(express@5.2.1)
+        specifier: 0.2.0
+        version: 0.2.0(express@5.2.1)
       cookie-parser:
         specifier: ^1.4.7
         version: 1.4.7
@@ -1345,8 +1345,8 @@ packages:
   '@fontsource-variable/playfair-display@5.2.8':
     resolution: {integrity: sha512-ZzVIXPOrL85yyOvZYoBzUszIJM+xKkHqni4IYn2CVLaGQQdJR8sBeC8yFNgjxSJ7ludTwta8qpULeOFuk5X75A==}
 
-  '@gagnatdev/homectl-auth-client@0.1.0':
-    resolution: {integrity: sha512-7SNwJk0B2jzcOAZhxvjUo6cvxe+ykvTj2gZoi3HS7GBI7lLpunZYUhsmPsCeO8j9YNW/7kKPC/giz+UzONt0MQ==, tarball: https://npm.pkg.github.com/download/@gagnatdev/homectl-auth-client/0.1.0/d296e89c50afba2b6f8266ad01069ee499b5e9ae}
+  '@gagnatdev/homectl-auth-client@0.2.0':
+    resolution: {integrity: sha512-TMniisaeDUMr3rNZaqRxEGpNQton8bCo+CJwGuQPQlMonNkMGHzKmJG5jh0RhCbxGo1FhVPyuR+9XE5Kr4IP7A==, tarball: https://npm.pkg.github.com/download/@gagnatdev/homectl-auth-client/0.2.0/7f51a07400c5255218f5c92296514b7d23d014af}
     peerDependencies:
       express: ^4.x
 
@@ -5673,7 +5673,7 @@ snapshots:
 
   '@fontsource-variable/playfair-display@5.2.8': {}
 
-  '@gagnatdev/homectl-auth-client@0.1.0(express@5.2.1)':
+  '@gagnatdev/homectl-auth-client@0.2.0(express@5.2.1)':
     dependencies:
       cookie: 0.6.0
       express: 5.2.1

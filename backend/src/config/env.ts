@@ -21,6 +21,11 @@ const EnvSchema = z
     AUTH_MODE: AuthMode.optional(),
     APP_BASE_URL: z.string().default("http://localhost:3000"),
     AUTH_SERVICE_URL: z.string().default("https://auth.homectl.no"),
+    // In-cluster address for server-to-server auth calls (token exchange, JWKS,
+    // invite forwarding), e.g. http://homectl-auth.homectl.svc.cluster.local.
+    // Keeps backend traffic on cluster service discovery instead of the public
+    // auth ingress. Falls back to AUTH_SERVICE_URL when unset (local dev).
+    AUTH_INTERNAL_URL: z.string().optional(),
     AUTH_CLIENT_ID: z.string().default("workbench"),
     AUTH_CALLBACK_PATH: z.string().default("/auth/callback"),
     WORKBENCH_CLIENT_SECRET: z.string().optional(),

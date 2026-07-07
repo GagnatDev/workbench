@@ -1,20 +1,15 @@
 import type { RequestHandler } from "express";
+import type { AuthUser as HomectlAuthUser } from "@gagnatdev/homectl-auth-client/server";
 
 /**
  * The authenticated principal as seen from the auth provider. `id` is the auth
  * service's subject (`sub`) — the provider's identifier, NOT the app's user id.
- * It is mapped to the app's own `users.id` by resolveUser. Shape matches
- * `@gagnatdev/homectl-auth-client`'s `req.user` so the real and dev providers
- * are interchangeable.
+ * It is mapped to the app's own `users.id` by resolveUser. This IS the client
+ * package's `req.user` type (aliased, not mirrored): the package augments
+ * `Express.Request.user` globally, so a diverging local shape would conflict
+ * with its declaration. The dev provider fills the same type.
  */
-export interface AuthUser {
-  /** Auth provider subject (homectl JWT `sub`). Stored as `users.auth_sub`. */
-  id: string;
-  email: string | null;
-  isAdmin: boolean;
-  /** Role within this app (from the token's `apps[]` entry for our client id). */
-  role: string | null;
-}
+export type AuthUser = HomectlAuthUser;
 
 /** The app's own user record, resolved from AuthUser by resolveUser. */
 export interface AppUser {
@@ -40,8 +35,8 @@ declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
-      /** Set by the auth provider's middleware (provider identity). */
-      user?: AuthUser;
+      // `user?: AuthUser` is declared by @gagnatdev/homectl-auth-client/server's
+      // global augmentation — set by the provider's authMiddleware.
       /** App-owned uuid set by resolveUser — scope all queries by this. */
       userId?: string;
       /** Full app user record set by resolveUser. */

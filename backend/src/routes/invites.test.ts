@@ -82,6 +82,41 @@ describe("POST /api/invites", () => {
     });
   });
 
+  it("forwards over AUTH_INTERNAL_URL but builds the redemption link on the public URL", async () => {
+    const fetchMock = vi.fn(
+      async (_url: string | URL, _init?: RequestInit) =>
+        new Response(JSON.stringify({ token: "raw-invite-token" }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const internalEnv: Env = loadEnv({
+      DATABASE_URL: "postgres://unused",
+      AUTH_MODE: "homectl",
+      WORKBENCH_CLIENT_SECRET: "secret",
+      AUTH_SERVICE_URL: "https://auth.test",
+      AUTH_INTERNAL_URL: "http://homectl-auth.homectl.svc.cluster.local",
+      AUTH_CLIENT_ID: "workbench",
+    });
+
+    const res = await request(appWith(internalEnv))
+      .post("/api/invites")
+      .set("Authorization", "Bearer t")
+      .send({ email: "friend@example.com" });
+
+    expect(res.status).toBe(200);
+    // The service-to-service call rides cluster DNS…
+    expect(fetchMock.mock.calls[0]![0]).toBe(
+      "http://homectl-auth.homectl.svc.cluster.local/api/invites",
+    );
+    // …but the link a human clicks is still the public host.
+    expect(res.body.inviteUrl).toBe(
+      "https://auth.test/invite?token=raw-invite-token",
+    );
+  });
+
   it("passes a client error from the auth service straight through", async () => {
     vi.stubGlobal("fetch", async () =>
       new Response(JSON.stringify({ error: "Only admins may invite" }), {

@@ -15,7 +15,11 @@ const inviteSchema = z.object({
  * issue one (admins, per homectl-auth). We add `appId`/`role` so the invitee is
  * scoped to Workbench as a member.
  *
- *   POST /api/invites { email } -> auth.homectl.no/api/invites { email, appId, role }
+ *   POST /api/invites { email } -> <auth service>/api/invites { email, appId, role }
+ *
+ * The forward goes to AUTH_INTERNAL_URL (in-cluster service discovery) when
+ * configured, bypassing the public auth ingress; the redemption link handed to
+ * the SPA is always built on the public AUTH_SERVICE_URL — a human clicks it.
  *
  * Only meaningful under real auth — in dev mode there's no auth service to call,
  * so we 501 rather than pretend.
@@ -34,7 +38,8 @@ export function inviteRoutes(config: Env = env): Router {
       const parsed = inviteSchema.safeParse(req.body);
       if (!parsed.success) throw new HttpError(400, "A valid email is required");
 
-      const upstream = await fetch(`${config.AUTH_SERVICE_URL}/api/invites`, {
+      const authApiBase = config.AUTH_INTERNAL_URL ?? config.AUTH_SERVICE_URL;
+      const upstream = await fetch(`${authApiBase}/api/invites`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: bearer },
         body: JSON.stringify({
