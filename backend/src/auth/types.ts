@@ -22,13 +22,11 @@ export interface AppUser {
 
 /**
  * Pluggable auth backend. `authMiddleware` verifies the request and populates
- * `req.user`. The OAuth callback/logout handlers exist only for the real
- * (homectl) provider; the dev provider omits them.
+ * `req.user`. The browser-facing OAuth flows (login/callback/refresh/logout)
+ * live in routes/authGateway.ts, not on the provider.
  */
 export interface AuthProvider {
   authMiddleware: RequestHandler;
-  callbackHandler?: RequestHandler;
-  logoutHandler?: RequestHandler;
 }
 
 declare global {

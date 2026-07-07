@@ -60,11 +60,13 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
-      // Only the API is proxied to the backend. The OAuth `/auth/callback` is
-      // handled client-side (see src/auth/Callback.tsx): login is SPA-initiated,
-      // so the callback must land in the SPA, not the backend client lib (which
-      // expects a server-set state cookie it never wrote). The SPA talks to the
-      // auth service directly for /authorize, /refresh and /logout.
+      // Only the API is proxied to the backend. Local real-auth dev
+      // (`pnpm dev:homectl`) runs in DIRECT mode — VITE_AUTH_SERVICE_URL is set,
+      // the SPA talks to the public auth service itself and handles the OAuth
+      // callback client-side (src/auth/Callback.tsx) — because the auth
+      // service's *.homectl.no session cookie never reaches a localhost backend
+      // to proxy. The same-origin /auth/* gateway is a production/k8s topology
+      // (backend/src/routes/authGateway.ts).
       '/api': { target: apiProxyTarget, changeOrigin: true },
     },
   },

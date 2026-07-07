@@ -4,9 +4,12 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from './AuthContext'
 
 /**
- * OAuth callback landing page. Login is SPA-initiated (authClient.login redirects
- * the browser straight to the auth service's /authorize), so the callback is
- * handled here rather than by the backend client lib.
+ * OAuth callback landing page for DIRECT auth mode (VITE_AUTH_SERVICE_URL set;
+ * local `pnpm dev:homectl`), where login is SPA-initiated and authClient.login
+ * redirects the browser straight to the auth service's /authorize. In gateway
+ * mode (production) this route never renders: the backend mounts GET
+ * /auth/callback ahead of the SPA fallback and validates its own signed state
+ * cookie there (backend/src/routes/authGateway.ts).
  *
  * The auth service has already set the session/refresh cookie on its own origin
  * during /login, so the callback's only jobs are:
