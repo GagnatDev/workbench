@@ -69,9 +69,9 @@ describe('authClient refresh dedup', () => {
 
 /**
  * Transport selection: with VITE_AUTH_SERVICE_URL set (local `pnpm dev:homectl`)
- * the client talks to the public auth service directly; unset (production) it
- * goes same-origin to the backend gateway, which fronts the auth service over
- * cluster service discovery (backend/src/routes/authGateway.ts).
+ * the client talks to the public auth service directly; unset (production) login
+ * goes through the backend gateway while refresh/logout hit the public auth
+ * service so the host-only session cookie is sent.
  */
 describe('authClient transport', () => {
   beforeEach(() => {
@@ -98,7 +98,7 @@ describe('authClient transport', () => {
     expect(fetchMock).toHaveBeenNthCalledWith(2, 'http://auth.test/logout', expect.anything())
   })
 
-  it('uses the same-origin backend gateway when VITE_AUTH_SERVICE_URL is unset', async () => {
+  it('uses the public auth service for session endpoints when VITE_AUTH_SERVICE_URL is unset', async () => {
     vi.stubEnv('VITE_AUTH_SERVICE_URL', '')
     const fetchMock = vi
       .fn()
@@ -111,9 +111,20 @@ describe('authClient transport', () => {
 
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
-      '/auth/refresh',
+      'https://auth.homectl.no/refresh',
       expect.objectContaining({ method: 'POST', credentials: 'include' }),
     )
-    expect(fetchMock).toHaveBeenNthCalledWith(2, '/auth/logout', expect.anything())
+    expect(fetchMock).toHaveBeenNthCalledWith(2, 'https://auth.homectl.no/logout', expect.anything())
+  })
+
+  it('redirects to the backend gateway for login when VITE_AUTH_SERVICE_URL is unset', async () => {
+    vi.stubEnv('VITE_AUTH_SERVICE_URL', '')
+    delete (window as { location?: Location }).location
+    window.location = { href: '' } as Location
+    const { authClient } = await import('./authClient')
+
+    authClient.login()
+
+    expect(window.location.href).toBe('/auth/login')
   })
 })
