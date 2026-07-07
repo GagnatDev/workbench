@@ -5,28 +5,15 @@
  * installable. Implemented locally for now to keep the frontend buildable
  * without the private GitHub Packages dependency, and to add a dev bypass.
  *
- * Two transports:
- * - Gateway (default; production): every flow goes same-origin to the backend
- *   (/auth/login, /auth/refresh, /auth/logout), which fronts the auth service
- *   over in-cluster service discovery (backend/src/routes/authGateway.ts). The
- *   auth service's public ingress only ever sees the human /authorize redirect.
- * - Direct (VITE_AUTH_SERVICE_URL set; local `pnpm dev:homectl`): the browser
- *   talks to the public auth service itself — login is SPA-initiated with the
- *   CSRF state kept in sessionStorage and validated by src/auth/Callback.tsx.
- *   Needed locally because the auth service's session cookie is scoped to
- *   *.homectl.no and never reaches a localhost backend to proxy.
- *
  * Flow: the refresh cookie lives on the auth service domain. `bootstrap()` trades
  * it for a short-lived access token (kept in memory only — never localStorage).
  * `authedFetch` attaches the bearer and re-bootstraps once on 401.
  */
 
 const AUTH_DISABLED = import.meta.env.VITE_DISABLE_AUTH === 'true'
-const DIRECT_AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL
+const AUTH_SERVICE_URL =
+  import.meta.env.VITE_AUTH_SERVICE_URL ?? 'https://auth.homectl.no'
 const CLIENT_ID = 'workbench'
-
-const REFRESH_URL = DIRECT_AUTH_URL ? `${DIRECT_AUTH_URL}/refresh` : '/auth/refresh'
-const LOGOUT_URL = DIRECT_AUTH_URL ? `${DIRECT_AUTH_URL}/logout` : '/auth/logout'
 
 let accessToken: string | null = null
 
@@ -57,7 +44,7 @@ function refresh(): Promise<string | null> {
   if (inflightRefresh) return inflightRefresh
   inflightRefresh = (async () => {
     try {
-      const res = await fetch(REFRESH_URL, {
+      const res = await fetch(`${AUTH_SERVICE_URL}/refresh`, {
         method: 'POST',
         credentials: 'include',
       })
@@ -108,12 +95,6 @@ export const authClient: AuthBrowserClient = {
 
   login() {
     if (AUTH_DISABLED) return
-    if (!DIRECT_AUTH_URL) {
-      // Gateway mode: the backend builds the /authorize redirect and owns the
-      // CSRF state (a signed cookie its callback route validates).
-      window.location.href = '/auth/login'
-      return
-    }
     const redirectUri = `${window.location.origin}/auth/callback`
     const state = crypto.randomUUID()
     sessionStorage.setItem('auth_state', state)
@@ -123,14 +104,14 @@ export const authClient: AuthBrowserClient = {
       redirect_uri: redirectUri,
       state,
     })
-    window.location.href = `${DIRECT_AUTH_URL}/authorize?${params.toString()}`
+    window.location.href = `${AUTH_SERVICE_URL}/authorize?${params.toString()}`
   },
 
   async logout() {
     accessToken = null
     if (AUTH_DISABLED) return
     try {
-      await fetch(LOGOUT_URL, {
+      await fetch(`${AUTH_SERVICE_URL}/logout`, {
         method: 'POST',
         credentials: 'include',
       })
