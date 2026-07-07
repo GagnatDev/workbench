@@ -104,20 +104,23 @@ Two providers, selected by `AUTH_MODE`:
   resolve to a fixed dev principal so the whole pipeline runs offline. A
   per-identity override is available via the `x-dev-sub` header (used in tests).
 - **`homectl`** (default in production) — the real OAuth2 flow via
-  `@gagnatdev/homectl-auth-client`. That package is private (GitHub Packages)
-  and **not yet installed** here; enable it with:
+  `@gagnatdev/homectl-auth-client` (pinned to `0.2.0`). The package is private
+  (GitHub Packages), so installing needs registry auth:
 
   ```bash
   cp .npmrc.example .npmrc          # set GITHUB_TOKEN with read:packages
-  pnpm add --filter @workbench/backend @gagnatdev/homectl-auth-client
+  pnpm install
   ```
 
-  Then set `AUTH_MODE=homectl` and `WORKBENCH_CLIENT_SECRET`. The provider is
-  loaded dynamically, so the default build never depends on the package.
+  Then set `AUTH_MODE=homectl` and `WORKBENCH_CLIENT_SECRET`.
 
-  > ⚠️ The auth client is unproven (travel-journal is mid-migration onto it).
-  > Validate the full login → callback → token → refresh flow against the real
-  > `auth.homectl.no` when enabling this path, and be ready to patch the client.
+  Server-to-server calls (token exchange, JWKS, invite forwarding) use
+  `AUTH_INTERNAL_URL` when set — in k8s this is the in-cluster service address
+  (`http://homectl-auth.homectl.svc.cluster.local`), so backend traffic rides
+  service discovery instead of the public auth ingress. `AUTH_SERVICE_URL`
+  stays the public URL: it is the JWT issuer and the target for everything the
+  browser itself must reach (`/authorize`, `/refresh`, `/logout` — the refresh
+  cookie lives on the auth service's origin, so those cannot be proxied).
 
 ## Deploy
 

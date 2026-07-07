@@ -29,4 +29,15 @@ describe("loadEnv", () => {
   it("requires DATABASE_URL", () => {
     expect(() => loadEnv({ NODE_ENV: "development" })).toThrow(/DATABASE_URL/);
   });
+
+  it("leaves AUTH_INTERNAL_URL unset unless configured (callers fall back to AUTH_SERVICE_URL)", () => {
+    expect(loadEnv({ ...base }).AUTH_INTERNAL_URL).toBeUndefined();
+    const env = loadEnv({
+      ...base,
+      AUTH_INTERNAL_URL: "http://homectl-auth.homectl.svc.cluster.local",
+    });
+    expect(env.AUTH_INTERNAL_URL).toBe(
+      "http://homectl-auth.homectl.svc.cluster.local",
+    );
+  });
 });

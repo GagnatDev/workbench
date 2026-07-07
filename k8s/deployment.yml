@@ -25,6 +25,12 @@ spec:
                 name: workbench-secrets
                 optional: true
           env:
+            # Server-to-server auth traffic (token exchange, JWKS, invite
+            # forwarding) stays in-cluster via service discovery instead of
+            # round-tripping through the public auth ingress. Plain `env`
+            # entries take precedence over the envFrom secrets above.
+            - name: AUTH_INTERNAL_URL
+              value: http://homectl-auth.homectl.svc.cluster.local
             - name: S3_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
