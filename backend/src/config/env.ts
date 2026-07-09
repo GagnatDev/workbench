@@ -6,7 +6,7 @@ const boolFlag = z
   .optional()
   .transform((v) => v?.toLowerCase() === "true");
 
-const AuthMode = z.enum(["dev", "homectl"]);
+const AuthMode = z.enum(["dev", "sidecar"]);
 export type AuthMode = z.infer<typeof AuthMode>;
 
 const EnvSchema = z
@@ -15,20 +15,23 @@ const EnvSchema = z
     PORT: z.coerce.number().int().positive().default(8080),
     DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
 
-    // Auth. `dev` resolves every request to a fixed local identity (no auth
-    // service needed); `homectl` runs the real OAuth2 flow via the auth client.
-    // Default mirrors NODE_ENV: real auth in production, bypass elsewhere.
+    // Auth. The app reads identity from the `X-Homectl-*` headers injected by the
+    // auth-proxy sidecar (no token handling of its own). `dev` synthesizes a
+    // local identity when those headers are absent (no sidecar in front);
+    // `sidecar` treats their absence as unauthenticated. Default mirrors
+    // NODE_ENV: trust the sidecar in production, synthesize elsewhere.
     AUTH_MODE: AuthMode.optional(),
-    APP_BASE_URL: z.string().default("http://localhost:3000"),
+    // Public homectl-auth URL — used only to build the human-clickable invite
+    // redemption link (`/invite?token=...`).
     AUTH_SERVICE_URL: z.string().default("https://auth.homectl.no"),
-    // In-cluster address for server-to-server auth calls (token exchange, JWKS,
-    // invite forwarding), e.g. http://homectl-auth.homectl.svc.cluster.local.
-    // Keeps backend traffic on cluster service discovery instead of the public
-    // auth ingress. Falls back to AUTH_SERVICE_URL when unset (local dev).
+    // In-cluster address for server-to-server auth calls (invite forwarding),
+    // e.g. http://homectl-auth.homectl.svc.cluster.local. Keeps backend traffic
+    // on cluster service discovery instead of the public auth ingress. Falls back
+    // to AUTH_SERVICE_URL when unset (local dev).
     AUTH_INTERNAL_URL: z.string().optional(),
+    // The app's registered id in homectl-auth's apps.json; sent as the invite
+    // `appId`. Matches the sidecar's AUTH_CLIENT_ID.
     AUTH_CLIENT_ID: z.string().default("workbench"),
-    AUTH_CALLBACK_PATH: z.string().default("/auth/callback"),
-    WORKBENCH_CLIENT_SECRET: z.string().optional(),
 
     // Object storage (Phase 3+). Optional until photo attachments land.
     S3_ENDPOINT: z.string().optional(),
@@ -48,17 +51,8 @@ const EnvSchema = z
   .transform((env) => ({
     ...env,
     authMode: (env.AUTH_MODE ??
-      (env.NODE_ENV === "production" ? "homectl" : "dev")) as AuthMode,
-  }))
-  .superRefine((env, ctx) => {
-    if (env.authMode === "homectl" && !env.WORKBENCH_CLIENT_SECRET) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["WORKBENCH_CLIENT_SECRET"],
-        message: "WORKBENCH_CLIENT_SECRET is required when AUTH_MODE=homectl",
-      });
-    }
-  });
+      (env.NODE_ENV === "production" ? "sidecar" : "dev")) as AuthMode,
+  }));
 
 export type Env = z.infer<typeof EnvSchema>;
 

@@ -9,19 +9,12 @@ describe("loadEnv", () => {
     expect(env.authMode).toBe("dev");
   });
 
-  it("defaults authMode to homectl in production (requires the client secret)", () => {
-    expect(() => loadEnv({ ...base, NODE_ENV: "production" })).toThrow(
-      /WORKBENCH_CLIENT_SECRET/,
-    );
-    const env = loadEnv({
-      ...base,
-      NODE_ENV: "production",
-      WORKBENCH_CLIENT_SECRET: "secret",
-    });
-    expect(env.authMode).toBe("homectl");
+  it("defaults authMode to sidecar in production", () => {
+    const env = loadEnv({ ...base, NODE_ENV: "production" });
+    expect(env.authMode).toBe("sidecar");
   });
 
-  it("honors an explicit AUTH_MODE override (dev in production needs no secret)", () => {
+  it("honors an explicit AUTH_MODE override", () => {
     const env = loadEnv({ ...base, NODE_ENV: "production", AUTH_MODE: "dev" });
     expect(env.authMode).toBe("dev");
   });

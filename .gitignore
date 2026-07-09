@@ -10,7 +10,7 @@ node_modules/
 npm-debug.log*
 .pnpm-debug.log*
 .npm
-# .npmrc holds the GitHub Packages token for @gagnatdev/* — never commit it.
+# A personal .npmrc may hold registry tokens — never commit it.
 .npmrc
 
 # Frontend build / tooling

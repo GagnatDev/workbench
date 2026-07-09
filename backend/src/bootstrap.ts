@@ -1,7 +1,7 @@
 import type { Server } from "node:http";
 import type { Pool } from "pg";
 import { buildApp } from "./app.js";
-import { createAuthProvider } from "./auth/index.js";
+import { createIdentityMiddleware } from "./auth/index.js";
 import { createDb } from "./db/kysely.js";
 import { createPool } from "./db/pool.js";
 import { env } from "./config/env.js";
@@ -19,9 +19,9 @@ export interface StartedServer {
 export async function startServer(connectionString?: string): Promise<StartedServer> {
   const pool = createPool(connectionString);
   const db = createDb(pool);
-  const authProvider = await createAuthProvider();
+  const identity = createIdentityMiddleware(env);
 
-  const app = buildApp({ db, authProvider, webRoot: env.WEB_ROOT });
+  const app = buildApp({ db, identity, webRoot: env.WEB_ROOT });
 
   const server = await new Promise<Server>((resolve) => {
     const s = app.listen(env.PORT, () => {

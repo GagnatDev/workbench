@@ -1,8 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from '@/components/AppLayout'
 import { RequireAuth } from '@/auth/RequireAuth'
-import { Callback } from '@/auth/Callback'
-import { Login } from '@/pages/Login'
 import { Inbox } from '@/pages/Inbox'
 import { Projects } from '@/pages/Projects'
 import { ProjectOverview } from '@/pages/ProjectOverview'
@@ -13,8 +11,6 @@ import { Settings } from '@/pages/Settings'
 export default function App() {
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/auth/callback" element={<Callback />} />
       <Route
         element={
           <RequireAuth>
