@@ -3,6 +3,13 @@ packages:
   - backend
   - e2e
 
+# Build scripts are opt-in (pnpm 10). `sharp` is intentionally NOT listed: its
+# postinstall downloads a prebuilt libvips binary from GitHub releases, which
+# makes `pnpm install` fail on any network that can't reach that host (and
+# needlessly re-downloads on every lockfile-cache miss). Nothing in the
+# build/test/deploy path uses sharp — it's only pulled in by the manual
+# `generate-pwa-assets` script, and the PWA icons are already committed under
+# frontend/public. Run `pnpm --filter @workbench/frontend approve-builds` (or
+# add it back here) if you need to regenerate those assets locally.
 onlyBuiltDependencies:
-  - sharp
   - esbuild
