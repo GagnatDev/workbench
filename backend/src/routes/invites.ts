@@ -21,19 +21,17 @@ const inviteSchema = z.object({
  * configured, bypassing the public auth ingress; the redemption link handed to
  * the SPA is always built on the public AUTH_SERVICE_URL — a human clicks it.
  *
- * Only meaningful behind the sidecar — in dev mode there's no auth-proxy to
- * inject a bearer and no auth service to call, so we 501 rather than pretend.
+ * Only meaningful under real auth — in dev mode there's no auth service to call,
+ * so we 501 rather than pretend.
  */
 export function inviteRoutes(config: Env = env): Router {
   const router = Router();
 
   router.post("/invites", async (req, res, next) => {
     try {
-      if (config.authMode !== "sidecar") {
-        throw new HttpError(501, "Invites are only available behind the sidecar");
+      if (config.authMode !== "homectl") {
+        throw new HttpError(501, "Invites are only available with homectl auth");
       }
-      // The sidecar injects `Authorization: Bearer <jwt>` on every proxied
-      // request; forward it so the auth service can authorize the inviter.
       const bearer = req.headers.authorization;
       if (!bearer) throw new HttpError(401, "Not authenticated");
 

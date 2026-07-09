@@ -1,9 +1,15 @@
 import 'fake-indexeddb/auto'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-// The engine makes plain same-origin fetches now (the sidecar authenticates
-// them); route presign / push / pull and the direct S3 PUT through one mock.
-const fetchMock = vi.fn()
+// Route the engine's authed calls (presign / push / pull) at an in-memory server.
+const authedFetch = vi.fn()
+vi.mock('@/auth/authClient', () => ({
+  authClient: {
+    authedFetch: (...args: unknown[]) => authedFetch(...args),
+    getAccessToken: () => 'test-token',
+    disabled: true,
+  },
+}))
 
 const { db } = await import('./db')
 const { syncEngine, writeLocal } = await import('./sync')
@@ -18,49 +24,45 @@ function resp(body: unknown): Response {
   return { ok: true, status: 200, json: async () => body } as unknown as Response
 }
 
-/** True for the direct browser→S3 PUT (a cross-origin call to the presigned URL). */
-const isS3Put = (url: string): boolean => url.startsWith('https://s3.test/')
-
-/** The same-origin API handler (presign / push / pull) shared across tests. */
-function apiResponse(url: string, init?: RequestInit): Response {
-  if (url.includes('/api/uploads/presign')) {
-    const { attachmentId } = JSON.parse(String(init?.body)) as { attachmentId: string }
-    return resp({ url: `https://s3.test/put/${attachmentId}`, storageKey: `u1/${attachmentId}` })
-  }
-  if (url.includes('/api/sync/push')) {
-    const { changes } = JSON.parse(String(init?.body)) as { changes: Record<string, Row[]> }
-    const applied: Record<string, Row[]> = {}
-    for (const [table, rows] of Object.entries(changes)) {
-      server[table] ??= []
-      applied[table] = []
-      for (const row of rows) {
-        const stored: Row = { ...row, user_id: 'u1', updated_at: new Date().toISOString() }
-        const idx = server[table].findIndex((r) => r.id === row.id)
-        if (idx >= 0) server[table][idx] = stored
-        else server[table].push(stored)
-        applied[table].push(stored)
-      }
-    }
-    return resp({ serverTime: new Date().toISOString(), applied })
-  }
-  return resp({ serverTime: new Date().toISOString(), changes: { ...server } })
-}
-
 beforeEach(async () => {
   // Template seeds are localized (Norwegian-first); pin English so the
   // promote-into-project assertions below stay deterministic.
   await i18n.changeLanguage('en')
   server = {}
   putUrls = []
-  fetchMock.mockReset()
-  fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
-    if (isS3Put(url)) {
+  authedFetch.mockReset()
+  authedFetch.mockImplementation(async (url: string, init?: RequestInit) => {
+    if (url.includes('/api/uploads/presign')) {
+      const { attachmentId } = JSON.parse(String(init?.body)) as { attachmentId: string }
+      return resp({ url: `https://s3.test/put/${attachmentId}`, storageKey: `u1/${attachmentId}` })
+    }
+    if (url.includes('/api/sync/push')) {
+      const { changes } = JSON.parse(String(init?.body)) as { changes: Record<string, Row[]> }
+      const applied: Record<string, Row[]> = {}
+      for (const [table, rows] of Object.entries(changes)) {
+        server[table] ??= []
+        applied[table] = []
+        for (const row of rows) {
+          const stored: Row = { ...row, user_id: 'u1', updated_at: new Date().toISOString() }
+          const idx = server[table].findIndex((r) => r.id === row.id)
+          if (idx >= 0) server[table][idx] = stored
+          else server[table].push(stored)
+          applied[table].push(stored)
+        }
+      }
+      return resp({ serverTime: new Date().toISOString(), applied })
+    }
+    return resp({ serverTime: new Date().toISOString(), changes: { ...server } })
+  })
+
+  // The S3 PUT is a plain fetch (presigned URL); capture its calls.
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (url: string) => {
       putUrls.push(String(url))
       return { ok: true, status: 200 } as Response
-    }
-    return apiResponse(url, init)
-  })
-  vi.stubGlobal('fetch', fetchMock)
+    }),
+  )
 
   vi.spyOn(syncEngine, 'schedule').mockImplementation(() => {})
   // Reset the engine's session flag so a prior test's 503 doesn't disable uploads.
@@ -98,8 +100,8 @@ describe('photo upload pipeline', () => {
 
   it('treats an unreachable server as offline (calm), not an error', async () => {
     // fetch() rejects with a TypeError when it can't reach the server.
-    fetchMock.mockReset()
-    fetchMock.mockRejectedValue(new TypeError('Failed to fetch'))
+    authedFetch.mockReset()
+    authedFetch.mockRejectedValue(new TypeError('Failed to fetch'))
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
     await writeLocal('ideas', {
@@ -119,8 +121,8 @@ describe('photo upload pipeline', () => {
 
   it('stops re-presigning (one calm log) when storage is not configured (503)', async () => {
     // Presign returns 503; everything else (push/pull) behaves normally.
-    fetchMock.mockReset()
-    fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
+    authedFetch.mockReset()
+    authedFetch.mockImplementation(async (url: string, init?: RequestInit) => {
       if (url.includes('/api/uploads/presign')) {
         return { ok: false, status: 503, json: async () => ({}) } as Response
       }
@@ -150,7 +152,7 @@ describe('photo upload pipeline', () => {
     await syncEngine.syncNow()
     await syncEngine.syncNow() // a second run must not re-attempt presign
 
-    const presignCalls = fetchMock.mock.calls.filter((c) =>
+    const presignCalls = authedFetch.mock.calls.filter((c) =>
       String(c[0]).includes('/api/uploads/presign'),
     )
     expect(presignCalls).toHaveLength(1)
@@ -165,10 +167,9 @@ describe('photo upload pipeline', () => {
     // with a TypeError (not return a non-2xx response). That used to propagate out
     // of uploadPending and abort the whole run, stranding pending data edits behind
     // a false "offline". The data push/pull must still run and settle the run clean.
-    fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
-      if (isS3Put(url)) throw new TypeError('Failed to fetch')
-      return apiResponse(url, init)
-    })
+    ;(globalThis.fetch as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new TypeError('Failed to fetch'),
+    )
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
     const attId = crypto.randomUUID()
@@ -203,10 +204,8 @@ describe('photo upload pipeline', () => {
   })
 
   it('keeps the photo queued when upload fails (data sync still completes)', async () => {
-    // The S3 PUT fails (non-2xx); presign / push / pull still succeed.
-    fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
-      if (isS3Put(url)) return { ok: false, status: 503 } as Response
-      return apiResponse(url, init)
+    ;(globalThis.fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async () => {
+      return { ok: false, status: 503 } as Response
     })
     const attId = crypto.randomUUID()
     await db.blobs.put({ id: attId, blob: new Blob(['x'], { type: 'image/png' }) })

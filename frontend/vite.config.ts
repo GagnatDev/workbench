@@ -8,7 +8,8 @@ const apiProxyTarget = process.env.VITE_API_PROXY ?? 'http://localhost:8080'
 
 export default defineConfig({
   // The whole stack shares one .env at the monorepo root (the backend loads it
-  // too), so point Vite at the root instead of frontend/.env.
+  // too). Without this, Vite would only read frontend/.env and miss
+  // VITE_DISABLE_AUTH, silently re-enabling the auth redirect in local dev.
   envDir: path.resolve(__dirname, '..'),
   plugins: [
     react(),
@@ -59,10 +60,11 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
-      // Proxy the API to the backend in local dev. Under the sidecar model the
-      // SPA is auth-agnostic (no /authorize, /refresh, /logout, or callback
-      // handling of its own — the auth-proxy owns all of that in the cluster), so
-      // there's nothing auth-related to route here.
+      // Only the API is proxied to the backend. The OAuth `/auth/callback` is
+      // handled client-side (see src/auth/Callback.tsx): login is SPA-initiated,
+      // so the callback must land in the SPA, not the backend client lib (which
+      // expects a server-set state cookie it never wrote). The SPA talks to the
+      // auth service directly for /authorize, /refresh and /logout.
       '/api': { target: apiProxyTarget, changeOrigin: true },
     },
   },

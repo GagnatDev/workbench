@@ -145,15 +145,15 @@ Idea (capture primitive — lives in the global Inbox OR a project-scoped Inbox)
 
 ## 8. Architecture (overview)
 
-- **Single deployable** at `workbench.homectl.no`: a pnpm monorepo built into one Docker image. An **Express 5** server serves the built **React + Vite** PWA as static files *and* hosts the API on the same origin, behind the auth-proxy sidecar that owns the OAuth callback.
+- **Single deployable** at `workbench.homectl.no`: a pnpm monorepo built into one Docker image. An **Express 5** server serves the built **React + Vite** PWA as static files *and* hosts the API and the auth callback on the same origin.
 - **Local-first:** the client uses **Dexie/IndexedDB** as the offline source of truth. A **last-write-wins sync engine** (`pull`/`push` with soft-delete tombstones) reconciles with the backend.
 - **Backend:** Express 5 + **Kysely** (typed SQL) + **node-pg-migrate** (plain-SQL migrations run at boot). Data in the managed **Postgres** database `workbench`, every content row scoped by `user_id` (→ `users.id`). Flexible fields stored as **JSONB**.
-- **Identity:** the app keeps its own **`users`** table; a `resolveUser` step maps the sidecar-injected identity (`X-Homectl-User`, the JWT `sub`) to a local `user.id` (creating the row just-in-time on first login), so Workbench owns its identity and isn't coupled to the auth provider's key beyond the initial mapping.
+- **Identity:** the app keeps its own **`users`** table; a `resolveUser` step after auth maps the verified JWT `sub` to a local `user.id` (creating the row just-in-time on first login), so Workbench owns its identity and isn't coupled to the auth provider's key beyond the initial mapping.
 - **Photos:** stored in **S3-compatible object storage** (bucket `homectl-workbench`) via **presigned PUT/GET** URLs; captured offline as local blobs, uploaded on sync.
-- **Auth:** the **homectl-auth-proxy sidecar** in front of the app runs the OAuth2 code flow against `auth.homectl.no` and injects a verified identity (`X-Homectl-*` headers + RS256 JWT bearer); the app reads the headers and holds no token. Registered in `homectl-auth`'s `apps.json` with roles `member`/`admin`.
-- **Deploy:** GitHub Actions (CI → build & push image to `rg.fr-par.scw.cloud/homectl/workbench` → `kubectl apply`), mirroring the `unforked` app. NGINX ingress + cert-manager TLS. The pod runs two containers: the app and the auth-proxy sidecar (the Service targets the sidecar).
+- **Auth:** `@gagnatdev/homectl-auth-client` against `auth.homectl.no` (OAuth2 code flow + RS256 JWT bearer). The app is registered in `homectl-auth`'s `apps.json` with roles `member`/`admin`.
+- **Deploy:** GitHub Actions (CI → build & push image to `rg.fr-par.scw.cloud/homectl/workbench` → `kubectl apply`), mirroring the `unforked` app. NGINX ingress + cert-manager TLS.
 
-> **Note — sidecar migration:** Workbench originally integrated auth via the `@gagnatdev/homectl-auth-client` library (browser-held token + backend JWT verification). It has since migrated to the auth-proxy sidecar, which moves all token handling out of the app. The migration is opt-in and reversible at the Service/ingress layer; homectl-auth itself is unchanged.
+> **Risk — auth client maturity:** `@gagnatdev/homectl-auth-client` is **not yet in production**; the `travel-journal` app is mid-migration onto it. The library may contain bugs we'll need to find and fix during implementation. Validate the full login/callback/refresh flow early and coordinate fixes with the travel-journal migration.
 
 ---
 

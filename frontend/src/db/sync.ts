@@ -1,3 +1,4 @@
+import { authClient } from '@/auth/authClient'
 import { db } from './db'
 import { SYNC_TABLES, type SyncEnvelope, type SyncTableName } from './types'
 
@@ -32,11 +33,8 @@ function isNetworkError(err: unknown): boolean {
   return err instanceof TypeError
 }
 
-// Same-origin fetch: the auth-proxy sidecar authenticates the request from the
-// hs_session cookie and injects identity for the backend, so no token is
-// attached here (see lib/api.ts).
-async function apiJson(path: string, init?: RequestInit): Promise<unknown> {
-  const res = await fetch(`${API_BASE}${path}`, {
+async function authedJson(path: string, init?: RequestInit): Promise<unknown> {
+  const res = await authClient.authedFetch(`${API_BASE}${path}`, {
     ...init,
     headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
   })
@@ -201,7 +199,7 @@ class SyncEngine {
       const contentType = att.content_type ?? blobRow.blob.type ?? 'application/octet-stream'
 
       try {
-        const presign = await fetch(`${API_BASE}/api/uploads/presign`, {
+        const presign = await authClient.authedFetch(`${API_BASE}/api/uploads/presign`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ attachmentId: att.id, contentType }),
@@ -260,7 +258,7 @@ class SyncEngine {
     }
     if (Object.keys(changes).length === 0) return
 
-    const res = (await apiJson('/api/sync/push', {
+    const res = (await authedJson('/api/sync/push', {
       method: 'POST',
       body: JSON.stringify({ changes }),
     })) as { applied: Record<string, Array<SyncEnvelope & Record<string, unknown>>> }
@@ -284,7 +282,7 @@ class SyncEngine {
 
   private async pull(): Promise<void> {
     const since = await this.getCursor()
-    const res = (await apiJson(
+    const res = (await authedJson(
       `/api/sync/pull?since=${encodeURIComponent(since)}`,
     )) as { serverTime: string; changes: Record<string, Array<SyncEnvelope & Record<string, unknown>>> }
 

@@ -41,6 +41,8 @@ export default defineConfig({
         "src/db/schema.ts",
         "src/db/migrate.ts",
         "src/logger.ts",
+        "src/auth/homectlProvider.ts",
+        "src/auth/homectl-auth-client.d.ts",
         "src/test/**",
       ],
     },
