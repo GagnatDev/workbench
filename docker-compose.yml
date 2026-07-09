@@ -54,7 +54,8 @@ services:
     environment:
       - DATABASE_URL=postgresql://workbench:workbench@postgres:5432/workbench
       - PORT=8080
-      # Dev/demo: skip the real auth service. Flip to homectl for real OAuth.
+      # Dev/demo: no auth-proxy sidecar in front, so synthesize a local user.
+      # In production the pod runs the sidecar and this defaults to `sidecar`.
       - AUTH_MODE=dev
     ports:
       - "8080:8080"

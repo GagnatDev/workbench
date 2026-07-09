@@ -1,12 +1,8 @@
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-// The db ops call writeLocal → schedule a sync; stub the network seam and the
-// scheduler so these stay pure local-store tests.
-vi.mock('@/auth/authClient', () => ({
-  authClient: { authedFetch: vi.fn(), getAccessToken: () => 't', disabled: true },
-}))
-
+// The db ops call writeLocal → schedule a sync; stub the scheduler so these
+// stay pure local-store tests (the beforeEach below spies syncEngine.schedule).
 const { db } = await import('./db')
 const { syncEngine, writeLocal } = await import('./sync')
 const {

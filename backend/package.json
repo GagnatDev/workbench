@@ -11,7 +11,6 @@
   },
   "scripts": {
     "dev": "tsx watch --env-file-if-exists=../.env --env-file-if-exists=../.env.development src/server.ts",
-    "dev:homectl": "tsx watch --env-file-if-exists=../.env --env-file-if-exists=../.env.homectl src/server.ts",
     "build": "tsc --noEmit && tsup",
     "typecheck": "tsc --noEmit",
     "start": "node dist/server.js",
@@ -22,7 +21,6 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1062.0",
     "@aws-sdk/s3-request-presigner": "^3.1062.0",
-    "@gagnatdev/homectl-auth-client": "0.2.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "express": "^5.1.0",

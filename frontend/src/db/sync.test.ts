@@ -1,21 +1,15 @@
 import 'fake-indexeddb/auto'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-// Mock the auth client so the engine's authedFetch hits our in-memory server.
-const authedFetch = vi.fn()
-vi.mock('@/auth/authClient', () => ({
-  authClient: {
-    authedFetch: (...args: unknown[]) => authedFetch(...args),
-    getAccessToken: () => 'test-token',
-    disabled: true,
-  },
-}))
+// The engine makes plain same-origin fetches now (the sidecar authenticates
+// them); back that fetch with a tiny in-memory LWW server.
+const fetchMock = vi.fn()
 
 const { db } = await import('./db')
 const { syncEngine, writeLocal, deleteLocal } = await import('./sync')
 const { SYNC_TABLES } = await import('./types')
 
-/** A tiny stateful LWW server backing authedFetch. */
+/** A tiny stateful LWW server backing the fetch mock. */
 type Row = Record<string, unknown> & { id: string; updated_at: string }
 let server: Record<string, Row[]>
 
@@ -24,7 +18,7 @@ function resp(body: unknown): Response {
 }
 
 function installServer(): void {
-  authedFetch.mockImplementation(async (url: string, init?: RequestInit) => {
+  fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
     if (url.includes('/api/sync/push')) {
       const { changes } = JSON.parse(String(init?.body)) as {
         changes: Record<string, Row[]>
@@ -56,8 +50,9 @@ function installServer(): void {
 
 beforeEach(async () => {
   server = {}
-  authedFetch.mockReset()
+  fetchMock.mockReset()
   installServer()
+  vi.stubGlobal('fetch', fetchMock)
   // Stop the debounce from firing real timers between tests.
   vi.spyOn(syncEngine, 'schedule').mockImplementation(() => {})
   await Promise.all(SYNC_TABLES.map((t) => db.table(t).clear()))
@@ -66,6 +61,7 @@ beforeEach(async () => {
 
 afterEach(() => {
   vi.restoreAllMocks()
+  vi.unstubAllGlobals()
 })
 
 describe('writeLocal', () => {
@@ -83,7 +79,7 @@ describe('push', () => {
     await writeLocal('collections', { name: 'Mugs', rank: 'a0' })
     await syncEngine.syncNow()
 
-    const sent = JSON.parse(String(authedFetch.mock.calls[0][1].body))
+    const sent = JSON.parse(String(fetchMock.mock.calls[0][1].body))
     expect(sent.changes.collections[0]).not.toHaveProperty('_dirty')
 
     const rows = await db.collections.toArray()

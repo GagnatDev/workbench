@@ -6,19 +6,13 @@ WORKDIR /app
 
 RUN corepack enable
 
-# Install workspace deps from the single root lockfile.
-# The github_token secret provides read:packages access for @gagnatdev/* without
-# leaking the token into any image layer.
+# Install workspace deps from the single root lockfile. Every dependency is
+# public now — the private @gagnatdev/homectl-auth-client was dropped when auth
+# moved to the auth-proxy sidecar — so no registry auth is needed.
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY frontend/package.json frontend/
 COPY backend/package.json backend/
-RUN --mount=type=secret,id=github_token \
-    ( \
-        echo "@gagnatdev:registry=https://npm.pkg.github.com" && \
-        echo "//npm.pkg.github.com/:_authToken=$(cat /run/secrets/github_token)" \
-    ) > .npmrc \
-    && pnpm install --frozen-lockfile \
-    && rm .npmrc
+RUN pnpm install --frozen-lockfile
 
 # Build both workspaces: frontend -> frontend/dist, backend -> backend/dist
 # (a single bundled server.js + copied SQL migrations).
