@@ -2,18 +2,19 @@ import 'fake-indexeddb/auto'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { render, screen, waitFor, cleanup } from '@testing-library/react'
 
-// Keep these pure local-store/render tests: stub the same-origin fetch the
-// component uses for /api/files, and the object-URL API jsdom doesn't implement.
-const fetchMock = vi.fn()
+// Keep these pure local-store/render tests: stub the auth seam (sync imports it)
+// and the object-URL API jsdom doesn't implement.
+vi.mock('@/auth/authClient', () => ({
+  authClient: { authedFetch: vi.fn(), getAccessToken: () => 't', disabled: true },
+}))
 
 const { db } = await import('@/db/db')
 const { syncEngine } = await import('@/db/sync')
+const { authClient } = await import('@/auth/authClient')
 const { AttachmentThumb } = await import('./AttachmentThumb')
 await import('@/i18n')
 
 beforeEach(async () => {
-  fetchMock.mockReset()
-  vi.stubGlobal('fetch', fetchMock)
   vi.spyOn(syncEngine, 'schedule').mockImplementation(() => {})
   vi.stubGlobal('URL', {
     ...URL,
@@ -48,18 +49,20 @@ function attachment(over: Partial<Record<string, unknown>> = {}) {
 }
 
 it('renders the inline thumbnail without fetching the full image', async () => {
+  const authedFetch = vi.mocked(authClient.authedFetch)
   await db.attachments.put(attachment({ thumb: 'data:image/webp;base64,THUMB' }))
 
   render(<AttachmentThumb attachmentId="a1" />)
 
   const img = (await screen.findByRole('img')) as HTMLImageElement
   expect(img.src).toBe('data:image/webp;base64,THUMB')
-  expect(fetchMock).not.toHaveBeenCalled()
+  expect(authedFetch).not.toHaveBeenCalled()
 })
 
-it('full variant fetches /api/files once and caches the blob in Dexie', async () => {
+it('full variant fetches /api/files once (with bearer) and caches the blob in Dexie', async () => {
   const blob = new Blob(['bytes'], { type: 'image/png' })
-  fetchMock.mockResolvedValue({ ok: true, blob: async () => blob } as unknown as Response)
+  const authedFetch = vi.mocked(authClient.authedFetch)
+  authedFetch.mockResolvedValue({ ok: true, blob: async () => blob } as unknown as Response)
   await db.attachments.put(attachment()) // uploaded, no thumb, no local blob
 
   render(<AttachmentThumb attachmentId="a1" variant="full" />)
@@ -69,9 +72,9 @@ it('full variant fetches /api/files once and caches the blob in Dexie', async ()
   await waitFor(async () => {
     expect(await db.blobs.get('a1')).toBeDefined()
   })
-  // The sidecar authenticates the same-origin request from the session cookie.
-  expect(fetchMock).toHaveBeenCalledTimes(1)
-  expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('/api/files/a1'))
+  // authedFetch attaches the bearer token — a raw fetch would 401 on another device.
+  expect(authedFetch).toHaveBeenCalledTimes(1)
+  expect(authedFetch).toHaveBeenCalledWith(expect.stringContaining('/api/files/a1'))
   // Renders from the cached blob's object URL, not the raw /api/files endpoint.
   const img = (await screen.findByRole('img')) as HTMLImageElement
   expect(img.src).toBe('blob:mock')

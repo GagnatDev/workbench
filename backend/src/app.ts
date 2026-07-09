@@ -1,14 +1,10 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
-import express, {
-  Router,
-  type Express,
-  type RequestHandler,
-  type Response,
-} from "express";
+import express, { Router, type Express, type Response } from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import type { Db } from "./db/kysely.js";
+import type { AuthProvider } from "./auth/types.js";
 import { httpLogger } from "./logger.js";
 import { errorHandler } from "./middleware/error.js";
 import { resolveUser } from "./middleware/resolveUser.js";
@@ -21,12 +17,7 @@ import { inviteRoutes } from "./routes/invites.js";
 
 export interface AppDeps {
   db: Db;
-  /**
-   * Populates `req.user` from the sidecar-injected `X-Homectl-*` headers (see
-   * auth/identity.ts). The auth-proxy owns the OAuth flow, `/auth/callback`, and
-   * `/auth/logout`; the app only reads the injected identity.
-   */
-  identity: RequestHandler;
+  authProvider: AuthProvider;
   /** Directory of the built SPA to serve. Defaults to `<cwd>/web`; skipped if absent. */
   webRoot?: string;
 }
@@ -46,10 +37,9 @@ function setStaticCacheHeaders(res: Response, filePath: string): void {
  * be driven in-process by supertest.
  */
 export function buildApp(deps: AppDeps): Express {
-  const { db, identity } = deps;
+  const { db, authProvider } = deps;
   const app = express();
-  // Behind the auth-proxy sidecar (and the K8s Ingress in front of it): trust
-  // X-Forwarded-* so req.ip / protocol are correct.
+  // Behind the K8s Ingress: trust X-Forwarded-* so req.ip / protocol are correct.
   app.set("trust proxy", true);
   app.use(httpLogger);
   app.use(express.json({ limit: "1mb" }));
@@ -58,14 +48,21 @@ export function buildApp(deps: AppDeps): Express {
 
   app.use(healthRouter);
 
-  // The auth-proxy sidecar owns `/auth/callback` and `/auth/logout` (it runs the
-  // OAuth flow and clears the session); those paths never reach the app. Point
-  // the front-end logout button at `POST /auth/logout` — the sidecar handles it.
+  // OAuth logout (real provider only; public, no resolveUser).
+  //
+  // No `/auth/callback` mount: login is SPA-initiated, so the callback is owned
+  // by the front-end (src/auth/Callback.tsx), which validates its own CSRF state
+  // and re-bootstraps from the auth service's session cookie. Routing it to the
+  // client lib's callbackHandler would fail — that handler requires a server-set
+  // `homectl_auth_state` cookie that only the server-initiated flow ever writes.
+  // Leaving it unmounted lets the SPA fallback below serve the callback route.
+  if (authProvider.logoutHandler) {
+    app.post("/auth/logout", authProvider.logoutHandler);
+  }
 
-  // Authenticated API: read injected identity -> map to app user
-  // (JIT-provision) -> routes.
+  // Authenticated API: verify token -> map to app user (JIT-provision) -> routes.
   const api = Router();
-  api.use(identity);
+  api.use(authProvider.authMiddleware);
   api.use(resolveUser(db));
   api.use(meRoutes());
   api.use(accountRoutes(db));

@@ -1,3 +1,5 @@
+import { authClient } from '@/auth/authClient'
+
 const base = import.meta.env.VITE_API_URL ?? ''
 
 /** The authenticated app user, as returned by GET /api/me. */
@@ -18,15 +20,8 @@ export class ApiError extends Error {
   }
 }
 
-/**
- * Same-origin fetch. The auth-proxy sidecar owns authentication end-to-end: it
- * gates the top-level navigation, refreshes tokens in-cluster, and injects the
- * identity the backend reads — so the SPA holds no token and attaches no
- * Authorization header. The browser's `hs_session` cookie rides along same-origin
- * automatically (default credentials).
- */
 async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
-  return fetch(`${base}${path}`, init)
+  return authClient.authedFetch(`${base}${path}`, init)
 }
 
 export async function getMe(): Promise<AppUser> {

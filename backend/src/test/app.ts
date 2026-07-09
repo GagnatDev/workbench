@@ -1,14 +1,8 @@
 import { buildApp } from "../app.js";
-import { createIdentityMiddleware } from "../auth/identity.js";
-import { loadEnv } from "../config/env.js";
+import { createDevProvider } from "../auth/devProvider.js";
 import { testDb } from "./db.js";
 
-/**
- * Build the Express app (dev identity middleware) wired to the shared test
- * database. `dev` mode synthesizes an identity when no `X-Homectl-*` headers are
- * present, so tests run with no auth-proxy in front.
- */
+/** Build the Express app (dev auth provider) wired to the shared test database. */
 export function buildTestApp(): ReturnType<typeof buildApp> {
-  const config = loadEnv({ DATABASE_URL: "postgres://unused", AUTH_MODE: "dev" });
-  return buildApp({ db: testDb(), identity: createIdentityMiddleware(config) });
+  return buildApp({ db: testDb(), authProvider: createDevProvider() });
 }

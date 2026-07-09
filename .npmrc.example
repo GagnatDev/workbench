@@ -1,0 +1,9 @@
+# Copy to .npmrc (gitignored) to install the private auth client from GitHub Packages.
+# Needed only for AUTH_MODE=homectl (real auth). AUTH_MODE=dev does not require it.
+#
+# 1. Create a GitHub Personal Access Token with the `read:packages` scope.
+# 2. Export it:  export GITHUB_TOKEN=ghp_xxx
+# 3. cp .npmrc.example .npmrc   then:  pnpm add @gagnatdev/homectl-auth-client
+#
+@gagnatdev:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}

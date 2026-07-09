@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { authClient } from './authClient'
 import { getMe, type AppUser } from '@/lib/api'
 
 type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated'
@@ -14,19 +15,13 @@ type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated'
 interface AuthContextValue {
   user: AppUser | null
   status: AuthStatus
+  login: () => void
   logout: () => Promise<void>
+  authDisabled: boolean
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-/**
- * The SPA is auth-agnostic under the sidecar model: it holds no token and knows
- * nothing about the auth service. The auth-proxy has already established the
- * session before the app loads (it redirects an unauthenticated top-level
- * navigation to central login), so we simply read the current user from
- * `GET /api/me`. A 401 means the session lapsed mid-use — bounce through a full
- * page load so the sidecar can run the login redirect for us.
- */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null)
   const [status, setStatus] = useState<AuthStatus>('loading')
@@ -34,6 +29,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false
     void (async () => {
+      const token = await authClient.bootstrap()
+      if (!token) {
+        if (!cancelled) setStatus('unauthenticated')
+        return
+      }
       try {
         const me = await getMe()
         if (!cancelled) {
@@ -49,22 +49,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const login = useCallback(() => authClient.login(), [])
+
   const logout = useCallback(async () => {
-    // The sidecar owns POST /auth/logout: it clears hs_session and the reload
-    // then hits the login redirect. Best-effort — clear local state regardless.
-    try {
-      await fetch('/auth/logout', { method: 'POST' })
-    } catch {
-      // ignore; the reload below re-authenticates anyway
-    }
+    await authClient.logout()
     setUser(null)
     setStatus('unauthenticated')
-    window.location.href = '/'
   }, [])
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, status, logout }),
-    [user, status, logout],
+    () => ({ user, status, login, logout, authDisabled: authClient.disabled }),
+    [user, status, login, logout],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

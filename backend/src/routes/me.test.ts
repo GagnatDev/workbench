@@ -3,7 +3,7 @@ import request from "supertest";
 import { buildTestApp } from "../test/app.js";
 import { testDb, useCleanDb } from "../test/db.js";
 import { UserRepository } from "../storage/userRepository.js";
-import { DEV_PRINCIPAL } from "../auth/identity.js";
+import { DEV_PRINCIPAL } from "../auth/devProvider.js";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

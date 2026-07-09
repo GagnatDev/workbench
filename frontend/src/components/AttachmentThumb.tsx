@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/db/db'
 import { writeLocal } from '@/db/sync'
+import { authClient } from '@/auth/authClient'
 import { generateThumbnail } from '@/lib/thumbnail'
 import { usePhotoViewerOptional } from './PhotoViewerProvider'
 
@@ -88,10 +89,7 @@ export function AttachmentThumb({
     let cancelled = false
     ;(async () => {
       try {
-        // Same-origin fetch: the sidecar authenticates it from the session
-        // cookie (no bearer to attach). /api/files/:id redirects to a
-        // short-lived presigned GET.
-        const res = await fetch(`${API_BASE}/api/files/${attachmentId}`)
+        const res = await authClient.authedFetch(`${API_BASE}/api/files/${attachmentId}`)
         if (!res.ok) return
         const blob = await res.blob()
         if (!cancelled) await db.blobs.put({ id: attachmentId, blob })
