@@ -35,8 +35,8 @@ export function AppLayout() {
   const currentProjectId = projectMatch?.params.id ?? null
 
   // The authed shell is the right place to start the engine: it mounts only once
-  // the user is authenticated (so authedFetch has a token) and stays mounted for
-  // the session. start() kicks off the first sync and wires focus/reconnect.
+  // the session is established and stays mounted for its lifetime. start() kicks
+  // off the first sync and wires focus/reconnect.
   useEffect(() => syncEngine.start(), [])
 
   const captureButton = (

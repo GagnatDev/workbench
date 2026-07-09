@@ -8,7 +8,6 @@
   },
   "scripts": {
     "dev": "vite",
-    "dev:homectl": "vite --mode homectl",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest run",

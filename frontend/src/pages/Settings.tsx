@@ -13,7 +13,7 @@ import { wipeLocalDb } from '@/db/db'
  * the optional "Invite a friend" flow (Phase 6) for admins. */
 export function Settings() {
   const { t } = useTranslation()
-  const { user, logout, authDisabled } = useAuth()
+  const { user, logout } = useAuth()
 
   return (
     <section className="flex flex-col gap-6">
@@ -25,16 +25,14 @@ export function Settings() {
         {user?.role && (
           <p className="mt-1 text-sm text-charcoal-muted">{t('settings.role', { role: user.role })}</p>
         )}
-        {authDisabled && (
-          <p className="mt-2 text-sm text-flax">{t('settings.dev_mode')}</p>
-        )}
       </div>
 
       <LanguageCard />
 
       <HintsCard />
 
-      {!authDisabled && <InviteCard />}
+      {/* Server-gated: homectl-auth decides who may invite (admins). */}
+      <InviteCard />
 
       <button
         type="button"
@@ -53,7 +51,7 @@ export function Settings() {
  * Permanently delete the account and all linked data. An irreversible action, so
  * the destructive button stays disabled until the user types their email (or, in
  * dev mode where there's no email, the literal "DELETE"). On success the session
- * is gone, so we log out — which redirects to /login.
+ * is gone, so we log out — which redirects through the sidecar to login.
  */
 function DangerZoneCard() {
   const { t } = useTranslation()
