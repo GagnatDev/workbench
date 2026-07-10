@@ -1,5 +1,10 @@
 name: Deploy to Kubernetes
 
+# Postfix the run title with the branch/ref being deployed, e.g.
+# "Deploy to Kubernetes [main]". For workflow_run it's the CI branch; for a
+# manual run it's the explicit `ref` input, falling back to the dispatched branch.
+run-name: Deploy to Kubernetes [${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.event.inputs.ref || github.ref_name }}]
+
 # Deploys the workbench app to the Scaleway Kubernetes cluster.
 #
 # Two ways this runs:
