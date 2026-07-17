@@ -65,3 +65,20 @@ jobs:
           sed -i "s|\$IMAGE_TAG|${{ env.IMAGE_TAG }}|g" k8s/deployment.yml
           kubectl apply -f k8s/deployment.yml
           kubectl rollout status deployment/workbench -n homectl --timeout=300s
+
+      # Same diagnostics as homectl-auth's deploy workflow: enough to see WHY a
+      # rollout timed out (which container is stuck — pull error, missing secret
+      # key, failing readiness probe) without it, "timed out waiting for the
+      # condition" is the only signal.
+      - name: Diagnostics on failure
+        if: failure()
+        run: |
+          echo "=== pods ==="
+          kubectl get pods --namespace homectl -l app=workbench -o wide
+          echo "=== describe ==="
+          kubectl describe pods --namespace homectl -l app=workbench
+          echo "=== events ==="
+          kubectl get events --namespace homectl --sort-by=.lastTimestamp | tail -50
+          # NOTE: deliberately does NOT dump `kubectl logs` — Actions logs may be
+          # world-readable and request loggers can emit auth headers/cookies.
+          # Pull pod logs manually with kubectl when needed.
