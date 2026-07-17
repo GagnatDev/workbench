@@ -15,7 +15,15 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
-      includeAssets: ['favicon.ico', 'pwa-icon.svg', 'apple-touch-icon-180x180.png'],
+      // All PWA discovery assets live under /static/, which the auth-proxy
+      // sidecar serves without a session cookie — the OS fetches the manifest
+      // and icons anonymously when installing to the Home Screen.
+      includeAssets: [
+        'static/favicon.ico',
+        'static/pwa-icon.svg',
+        'static/apple-touch-icon-180x180.png',
+      ],
+      manifestFilename: 'static/manifest.webmanifest',
       manifest: {
         name: 'Workbench',
         short_name: 'Workbench',
@@ -29,11 +37,11 @@ export default defineConfig({
         orientation: 'portrait-primary',
         lang: 'nb',
         icons: [
-          { src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },
-          { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
-          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+          { src: '/static/pwa-64x64.png', sizes: '64x64', type: 'image/png' },
+          { src: '/static/pwa-192x192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/static/pwa-512x512.png', sizes: '512x512', type: 'image/png' },
           {
-            src: 'maskable-icon-512x512.png',
+            src: '/static/maskable-icon-512x512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable',
@@ -45,7 +53,11 @@ export default defineConfig({
         // fully offline (offline is the normal case in the workshop).
         globPatterns: ['**/*.{js,css,html,woff2,png,svg,ico}'],
         navigateFallback: 'index.html',
-        navigateFallbackDenylist: [/^\/api\//],
+        // /auth/* must reach the network: the sidecar owns the OAuth callback
+        // and logout, and a precached SPA response for /auth/callback?code=…
+        // breaks login with OAuth state errors (see
+        // unforked docs/auth-sidecar-migration.md → PWA pitfalls).
+        navigateFallbackDenylist: [/^\/api\//, /^\/auth\//],
       },
     }),
   ],

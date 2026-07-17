@@ -2,6 +2,10 @@
   "app": {
     "title": "Workbench"
   },
+  "auth": {
+    "session_expired": "Your session has expired.",
+    "sign_in_again": "Sign in again"
+  },
   "common": {
     "loading": "Loading…",
     "more": "More",

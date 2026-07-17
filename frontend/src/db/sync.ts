@@ -1,5 +1,6 @@
 import { db } from './db'
 import { SYNC_TABLES, type SyncEnvelope, type SyncTableName } from './types'
+import { reloadForLogin } from '@/lib/session'
 
 const API_BASE = import.meta.env.VITE_API_URL ?? ''
 const CURSOR_KEY = 'syncCursor'
@@ -32,6 +33,9 @@ function isNetworkError(err: unknown): boolean {
   return err instanceof TypeError
 }
 
+/** The sidecar session expired mid-sync — not a server failure. */
+class SyncAuthError extends Error {}
+
 // Same-origin fetch: the auth-proxy sidecar authenticates the request from the
 // hs_session cookie and injects identity for the backend, so no token is
 // attached here (see lib/api.ts).
@@ -40,6 +44,14 @@ async function apiJson(path: string, init?: RequestInit): Promise<unknown> {
     ...init,
     headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
   })
+  if (res.status === 401) {
+    // The sidecar session is gone. Bounce through a bounded, place-preserving
+    // full load so the sidecar can silently re-authenticate (lib/session.ts).
+    // The Dexie outbox is durable — dirty rows and queued photos survive the
+    // reload and drain on the next run once the session is back.
+    reloadForLogin()
+    throw new SyncAuthError(`sync ${path}: session expired`)
+  }
   if (!res.ok) throw new Error(`sync ${path} failed: ${res.status}`)
   return res.json()
 }
@@ -149,9 +161,11 @@ class SyncEngine {
       })
     } catch (err) {
       // Server unreachable (a TypeError from fetch) is offline-like — stay calm
-      // (grey dot), no console noise. Reserve 'error' (red) + a logged error for
-      // an actual server/HTTP failure.
-      const offlineLike = isOffline() || isNetworkError(err)
+      // (grey dot), no console noise. An expired session is also quiet: a
+      // re-auth page load is already in flight (or the session-expired screen
+      // is taking over). Reserve 'error' (red) + a logged error for an actual
+      // server/HTTP failure.
+      const offlineLike = isOffline() || isNetworkError(err) || err instanceof SyncAuthError
       if (!offlineLike) console.error('[sync] run failed', err)
       this.setState({
         status: offlineLike ? 'offline' : 'error',
