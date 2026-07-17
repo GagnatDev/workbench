@@ -18,8 +18,8 @@ spec:
         # Serves the SPA + /api on 8080. Reached ONLY by the auth-proxy sidecar
         # in the same pod — the Service targets the sidecar (4180), never 8080,
         # so a client can't bypass auth and forge X-Homectl-* headers. The app
-        # runs in sidecar auth mode (NODE_ENV=production) and reads identity from
-        # the headers the sidecar injects.
+        # runs in sidecar auth mode and reads identity from the headers the
+        # sidecar injects.
         - name: workbench
           image: rg.fr-par.scw.cloud/homectl/workbench:$IMAGE_TAG
           ports:
@@ -31,10 +31,15 @@ spec:
                 name: workbench-secrets
                 optional: true
           env:
-            # Server-to-server auth traffic (token exchange, JWKS, invite
-            # forwarding) stays in-cluster via service discovery instead of
-            # round-tripping through the public auth ingress. Plain `env`
-            # entries take precedence over the envFrom secrets above.
+            # Behind the sidecar in prod: read the injected X-Homectl-* headers.
+            # Explicit (per the homectl-reference k8s template) rather than
+            # relying on the NODE_ENV=production derivation in the image.
+            - name: AUTH_MODE
+              value: sidecar
+            # Server-to-server auth traffic (invite forwarding) stays in-cluster
+            # via service discovery instead of round-tripping through the public
+            # auth ingress. Plain `env` entries take precedence over the envFrom
+            # secrets above.
             - name: AUTH_INTERNAL_URL
               value: http://homectl-auth.homectl.svc.cluster.local
             - name: S3_ACCESS_KEY_ID
