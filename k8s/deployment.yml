@@ -14,6 +14,12 @@ spec:
         app: workbench
     spec:
       containers:
+        # ── App ─────────────────────────────────────────────────────────────
+        # Serves the SPA + /api on 8080. Reached ONLY by the auth-proxy sidecar
+        # in the same pod — the Service targets the sidecar (4180), never 8080,
+        # so a client can't bypass auth and forge X-Homectl-* headers. The app
+        # runs in sidecar auth mode and reads identity from the headers the
+        # sidecar injects.
         - name: workbench
           image: rg.fr-par.scw.cloud/homectl/workbench:$IMAGE_TAG
           ports:
@@ -25,17 +31,17 @@ spec:
                 name: workbench-secrets
                 optional: true
           env:
-            # Server-to-server auth traffic (token exchange, JWKS, invite
-            # forwarding) stays in-cluster via service discovery instead of
-            # round-tripping through the public auth ingress. Plain `env`
-            # entries take precedence over the envFrom secrets above.
+            # Behind the sidecar in prod: read the injected X-Homectl-* headers.
+            # Explicit (per the homectl-reference k8s template) rather than
+            # relying on the NODE_ENV=production derivation in the image.
+            - name: AUTH_MODE
+              value: sidecar
+            # Server-to-server auth traffic (invite forwarding) stays in-cluster
+            # via service discovery instead of round-tripping through the public
+            # auth ingress. Plain `env` entries take precedence over the envFrom
+            # secrets above.
             - name: AUTH_INTERNAL_URL
               value: http://homectl-auth.homectl.svc.cluster.local
-            - name: WORKBENCH_CLIENT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: workbench-terraform-secrets
-                  key: AUTH_CLIENT_SECRET
             - name: S3_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
@@ -70,6 +76,60 @@ spec:
               memory: 384Mi
             limits:
               memory: 768Mi
+
+        # ── Auth sidecar ────────────────────────────────────────────────────
+        # Owns the OAuth flow, /auth/callback, and /auth/logout; refreshes tokens
+        # in-cluster; injects verified X-Homectl-* identity + Bearer and proxies
+        # to the app on 127.0.0.1:8080. Stateless (session lives in the encrypted
+        # hs_session cookie), so no Redis / sticky sessions. AUTH_CLIENT_SECRET
+        # and COOKIE_KEY are Terraform-managed (the app has `auth = true` in
+        # homectl-infra, which writes them into workbench-terraform-secrets).
+        - name: auth-proxy
+          image: rg.fr-par.scw.cloud/homectl/homectl-auth-proxy:latest
+          ports:
+            - containerPort: 4180
+          env:
+            - name: PUBLIC_AUTH_URL
+              value: https://auth.homectl.no
+            - name: INTERNAL_AUTH_URL
+              value: http://homectl-auth.homectl.svc.cluster.local
+            - name: APP_BASE_URL
+              value: https://workbench.homectl.no
+            - name: UPSTREAM
+              value: http://127.0.0.1:8080
+            - name: AUTH_CLIENT_ID
+              value: workbench
+            - name: AUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: workbench-terraform-secrets
+                  key: AUTH_CLIENT_SECRET
+            - name: COOKIE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: workbench-terraform-secrets
+                  key: COOKIE_KEY
+            - name: NODE_ENV
+              value: production
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 4180
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 4180
+            initialDelaySeconds: 3
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
 ---
 apiVersion: v1
 kind: Service
@@ -81,7 +141,9 @@ spec:
     app: workbench
   ports:
     - port: 80
-      targetPort: 8080
+      # → the auth-proxy sidecar (4180), never the app's 8080. Ingress →
+      # Service:80 → sidecar:4180 → app:8080.
+      targetPort: 4180
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress

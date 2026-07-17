@@ -20,7 +20,9 @@ What works today:
 - Backend: Express 5 + Kysely + node-pg-migrate (migrations run at boot). The
   app-owned `users` identity table, with **just-in-time provisioning** mapping
   the auth `sub` → app `user.id`. `GET /api/me` returns the resolved app user.
-- Auth seam with two providers (see **Auth** below).
+- Auth via the homectl-auth-proxy **sidecar** — the app reads identity from
+  injected `X-Homectl-*` headers and does no token handling of its own (see
+  **Auth** below).
 - **Local-first sync (LWW).** Six syncable content tables (collections,
   projects, sections, items, ideas, attachments) sharing one envelope
   (`id`/`user_id`/`updated_at`/`deleted`). `GET /api/sync/pull` +
@@ -71,9 +73,10 @@ The backend dev script reads the root `.env` via Node's `--env-file-if-exists`,
 so `DATABASE_URL` (and `AUTH_MODE` etc.) must live there. Without `.env` the
 backend exits with a Zod error for the missing `DATABASE_URL`.
 
-Open http://localhost:3000. With `AUTH_MODE=dev` / `VITE_DISABLE_AUTH=true`
-(the defaults) there's no login step — every request resolves to a fixed local
-user, and a `users` row is provisioned on the first `/api/me` call.
+Open http://localhost:3000. With `AUTH_MODE=dev` (the default outside
+production) there's no login step and no auth-proxy in front — the backend
+synthesizes a fixed local user for every request, and a `users` row is
+provisioned on the first `/api/me` call.
 
 To exercise photo capture locally, uncomment the `S3_*` block in `.env` (it's
 pre-filled to match the docker-compose MinIO). Without it, capture still works —
@@ -94,33 +97,40 @@ pnpm --filter @workbench/frontend test:unit
 
 ## Auth
 
-Authentication is delegated to **homectl-auth** (OAuth2 + RS256 JWT). The app
-keeps its **own** identity: the JWT `sub` is stored once on the `users` row
-(`auth_sub`); everything else is scoped by the app's own `user.id`.
+Authentication is delegated to **homectl-auth** (OAuth2 + RS256 JWT) via the
+**homectl-auth-proxy sidecar**. In production the sidecar sits in front of the
+app in the same pod (ingress → Service → sidecar:4180 → app:8080): it runs the
+OAuth flow, owns `/auth/callback` and `/auth/logout`, refreshes tokens
+in-cluster, and injects a verified identity — `X-Homectl-User` / `-Email` /
+`-Role` (plus a `Bearer`) — on every proxied request. The app reads those
+headers and does **no** token handling; the browser holds only the sidecar's
+opaque `hs_session` cookie and makes plain same-origin `fetch` calls. The app
+keeps its **own** identity: the JWT `sub` (from `X-Homectl-User`) is stored once
+on the `users` row (`auth_sub`); everything else is scoped by the app's own
+`user.id`.
 
-Two providers, selected by `AUTH_MODE`:
+Identity source is selected by `AUTH_MODE`:
 
-- **`dev`** (default outside production) — no auth service needed. Requests
-  resolve to a fixed dev principal so the whole pipeline runs offline. A
-  per-identity override is available via the `x-dev-sub` header (used in tests).
-- **`homectl`** (default in production) — the real OAuth2 flow via
-  `@gagnatdev/homectl-auth-client` (pinned to `0.2.0`). The package is private
-  (GitHub Packages), so installing needs registry auth:
+- **`dev`** (default outside production) — no sidecar in front. The backend
+  synthesizes a fixed dev principal so the whole pipeline runs offline. A
+  per-identity override is available via the `x-dev-sub` header (used in tests);
+  the `X-Homectl-*` headers are also honored if present.
+- **`sidecar`** (default in production) — identity comes only from the
+  `X-Homectl-*` headers the auth-proxy injects; a request without them is
+  unauthenticated. The sidecar's Kubernetes wiring (image, env, secrets) lives
+  in [`k8s/deployment.yml`](./k8s/deployment.yml); its `AUTH_CLIENT_SECRET` and
+  `COOKIE_KEY` are Terraform-managed (the app has `auth = true` in
+  homectl-infra).
 
-  ```bash
-  cp .npmrc.example .npmrc          # set GITHUB_TOKEN with read:packages
-  pnpm install
-  ```
+The only server-to-server auth call the app still makes is **invite forwarding**
+(`POST /api/invites`), which relays the sidecar-injected bearer to homectl-auth.
+It uses `AUTH_INTERNAL_URL` when set — in k8s the in-cluster service address
+(`http://homectl-auth.homectl.svc.cluster.local`), keeping that traffic off the
+public auth ingress — while `AUTH_SERVICE_URL` (public) is used only to build the
+human-clickable invite redemption link.
 
-  Then set `AUTH_MODE=homectl` and `WORKBENCH_CLIENT_SECRET`.
-
-  Server-to-server calls (token exchange, JWKS, invite forwarding) use
-  `AUTH_INTERNAL_URL` when set — in k8s this is the in-cluster service address
-  (`http://homectl-auth.homectl.svc.cluster.local`), so backend traffic rides
-  service discovery instead of the public auth ingress. `AUTH_SERVICE_URL`
-  stays the public URL: it is the JWT issuer and the target for everything the
-  browser itself must reach (`/authorize`, `/refresh`, `/logout` — the refresh
-  cookie lives on the auth service's origin, so those cannot be proxied).
+To run the real sidecar locally, run the `homectl-auth-proxy` container with
+`DEV_FAKE_IDENTITY` in front of the app (see the sidecar integration guide §7).
 
 ## Deploy
 

@@ -7,8 +7,7 @@ import { loadEnv, type Env } from "../config/env.js";
 
 const homectlEnv: Env = loadEnv({
   DATABASE_URL: "postgres://unused",
-  AUTH_MODE: "homectl",
-  WORKBENCH_CLIENT_SECRET: "secret",
+  AUTH_MODE: "sidecar",
   AUTH_SERVICE_URL: "https://auth.test",
   AUTH_CLIENT_ID: "workbench",
 });
@@ -94,8 +93,7 @@ describe("POST /api/invites", () => {
 
     const internalEnv: Env = loadEnv({
       DATABASE_URL: "postgres://unused",
-      AUTH_MODE: "homectl",
-      WORKBENCH_CLIENT_SECRET: "secret",
+      AUTH_MODE: "sidecar",
       AUTH_SERVICE_URL: "https://auth.test",
       AUTH_INTERNAL_URL: "http://homectl-auth.homectl.svc.cluster.local",
       AUTH_CLIENT_ID: "workbench",

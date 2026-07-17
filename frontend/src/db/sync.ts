@@ -1,6 +1,6 @@
-import { authClient } from '@/auth/authClient'
 import { db } from './db'
 import { SYNC_TABLES, type SyncEnvelope, type SyncTableName } from './types'
+import { reloadForLogin } from '@/lib/session'
 
 const API_BASE = import.meta.env.VITE_API_URL ?? ''
 const CURSOR_KEY = 'syncCursor'
@@ -33,11 +33,25 @@ function isNetworkError(err: unknown): boolean {
   return err instanceof TypeError
 }
 
-async function authedJson(path: string, init?: RequestInit): Promise<unknown> {
-  const res = await authClient.authedFetch(`${API_BASE}${path}`, {
+/** The sidecar session expired mid-sync — not a server failure. */
+class SyncAuthError extends Error {}
+
+// Same-origin fetch: the auth-proxy sidecar authenticates the request from the
+// hs_session cookie and injects identity for the backend, so no token is
+// attached here (see lib/api.ts).
+async function apiJson(path: string, init?: RequestInit): Promise<unknown> {
+  const res = await fetch(`${API_BASE}${path}`, {
     ...init,
     headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
   })
+  if (res.status === 401) {
+    // The sidecar session is gone. Bounce through a bounded, place-preserving
+    // full load so the sidecar can silently re-authenticate (lib/session.ts).
+    // The Dexie outbox is durable — dirty rows and queued photos survive the
+    // reload and drain on the next run once the session is back.
+    reloadForLogin()
+    throw new SyncAuthError(`sync ${path}: session expired`)
+  }
   if (!res.ok) throw new Error(`sync ${path} failed: ${res.status}`)
   return res.json()
 }
@@ -147,9 +161,11 @@ class SyncEngine {
       })
     } catch (err) {
       // Server unreachable (a TypeError from fetch) is offline-like — stay calm
-      // (grey dot), no console noise. Reserve 'error' (red) + a logged error for
-      // an actual server/HTTP failure.
-      const offlineLike = isOffline() || isNetworkError(err)
+      // (grey dot), no console noise. An expired session is also quiet: a
+      // re-auth page load is already in flight (or the session-expired screen
+      // is taking over). Reserve 'error' (red) + a logged error for an actual
+      // server/HTTP failure.
+      const offlineLike = isOffline() || isNetworkError(err) || err instanceof SyncAuthError
       if (!offlineLike) console.error('[sync] run failed', err)
       this.setState({
         status: offlineLike ? 'offline' : 'error',
@@ -199,7 +215,7 @@ class SyncEngine {
       const contentType = att.content_type ?? blobRow.blob.type ?? 'application/octet-stream'
 
       try {
-        const presign = await authClient.authedFetch(`${API_BASE}/api/uploads/presign`, {
+        const presign = await fetch(`${API_BASE}/api/uploads/presign`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ attachmentId: att.id, contentType }),
@@ -258,7 +274,7 @@ class SyncEngine {
     }
     if (Object.keys(changes).length === 0) return
 
-    const res = (await authedJson('/api/sync/push', {
+    const res = (await apiJson('/api/sync/push', {
       method: 'POST',
       body: JSON.stringify({ changes }),
     })) as { applied: Record<string, Array<SyncEnvelope & Record<string, unknown>>> }
@@ -282,7 +298,7 @@ class SyncEngine {
 
   private async pull(): Promise<void> {
     const since = await this.getCursor()
-    const res = (await authedJson(
+    const res = (await apiJson(
       `/api/sync/pull?since=${encodeURIComponent(since)}`,
     )) as { serverTime: string; changes: Record<string, Array<SyncEnvelope & Record<string, unknown>>> }
 

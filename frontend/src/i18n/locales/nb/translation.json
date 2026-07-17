@@ -2,6 +2,10 @@
   "app": {
     "title": "Arbeidsbenk"
   },
+  "auth": {
+    "session_expired": "Økten din har utløpt.",
+    "sign_in_again": "Logg inn på nytt"
+  },
   "common": {
     "loading": "Laster…",
     "more": "Mer",

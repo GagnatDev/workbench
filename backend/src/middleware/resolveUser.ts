@@ -14,10 +14,10 @@ function toAppUser(row: UserRow): AppUser {
 }
 
 /**
- * Map the verified provider identity (`req.user`, keyed by auth `sub`) to the
- * app's own user row, provisioning it just-in-time on first login. Sets
- * `req.userId` (the app uuid every content row is scoped by) and `req.appUser`.
- * Mount immediately after the provider's authMiddleware.
+ * Map the injected identity (`req.user`, keyed by auth `sub`) to the app's own
+ * user row, provisioning it just-in-time on first login. Sets `req.userId` (the
+ * app uuid every content row is scoped by) and `req.appUser`.
+ * Mount immediately after the identity middleware.
  */
 export function resolveUser(db: Db): RequestHandler {
   const users = new UserRepository(db);

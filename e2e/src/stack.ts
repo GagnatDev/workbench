@@ -129,11 +129,12 @@ async function buildFrontend(): Promise<void> {
     log("E2E_SKIP_BUILD=1 — reusing existing frontend/dist");
     return;
   }
-  log("building the SPA (vite build, auth disabled)…");
+  log("building the SPA (vite build)…");
   await run("pnpm", ["--filter", "@workbench/frontend", "run", "build"], {
-    // VITE_DISABLE_AUTH skips the login screen; empty VITE_API_URL keeps the API
-    // same-origin so it hits the backend that serves this bundle.
-    VITE_DISABLE_AUTH: "true",
+    // Empty VITE_API_URL keeps the API same-origin so it hits the backend that
+    // serves this bundle. The SPA is auth-agnostic; the backend runs in
+    // AUTH_MODE=dev below (no sidecar in e2e), so /api/me resolves to the fixed
+    // dev user with no login step.
     VITE_API_URL: "",
   });
 }
