@@ -1,11 +1,28 @@
 name: Deploy to Kubernetes
 
+# Postfix the run title with the branch/ref being deployed, e.g.
+# "Deploy to Kubernetes [main]". For workflow_run it's the CI branch; for a
+# manual run it's the explicit `ref` input, falling back to the dispatched branch.
+run-name: Deploy to Kubernetes [${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.event.inputs.ref || github.ref_name }}]
+
+# Deploys the workbench app to the Scaleway Kubernetes cluster.
+#
+# Two ways this runs:
+#   1. Automatically after CI succeeds on `main`.
+#   2. Manually via "Run workflow" (workflow_dispatch) — from ANY branch.
+#      Pick the branch in the Actions UI, or pass an explicit `ref`
+#      (branch, tag, or commit SHA) as an input to deploy that instead.
 on:
   workflow_run:
     workflows: ["CI"]
     types: [completed]
     branches: [main]
   workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch, tag, or commit SHA to build and deploy. Leave blank to use the branch this run was started from."
+        required: false
+        default: ""
 
 permissions:
   actions: read
@@ -16,39 +33,58 @@ concurrency:
   group: deploy-k8s-workbench
   cancel-in-progress: true
 
-env:
-  IMAGE_TAG: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
-
 jobs:
   build:
     if: >
       github.event_name == 'workflow_dispatch' ||
       github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.resolve.outputs.image_tag }}
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ env.IMAGE_TAG }}
+          # workflow_run: the commit CI validated on main.
+          # workflow_dispatch: the explicit `ref` input, or (when blank) the
+          # branch the run was dispatched from.
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.event.inputs.ref }}
+
+      - name: Resolve image tag
+        id: resolve
+        # Always tag by the resolved commit SHA so branch/tag names (which may
+        # contain slashes and are invalid as image tags) never leak in.
+        run: echo "image_tag=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Build and push image
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE_TAG: ${{ steps.resolve.outputs.image_tag }}
+          # Only move the shared `latest` tag for main deploys, so deploying a
+          # feature branch doesn't repoint `latest` at unmerged code.
+          PUSH_LATEST: ${{ github.event_name == 'workflow_run' }}
         run: |
           echo "${{ secrets.SCW_SECRET_KEY }}" | docker login rg.fr-par.scw.cloud \
             -u nologin --password-stdin
+
+          TAGS="-t rg.fr-par.scw.cloud/homectl/workbench:${IMAGE_TAG}"
+          if [ "$PUSH_LATEST" = "true" ]; then
+            TAGS="$TAGS -t rg.fr-par.scw.cloud/homectl/workbench:latest"
+          fi
+
           docker build \
             --secret id=github_token,env=GITHUB_TOKEN \
-            -t rg.fr-par.scw.cloud/homectl/workbench:${{ env.IMAGE_TAG }} \
-            -t rg.fr-par.scw.cloud/homectl/workbench:latest .
-          docker push rg.fr-par.scw.cloud/homectl/workbench:${{ env.IMAGE_TAG }}
-          docker push rg.fr-par.scw.cloud/homectl/workbench:latest
+            $TAGS .
+
+          docker push rg.fr-par.scw.cloud/homectl/workbench:${IMAGE_TAG}
+          if [ "$PUSH_LATEST" = "true" ]; then
+            docker push rg.fr-par.scw.cloud/homectl/workbench:latest
+          fi
 
   deploy:
     needs: build
-    if: >
-      github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    env:
+      IMAGE_TAG: ${{ needs.build.outputs.image_tag }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -65,6 +101,6 @@ jobs:
 
       - name: Deploy to cluster
         run: |
-          sed -i "s|\$IMAGE_TAG|${{ env.IMAGE_TAG }}|g" k8s/deployment.yml
+          sed -i "s|\$IMAGE_TAG|${IMAGE_TAG}|g" k8s/deployment.yml
           kubectl apply -f k8s/deployment.yml
           kubectl rollout status deployment/workbench -n homectl --timeout=300s
