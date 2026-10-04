@@ -89,7 +89,7 @@ jobs:
             -e MINIO_ROOT_USER=workbench \
             -e MINIO_ROOT_PASSWORD=workbench-dev-secret \
             -p 9000:9000 \
-            minio/minio:latest server /data
+            pgsty/minio:latest server /data
           timeout 30 sh -c 'until curl -sf http://localhost:9000/minio/health/live; do sleep 1; done'
 
       - name: Set up pnpm

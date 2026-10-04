@@ -18,7 +18,7 @@ services:
   # S3-compatible local object storage (stand-in for Scaleway Object Storage).
   # Used from Phase 3 (photo attachments). Console at http://localhost:9001.
   minio:
-    image: minio/minio:latest
+    image: pgsty/minio:latest
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: workbench
@@ -36,7 +36,7 @@ services:
 
   # Creates the local bucket on startup, then exits.
   minio-init:
-    image: minio/mc:latest
+    image: pgsty/mc:latest
     depends_on:
       minio:
         condition: service_healthy
