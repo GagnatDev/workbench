@@ -48,7 +48,7 @@ export async function startStack(): Promise<Teardown> {
     process.env.DATABASE_URL = pg.getConnectionUri();
 
     log("starting MinIO (testcontainers)…");
-    minio = await new GenericContainer("minio/minio:latest")
+    minio = await new GenericContainer("pgsty/minio:latest")
       .withEnvironment({
         MINIO_ROOT_USER: MINIO.user,
         MINIO_ROOT_PASSWORD: MINIO.password,
