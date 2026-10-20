@@ -18,7 +18,7 @@ let container: StartedPostgreSqlContainer | undefined;
 // isolation via TRUNCATE between cases (see test/db.ts).
 // Vitest 5 calls global setup with the TestProject (provide lives on the project).
 export async function setup(project: TestProject): Promise<void> {
-  container = await new PostgreSqlContainer("postgres:18-alpine").start();
+  container = await new PostgreSqlContainer("postgres:17.11-alpine").start();
   const uri = container.getConnectionUri();
   await runMigrations(uri);
   project.provide("databaseUrl", uri);
