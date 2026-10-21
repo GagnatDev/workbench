@@ -131,7 +131,7 @@ export function JournalSection({
             type="datetime-local"
             value={toLocalInput(entryAt ?? new Date().toISOString())}
             onChange={(e) => setEntryAt(fromLocalInput(e.target.value))}
-            className="mt-2 rounded-lg bg-oatmeal p-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+            className="mt-2 rounded-lg bg-oatmeal p-2 text-sm text-charcoal focus:outline-hidden focus:ring-2 focus:ring-terracotta/40"
           />
         )}
       </div>
@@ -164,7 +164,7 @@ export function JournalSection({
                   {item.body && (
                     <Linkify
                       text={item.body}
-                      className="block whitespace-pre-wrap break-words text-charcoal"
+                      className="block whitespace-pre-wrap wrap-break-word text-charcoal"
                     />
                   )}
                 </button>
@@ -233,7 +233,7 @@ function JournalEntrySheet({ item, onClose }: { item: Item; onClose: () => void 
         rows={4}
         value={body}
         onChange={(e) => setBody(e.target.value)}
-        className="w-full resize-none rounded-lg bg-oatmeal p-3 text-charcoal focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+        className="w-full resize-none rounded-lg bg-oatmeal p-3 text-charcoal focus:outline-hidden focus:ring-2 focus:ring-terracotta/40"
       />
       <label className="mt-3 block text-sm text-charcoal-muted">
         {t('journal.date')}
@@ -241,7 +241,7 @@ function JournalEntrySheet({ item, onClose }: { item: Item; onClose: () => void 
           type="datetime-local"
           value={toLocalInput(at)}
           onChange={(e) => setAt(fromLocalInput(e.target.value))}
-          className="mt-1 block rounded-lg bg-oatmeal p-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+          className="mt-1 block rounded-lg bg-oatmeal p-2 text-sm text-charcoal focus:outline-hidden focus:ring-2 focus:ring-terracotta/40"
         />
       </label>
       <div className="mt-3">

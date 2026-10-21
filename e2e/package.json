@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "type": "module",
   "engines": {
-    "node": ">=26"
+    "node": ">=24"
   },
   "scripts": {
     "test:e2e": "playwright test",
@@ -15,7 +15,7 @@
     "@aws-sdk/client-s3": "^3.1152.0",
     "@playwright/test": "^1.64.1",
     "@testcontainers/postgresql": "^12.2.1",
-    "@types/node": "^26.6.5",
+    "@types/node": "^24.19.2",
     "@types/pg": "^8.23.1",
     "pg": "^8.23.1",
     "testcontainers": "^12.2.1",

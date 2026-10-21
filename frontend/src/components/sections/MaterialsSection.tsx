@@ -89,17 +89,17 @@ export function MaterialsSection({
                   <AttachmentThumb
                     attachmentId={photo.id}
                     uploaded={photo.uploaded}
-                    className="h-12 w-12 flex-shrink-0 rounded-lg object-cover"
+                    className="h-12 w-12 shrink-0 rounded-lg object-cover"
                     alt=""
                   />
                 )}
                 <span className="min-w-0 flex-1">
                   <span className="flex items-baseline justify-between gap-3">
-                    <span className="min-w-0 break-words text-charcoal">
+                    <span className="min-w-0 wrap-break-word text-charcoal">
                       {item.title || t('common.untitled')}
                     </span>
                     {amount && (
-                      <span className="tabular flex-shrink-0 text-sm text-charcoal-muted">
+                      <span className="tabular shrink-0 text-sm text-charcoal-muted">
                         {amount}
                       </span>
                     )}
@@ -107,7 +107,7 @@ export function MaterialsSection({
                   {item.body && (
                     <Linkify
                       text={item.body}
-                      className="mt-0.5 block break-words text-sm text-charcoal-muted"
+                      className="mt-0.5 block wrap-break-word text-sm text-charcoal-muted"
                     />
                   )}
                 </span>
@@ -128,14 +128,14 @@ export function MaterialsSection({
             }
           }}
           placeholder={t('materials.placeholder')}
-          className="min-w-0 flex-1 rounded-lg bg-oatmeal p-3 text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+          className="min-w-0 flex-1 rounded-lg bg-oatmeal p-3 text-charcoal placeholder:text-charcoal-muted focus:outline-hidden focus:ring-2 focus:ring-terracotta/40"
         />
         <button
           type="button"
           aria-label={t('materials.add_aria')}
           onClick={() => void add()}
           disabled={!name.trim()}
-          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-terracotta text-oatmeal disabled:opacity-40"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-terracotta text-oatmeal disabled:opacity-40"
         >
           <Plus size={20} />
         </button>
@@ -208,7 +208,7 @@ function MaterialEditSheet({
   }
 
   const field =
-    'rounded-lg bg-oatmeal p-2.5 text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-terracotta/40'
+    'rounded-lg bg-oatmeal p-2.5 text-charcoal placeholder:text-charcoal-muted focus:outline-hidden focus:ring-2 focus:ring-terracotta/40'
 
   return (
     <BottomSheet

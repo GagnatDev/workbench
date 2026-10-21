@@ -7,7 +7,7 @@ import { defineConfig } from "tsup";
 export default defineConfig({
   entry: ["src/server.ts"],
   format: ["esm"],
-  target: "node26",
+  target: "node24",
   platform: "node",
   bundle: true,
   splitting: false,

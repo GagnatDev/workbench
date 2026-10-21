@@ -86,7 +86,7 @@ export function IdeaDetailSheet({
         value={content}
         onChange={(e) => setContent(e.target.value)}
         placeholder={t('idea.placeholder')}
-        className="w-full resize-none rounded-lg bg-oatmeal p-3 text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+        className="w-full resize-none rounded-lg bg-oatmeal p-3 text-charcoal placeholder:text-charcoal-muted focus:outline-hidden focus:ring-2 focus:ring-terracotta/40"
       />
       <div className="mt-2 flex items-center gap-2">
         <input
@@ -95,14 +95,14 @@ export function IdeaDetailSheet({
           value={link}
           onChange={(e) => setLink(e.target.value)}
           placeholder={t('idea.link_placeholder')}
-          className="min-w-0 flex-1 rounded-lg bg-oatmeal p-2 text-sm text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+          className="min-w-0 flex-1 rounded-lg bg-oatmeal p-2 text-sm text-charcoal placeholder:text-charcoal-muted focus:outline-hidden focus:ring-2 focus:ring-terracotta/40"
         />
         {link.trim() && (
           <button
             type="button"
             aria-label={t('common.open_link')}
             onClick={() => openUrl(link.trim())}
-            className="flex-shrink-0 rounded-lg bg-oatmeal p-2 text-charcoal-muted hover:text-terracotta"
+            className="shrink-0 rounded-lg bg-oatmeal p-2 text-charcoal-muted hover:text-terracotta"
           >
             <ExternalLink size={16} />
           </button>

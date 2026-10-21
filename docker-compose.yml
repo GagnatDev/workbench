@@ -1,4 +1,7 @@
 services:
+  # Postgres 17.11 (matches managed production). A leftover `postgres_data`
+  # volume from local Postgres 16 cannot be opened by 17 — wipe it first:
+  # `docker compose down` then `docker volume rm <project>_postgres_data`.
   postgres:
     image: postgres:17.11-alpine
     environment:

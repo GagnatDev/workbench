@@ -122,7 +122,7 @@ function DangerZoneCard() {
             onChange={(e) => setConfirmText(e.target.value)}
             placeholder={required}
             disabled={deleting}
-            className="mt-1 w-full rounded-lg bg-oatmeal p-2.5 text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-brick/40"
+            className="mt-1 w-full rounded-lg bg-oatmeal p-2.5 text-charcoal placeholder:text-charcoal-muted focus:outline-hidden focus:ring-2 focus:ring-brick/40"
           />
 
           {error && <p className="mt-2 text-sm text-brick">{error}</p>}
@@ -193,8 +193,8 @@ function HintsCard() {
           onClick={() => void setHintsEnabled(!enabled)}
           className={
             enabled
-              ? 'flex h-7 w-12 flex-shrink-0 items-center rounded-full bg-terracotta px-0.5'
-              : 'flex h-7 w-12 flex-shrink-0 items-center rounded-full bg-oatmeal px-0.5'
+              ? 'flex h-7 w-12 shrink-0 items-center rounded-full bg-terracotta px-0.5'
+              : 'flex h-7 w-12 shrink-0 items-center rounded-full bg-oatmeal px-0.5'
           }
         >
           <span
@@ -271,13 +271,13 @@ function InviteCard() {
             }
           }}
           placeholder={t('settings.invite.email_placeholder')}
-          className="min-w-0 flex-1 rounded-lg bg-oatmeal p-2.5 text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+          className="min-w-0 flex-1 rounded-lg bg-oatmeal p-2.5 text-charcoal placeholder:text-charcoal-muted focus:outline-hidden focus:ring-2 focus:ring-terracotta/40"
         />
         <button
           type="button"
           onClick={() => void submit()}
           disabled={sending || !email.trim()}
-          className="flex-shrink-0 rounded-lg bg-terracotta px-4 py-2.5 text-sm text-oatmeal disabled:opacity-50"
+          className="shrink-0 rounded-lg bg-terracotta px-4 py-2.5 text-sm text-oatmeal disabled:opacity-50"
         >
           {sending ? t('settings.invite.sending') : t('settings.invite.send')}
         </button>
@@ -295,9 +295,9 @@ function InviteCard() {
           >
             <span className="min-w-0 flex-1 truncate">{link}</span>
             {copied ? (
-              <Check size={16} className="flex-shrink-0 text-olive" />
+              <Check size={16} className="shrink-0 text-olive" />
             ) : (
-              <Copy size={16} className="flex-shrink-0 text-charcoal-muted" />
+              <Copy size={16} className="shrink-0 text-charcoal-muted" />
             )}
           </button>
         </div>

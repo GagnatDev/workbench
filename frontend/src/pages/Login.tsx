@@ -21,7 +21,7 @@ export function Login() {
       <button
         type="button"
         onClick={login}
-        className="rounded-lg bg-terracotta px-6 py-3 text-oatmeal shadow-sm transition-transform active:scale-95"
+        className="rounded-lg bg-terracotta px-6 py-3 text-oatmeal shadow-xs transition-transform active:scale-95"
       >
         {t('login.sign_in')}
       </button>

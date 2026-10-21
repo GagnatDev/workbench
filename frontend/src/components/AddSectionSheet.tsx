@@ -63,7 +63,7 @@ export function AddSectionSheet({ projectId, onClose }: { projectId: string; onC
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder={defaultSectionName(kind)}
-        className="mt-4 w-full rounded-lg bg-oatmeal p-3 text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+        className="mt-4 w-full rounded-lg bg-oatmeal p-3 text-charcoal placeholder:text-charcoal-muted focus:outline-hidden focus:ring-2 focus:ring-terracotta/40"
       />
 
       <button

@@ -116,7 +116,7 @@ export function Composer({
           }
         }}
         placeholder={placeholder ?? t('capture.placeholder')}
-        className="w-full resize-none rounded-lg bg-oatmeal p-3 text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+        className="w-full resize-none rounded-lg bg-oatmeal p-3 text-charcoal placeholder:text-charcoal-muted focus:outline-hidden focus:ring-2 focus:ring-terracotta/40"
       />
 
       {draft.photo && (
@@ -144,7 +144,7 @@ export function Composer({
           value={draft.link}
           onChange={(e) => onChange({ ...draft, link: e.target.value })}
           placeholder={t('composer.url_placeholder')}
-          className="mt-2 w-full rounded-lg bg-oatmeal p-2 text-sm text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+          className="mt-2 w-full rounded-lg bg-oatmeal p-2 text-sm text-charcoal placeholder:text-charcoal-muted focus:outline-hidden focus:ring-2 focus:ring-terracotta/40"
         />
       )}
 

@@ -58,7 +58,7 @@ export function ChecklistSection({
                   aria-label={done ? t('checklist.mark_not_done') : t('checklist.mark_done')}
                   aria-pressed={done}
                   onClick={() => void toggleTask(item)}
-                  className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border ${
+                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border ${
                     done ? 'border-olive bg-olive text-oatmeal' : 'border-charcoal-muted'
                   }`}
                 >
@@ -67,7 +67,7 @@ export function ChecklistSection({
                 <button
                   type="button"
                   onClick={() => setEditing(item)}
-                  className={`min-w-0 flex-1 break-words text-left ${
+                  className={`min-w-0 flex-1 wrap-break-word text-left ${
                     done ? 'text-charcoal-muted line-through' : 'text-charcoal'
                   }`}
                 >
@@ -90,14 +90,14 @@ export function ChecklistSection({
             }
           }}
           placeholder={t('checklist.placeholder')}
-          className="min-w-0 flex-1 rounded-lg bg-oatmeal p-3 text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+          className="min-w-0 flex-1 rounded-lg bg-oatmeal p-3 text-charcoal placeholder:text-charcoal-muted focus:outline-hidden focus:ring-2 focus:ring-terracotta/40"
         />
         <button
           type="button"
           aria-label={t('checklist.add_aria')}
           onClick={() => void add()}
           disabled={!text.trim()}
-          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-terracotta text-oatmeal disabled:opacity-40"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-terracotta text-oatmeal disabled:opacity-40"
         >
           <Plus size={20} />
         </button>
@@ -138,7 +138,7 @@ function TaskEditSheet({ item, onClose }: { item: Item; onClose: () => void }) {
         rows={2}
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        className="w-full resize-none rounded-lg bg-oatmeal p-3 text-charcoal focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+        className="w-full resize-none rounded-lg bg-oatmeal p-3 text-charcoal focus:outline-hidden focus:ring-2 focus:ring-terracotta/40"
       />
       <div className="mt-3">
         <TagInput tags={tags} onChange={setTags} suggestions={suggestions} />

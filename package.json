@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "packageManager": "pnpm@10.34.7",
   "engines": {
-    "node": ">=26"
+    "node": ">=24"
   },
   "scripts": {
     "dev": "pnpm -r --parallel run dev",
@@ -14,5 +14,11 @@
     "dev:frontend": "pnpm --filter @workbench/frontend run dev",
     "dev:backend": "pnpm --filter @workbench/backend run dev",
     "test:e2e": "pnpm --filter @workbench/e2e run test:e2e"
+  },
+  "pnpm": {
+    "overrides": {
+      "brace-expansion@2": "2.1.7",
+      "brace-expansion@5": "5.0.12"
+    }
   }
 }

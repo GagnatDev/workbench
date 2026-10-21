@@ -106,7 +106,7 @@ function StageEditor({
               value={stage}
               onChange={(e) => rename(i, e.target.value)}
               placeholder={t('status.stage_placeholder')}
-              className="min-w-0 flex-1 rounded-lg bg-oatmeal p-2 text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+              className="min-w-0 flex-1 rounded-lg bg-oatmeal p-2 text-charcoal placeholder:text-charcoal-muted focus:outline-hidden focus:ring-2 focus:ring-terracotta/40"
             />
             <button
               type="button"

@@ -173,7 +173,7 @@ export function ProjectOverview() {
         <button
           type="button"
           onClick={() => setSheet('status')}
-          className="flex flex-shrink-0 items-center gap-1 rounded-full bg-stoneware px-3 py-1 text-sm text-charcoal"
+          className="flex shrink-0 items-center gap-1 rounded-full bg-stoneware px-3 py-1 text-sm text-charcoal"
         >
           {project.status ?? t('project.no_status')}
           <ChevronDown size={15} className="text-charcoal-muted" />
@@ -350,7 +350,7 @@ function SectionManageSheet({ section, onClose }: { section: Section; onClose: (
       <input
         value={name}
         onChange={(e) => setName(e.target.value)}
-        className="w-full rounded-lg bg-oatmeal p-3 text-charcoal focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+        className="w-full rounded-lg bg-oatmeal p-3 text-charcoal focus:outline-hidden focus:ring-2 focus:ring-terracotta/40"
       />
       <button
         type="button"
