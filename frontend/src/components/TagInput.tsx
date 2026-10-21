@@ -63,7 +63,7 @@ export function TagInput({
             }
           }}
           placeholder={tags.length ? '' : t('tags.add_placeholder')}
-          className="min-w-[6rem] flex-1 bg-transparent py-1 text-sm text-charcoal placeholder:text-charcoal-muted focus:outline-none"
+          className="min-w-[6rem] flex-1 bg-transparent py-1 text-sm text-charcoal placeholder:text-charcoal-muted focus:outline-hidden"
         />
       </div>
       {matches.length > 0 && (

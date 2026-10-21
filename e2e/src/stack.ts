@@ -44,7 +44,7 @@ export async function startStack(): Promise<Teardown> {
     process.env.TESTCONTAINERS_RYUK_DISABLED ??= "true";
 
     log("starting Postgres (testcontainers)…");
-    pg = await new PostgreSqlContainer("postgres:16-alpine").start();
+    pg = await new PostgreSqlContainer("postgres:17.11-alpine").start();
     process.env.DATABASE_URL = pg.getConnectionUri();
 
     log("starting MinIO (testcontainers)…");

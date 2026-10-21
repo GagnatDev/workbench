@@ -119,13 +119,13 @@ function DetailsEditor({
               value={row.key}
               onChange={(e) => patch(i, 'key', e.target.value)}
               placeholder={t('details.label_placeholder')}
-              className="min-w-0 flex-1 rounded-lg bg-oatmeal p-2 text-sm text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+              className="min-w-0 flex-1 rounded-lg bg-oatmeal p-2 text-sm text-charcoal placeholder:text-charcoal-muted focus:outline-hidden focus:ring-2 focus:ring-terracotta/40"
             />
             <input
               value={row.value}
               onChange={(e) => patch(i, 'value', e.target.value)}
               placeholder={t('details.value_placeholder')}
-              className="tabular min-w-0 flex-1 rounded-lg bg-oatmeal p-2 text-sm text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+              className="tabular min-w-0 flex-1 rounded-lg bg-oatmeal p-2 text-sm text-charcoal placeholder:text-charcoal-muted focus:outline-hidden focus:ring-2 focus:ring-terracotta/40"
             />
             <button
               type="button"

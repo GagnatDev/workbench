@@ -53,7 +53,7 @@ export function Section() {
         </Link>
         <h2 className="min-w-0 truncate font-serif text-xl text-charcoal">{section.name}</h2>
         {project && (
-          <span className="flex-shrink-0 text-sm text-charcoal-muted">· {project.title}</span>
+          <span className="shrink-0 text-sm text-charcoal-muted">· {project.title}</span>
         )}
       </div>
 

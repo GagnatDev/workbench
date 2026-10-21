@@ -66,7 +66,7 @@ export function MoodboardSection({
                     <LinkIcon size={15} />
                     <span className="truncate text-sm">{domainOf(payload.url)}</span>
                   </span>
-                  {caption && <span className="mt-1 block break-words text-charcoal">{caption}</span>}
+                  {caption && <span className="mt-1 block wrap-break-word text-charcoal">{caption}</span>}
                 </a>
               </PinFrame>
             )
@@ -95,7 +95,7 @@ export function MoodboardSection({
               {att && caption && (
                 <Linkify
                   text={caption}
-                  className="mt-1 block break-words text-sm text-charcoal-muted"
+                  className="mt-1 block wrap-break-word text-sm text-charcoal-muted"
                 />
               )}
             </PinFrame>
@@ -173,7 +173,7 @@ function AddPinSheet({ section, onClose }: { section: Section; onClose: () => vo
   }
 
   const field =
-    'w-full rounded-lg bg-oatmeal p-3 text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-terracotta/40'
+    'w-full rounded-lg bg-oatmeal p-3 text-charcoal placeholder:text-charcoal-muted focus:outline-hidden focus:ring-2 focus:ring-terracotta/40'
 
   return (
     <BottomSheet onClose={onClose} labelledBy="add-pin">

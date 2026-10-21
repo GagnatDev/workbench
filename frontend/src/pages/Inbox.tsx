@@ -145,15 +145,15 @@ export function Inbox({ archived = false }: { archived?: boolean }) {
             <div className="mb-3 flex items-start gap-3 rounded-card bg-stoneware px-3 py-2.5 text-xs text-charcoal-muted">
               <ul className="flex flex-1 flex-col gap-1">
                 <li className="flex items-center gap-1.5">
-                  <ArrowRight size={14} className="flex-shrink-0 text-olive" />
+                  <ArrowRight size={14} className="shrink-0 text-olive" />
                   {t('inbox.hint.keep')}
                 </li>
                 <li className="flex items-center gap-1.5">
-                  <ArrowLeft size={14} className="flex-shrink-0 text-terracotta" />
+                  <ArrowLeft size={14} className="shrink-0 text-terracotta" />
                   {t('inbox.hint.archive')}
                 </li>
                 <li className="flex items-center gap-1.5">
-                  <Hand size={14} className="flex-shrink-0" />
+                  <Hand size={14} className="shrink-0" />
                   {t('inbox.hint.promote')}
                 </li>
               </ul>
@@ -161,7 +161,7 @@ export function Inbox({ archived = false }: { archived?: boolean }) {
                 type="button"
                 aria-label={t('inbox.hint.dismiss')}
                 onClick={dismissHint}
-                className="flex-shrink-0 text-charcoal-muted hover:text-charcoal"
+                className="shrink-0 text-charcoal-muted hover:text-charcoal"
               >
                 <X size={16} />
               </button>

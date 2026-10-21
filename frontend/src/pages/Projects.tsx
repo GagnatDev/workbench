@@ -81,7 +81,7 @@ export function Projects() {
               >
                 <ProjectCover
                   cover={cover}
-                  className="h-20 w-20 flex-shrink-0 object-cover"
+                  className="h-20 w-20 shrink-0 object-cover"
                   alt=""
                 />
                 <span className="flex min-w-0 flex-1 flex-col justify-center py-2 pr-3">
@@ -124,8 +124,8 @@ function FilterChip({
       onClick={onClick}
       className={
         active
-          ? 'flex-shrink-0 rounded-full bg-terracotta px-3 py-1 text-sm text-oatmeal'
-          : 'flex-shrink-0 rounded-full bg-stoneware px-3 py-1 text-sm text-charcoal'
+          ? 'shrink-0 rounded-full bg-terracotta px-3 py-1 text-sm text-oatmeal'
+          : 'shrink-0 rounded-full bg-stoneware px-3 py-1 text-sm text-charcoal'
       }
     >
       {label}

@@ -1,11 +1,9 @@
 /* Self-hosted variable fonts (precached by the service worker — typography must
    not depend on connectivity). Playfair Display for titles, Inter for body. */
+@import 'tailwindcss';
+@config '../tailwind.config.js';
 @import '@fontsource-variable/playfair-display';
 @import '@fontsource-variable/inter';
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 @layer base {
   :root {

@@ -69,12 +69,12 @@ export function FileAsSheet({
           <AttachmentThumb
             attachmentId={photo.id}
             uploaded={photo.uploaded}
-            className="h-12 w-12 flex-shrink-0 rounded-lg object-cover"
+            className="h-12 w-12 shrink-0 rounded-lg object-cover"
             alt=""
             zoomable
           />
         )}
-        <p id="file-as-title" className="min-w-0 flex-1 break-words text-charcoal">
+        <p id="file-as-title" className="min-w-0 flex-1 wrap-break-word text-charcoal">
           {idea.content || (idea.link ?? t('common.photo'))}
         </p>
       </div>

@@ -78,8 +78,9 @@ export function buildApp(deps: AppDeps): Express {
   if (existsSync(webRoot)) {
     const indexHtml = path.join(webRoot, "index.html");
     app.use(express.static(webRoot, { setHeaders: setStaticCacheHeaders }));
-    // Express 5: no bare "*" route — use a named splat and skip API paths.
-    app.get("/*splat", (req, res, next) => {
+    // Express 5: a bare "*" is invalid. `/{*splat}` matches `/` and nested
+    // client routes; skip API paths so they still 404 via the error handler.
+    app.get("/{*splat}", (req, res, next) => {
       if (req.path.startsWith("/api/")) {
         next();
         return;

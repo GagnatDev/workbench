@@ -2,6 +2,7 @@
 import path from 'path'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 const apiProxyTarget = process.env.VITE_API_PROXY ?? 'http://localhost:8080'
@@ -10,8 +11,9 @@ export default defineConfig({
   // The whole stack shares one .env at the monorepo root (the backend loads it
   // too). Without this, Vite would only read frontend/.env and miss
   // VITE_DISABLE_AUTH, silently re-enabling the auth redirect in local dev.
-  envDir: path.resolve(__dirname, '..'),
+  envDir: path.resolve(import.meta.dirname, '..'),
   plugins: [
+    tailwindcss(),
     react(),
     VitePWA({
       registerType: 'autoUpdate',
@@ -65,7 +67,7 @@ export default defineConfig({
     }),
   ],
   resolve: {
-    alias: { '@': path.resolve(__dirname, 'src') },
+    alias: { '@': path.resolve(import.meta.dirname, 'src') },
   },
   test: {
     environment: 'jsdom',

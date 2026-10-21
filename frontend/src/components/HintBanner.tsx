@@ -50,13 +50,13 @@ export function HintBanner() {
       role="status"
       className="mb-4 flex items-start gap-3 rounded-card bg-stoneware px-4 py-3"
     >
-      <Lightbulb size={18} className="mt-0.5 flex-shrink-0 text-flax" />
+      <Lightbulb size={18} className="mt-0.5 shrink-0 text-flax" />
       <p className="flex-1 text-sm text-charcoal">{t(hint.key)}</p>
       <button
         type="button"
         aria-label={t('hints.dismiss_aria')}
         onClick={() => void markHintSeen(hint.id)}
-        className="-m-2 flex-shrink-0 p-2 text-charcoal-muted hover:text-terracotta"
+        className="-m-2 shrink-0 p-2 text-charcoal-muted hover:text-terracotta"
       >
         <X size={18} />
       </button>

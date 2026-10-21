@@ -49,14 +49,14 @@ export function EditProjectSheet({ project, onClose }: { project: Project; onClo
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder={t('project.title_placeholder')}
-        className="w-full rounded-lg bg-oatmeal p-3 text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+        className="w-full rounded-lg bg-oatmeal p-3 text-charcoal placeholder:text-charcoal-muted focus:outline-hidden focus:ring-2 focus:ring-terracotta/40"
       />
       <textarea
         rows={3}
         value={description}
         onChange={(e) => setDescription(e.target.value)}
         placeholder={t('project.description_placeholder')}
-        className="mt-2 w-full resize-none rounded-lg bg-oatmeal p-3 text-charcoal placeholder:text-charcoal-muted focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+        className="mt-2 w-full resize-none rounded-lg bg-oatmeal p-3 text-charcoal placeholder:text-charcoal-muted focus:outline-hidden focus:ring-2 focus:ring-terracotta/40"
       />
       <div className="mt-3">
         <TagInput tags={tags} onChange={setTags} suggestions={suggestions} />

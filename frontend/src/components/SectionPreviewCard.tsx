@@ -51,7 +51,7 @@ export function SectionPreviewCard({
   return (
     <div className="rounded-card bg-stoneware p-3">
       <div className="flex items-center gap-2 text-charcoal">
-        <Icon size={16} className="flex-shrink-0 text-charcoal-muted" />
+        <Icon size={16} className="shrink-0 text-charcoal-muted" />
         <Link to={to} className="min-w-0 flex-1 truncate font-medium">
           {section.name}
         </Link>
@@ -112,7 +112,7 @@ function Preview({ section, data }: { section: Section; data: ReturnType<typeof 
                 done ? 'text-charcoal-muted line-through' : 'text-charcoal-muted'
               }`}
             >
-              <span className="flex h-3.5 w-3.5 flex-shrink-0 items-center justify-center rounded-sm border border-charcoal-muted">
+              <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-xs border border-charcoal-muted">
                 {done && <Check size={10} />}
               </span>
               <span className="truncate">{t.title || tr('common.untitled')}</span>

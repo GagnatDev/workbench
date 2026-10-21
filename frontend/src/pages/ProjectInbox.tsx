@@ -150,15 +150,15 @@ function InboxCard({ idea, onTap }: { idea: Idea; onTap: () => void }) {
         <AttachmentThumb
           attachmentId={photo.id}
           uploaded={photo.uploaded}
-          className="h-12 w-12 flex-shrink-0 rounded-lg object-cover"
+          className="h-12 w-12 shrink-0 rounded-lg object-cover"
           alt=""
         />
       )}
       <span className="min-w-0 flex-1">
         {idea.content ? (
-          <Linkify text={idea.content} className="line-clamp-2 block break-words text-charcoal" />
+          <Linkify text={idea.content} className="line-clamp-2 block wrap-break-word text-charcoal" />
         ) : (
-          <span className="line-clamp-2 block break-words text-charcoal">
+          <span className="line-clamp-2 block wrap-break-word text-charcoal">
             {idea.link ? domainOf(idea.link) : t('common.photo')}
           </span>
         )}
