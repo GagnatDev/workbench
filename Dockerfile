@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # Stage 1: Build frontend + backend (single Node toolchain, pnpm workspaces)
 # -----------------------------------------------------------------------------
-FROM node:24-alpine AS build
+FROM node:24.22.1-alpine AS build
 WORKDIR /app
 
 RUN corepack enable
@@ -27,9 +27,9 @@ RUN pnpm --filter @workbench/frontend run build \
  && pnpm --filter @workbench/backend run build
 
 # -----------------------------------------------------------------------------
-# Stage 2: Runtime (Node 24, no node_modules — everything is bundled)
+# Stage 2: Runtime (Node 24.22.1, no node_modules — everything is bundled)
 # -----------------------------------------------------------------------------
-FROM node:24-alpine
+FROM node:24.22.1-alpine
 WORKDIR /app
 
 RUN adduser -D -g "" appuser
