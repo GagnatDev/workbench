@@ -48,6 +48,22 @@ jobs:
       - name: Backend build
         run: pnpm --filter @workbench/backend run build
 
+  # Production image install is alpine + Corepack, not the ubuntu +
+  # pnpm/action-setup path used by verify/e2e. A pnpm major can pass CI and
+  # still fail at deploy (native musl binaries, allowBuilds, frozen lockfile).
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build production image
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          docker build \
+            --secret id=github_token,env=GITHUB_TOKEN \
+            -t workbench:${{ github.sha }} .
+
   e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 20
