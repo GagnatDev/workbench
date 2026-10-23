@@ -4,6 +4,10 @@
 FROM node:24.22.1-alpine AS build
 WORKDIR /app
 
+# pnpm 12 is a native binary. Node 24.22.1 bundles Corepack 0.36.0, which
+# downloads the musl build on alpine. Disable the download prompt so a
+# non-interactive build cannot hang if Corepack's TTY detection changes.
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 RUN corepack enable
 
 # Install workspace deps from the single root lockfile.
