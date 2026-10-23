@@ -3,6 +3,21 @@ packages:
   - backend
   - e2e
 
-onlyBuiltDependencies:
-  - sharp
-  - esbuild
+overrides:
+  brace-expansion@2: 2.1.7
+  brace-expansion@5: 5.0.12
+
+allowBuilds:
+  sharp: true
+  esbuild: true
+  # These optional native builds were ignored under pnpm 10's onlyBuiltDependencies.
+  # pnpm 12 fails the install unless every build script is explicitly allowed or denied.
+  cpu-features: false
+  protobufjs: false
+  ssh2: false
+
+minimumReleaseAgeExclude:
+  - '@aws-sdk/client-s3@3.1156.0'
+  - '@aws-sdk/s3-request-presigner@3.1156.0'
+  - i18next@26.5.6
+  - react-i18next@17.1.3
