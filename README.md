@@ -58,7 +58,7 @@ What works today:
 
 ## Local development
 
-Prereqs: Node 24.22.1, pnpm 12, Docker.
+Prereqs: Node 24.22.2, pnpm 12, Docker.
 
 ```bash
 cp .env.example .env                 # required — the backend loads it in dev

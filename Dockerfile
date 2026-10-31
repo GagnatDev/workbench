@@ -1,10 +1,10 @@
 # -----------------------------------------------------------------------------
 # Stage 1: Build frontend + backend (single Node toolchain, pnpm workspaces)
 # -----------------------------------------------------------------------------
-FROM node:24.22.1-alpine AS build
+FROM node:24.22.2-alpine AS build
 WORKDIR /app
 
-# pnpm 12 is a native binary. Node 24.22.1 bundles Corepack 0.36.0, which
+# pnpm 12 is a native binary. Node 24.22.2 bundles Corepack 0.36.0, which
 # downloads the musl build on alpine. Disable the download prompt so a
 # non-interactive build cannot hang if Corepack's TTY detection changes.
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
@@ -31,9 +31,9 @@ RUN pnpm --filter @workbench/frontend run build \
  && pnpm --filter @workbench/backend run build
 
 # -----------------------------------------------------------------------------
-# Stage 2: Runtime (Node 24.22.1, no node_modules — everything is bundled)
+# Stage 2: Runtime (Node 24.22.2, no node_modules — everything is bundled)
 # -----------------------------------------------------------------------------
-FROM node:24.22.1-alpine
+FROM node:24.22.2-alpine
 WORKDIR /app
 
 RUN adduser -D -g "" appuser
