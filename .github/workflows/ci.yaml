@@ -84,7 +84,7 @@ jobs:
       AUTH_MODE: dev
     services:
       postgres:
-        image: postgres:17.11-alpine
+        image: postgres:17.12-alpine
         env:
           POSTGRES_USER: workbench
           POSTGRES_PASSWORD: workbench

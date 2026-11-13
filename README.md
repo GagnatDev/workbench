@@ -67,7 +67,7 @@ pnpm install
 pnpm dev                             # frontend :3000 (proxy → :8080), backend :8080
 ```
 
-Postgres is **17.11** locally (matching managed production). An existing
+Postgres is **17.12** locally (matching managed production major). An existing
 `postgres_data` volume from Postgres 16 cannot be opened by 17 — Compose will
 fail to start `postgres` with a data-directory version error. Wipe the old
 volume first (`docker compose down` then `docker volume rm <project>_postgres_data`)
